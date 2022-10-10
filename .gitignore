@@ -28,7 +28,6 @@
 
 # Executables
 *.exe
-*.out
 *.app
 
 # Bison and flex
@@ -43,3 +42,6 @@ c-
 
 # Test
 tmp/
+
+# Downloads
+.Identifier
