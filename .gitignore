@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Bison and flex
+*.tab.c
+*.tab.h
+*.yy.c
+*.yy.o
+
+# Compiler
+c-
+*.tar
+
+# Test
+tmp/
