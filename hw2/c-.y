@@ -1,6 +1,7 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 #include "TokenData.hpp"
+#include "Node.hpp"
 
 #include <iostream>
 #include <string>
@@ -15,6 +16,9 @@ extern FILE *yyin;
 extern int lineCount;
 extern int errorCount;
 
+// AST
+Node *root;
+
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
 {
@@ -26,6 +30,7 @@ void yyerror(const char *msg)
 
 %union {
     TokenData *tokenData;
+    Node *node;
 }
 
 %token <tokenData> NUMCONST BOOLCONST CHARCONST STRINGCONST ID

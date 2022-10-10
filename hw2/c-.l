@@ -2,11 +2,13 @@
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
 #include "TokenData.hpp"
-#include "c-.tab.h"
+#include "Node.hpp"
 #include "Util.hpp"
 
 #include <string>
 #include <iostream>
+
+#include "c-.tab.h"
 
 int lineCount = 1;
 int errorCount;
