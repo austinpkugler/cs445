@@ -41,197 +41,213 @@ void yyerror(const char *msg)
 
 %%
 
-program         : declList
-                ;
+program                 : declList
+                        ;
 
-declList        : declList decl
-                | decl
-                ;
+declList                : declList decl
+                        | decl
+                        ;
 
-decl            : varDecl
-                | funDecl
-                ;
+decl                    : varDecl
+                        | funDecl
+                        ;
 
-varDecl         : typeSpec varDeclList SEMICOLON
-                ;
+varDecl                 : typeSpec varDeclList SEMICOLON
+                        ;
 
-scopedVarDecl   : STATIC typeSpec varDeclList SEMICOLON
-                | typeSpec varDeclList SEMICOLON
-                ;
+scopedVarDecl           : STATIC typeSpec varDeclList SEMICOLON
+                        | typeSpec varDeclList SEMICOLON
+                        ;
 
-varDeclList     : varDeclList COMMA varDeclInit
-                | varDeclInit
-                ;
+varDeclList             : varDeclList COMMA varDeclInit
+                        | varDeclInit
+                        ;
 
-varDeclInit     : varDeclId
-                | varDeclId COLON simpleExp
-                ;
+varDeclInit             : varDeclId
+                        | varDeclId COLON simpleExp
+                        ;
 
-varDeclId       : ID
-                | ID LBRACK NUMCONST RBRACK
-                ;
+varDeclId               : ID
+                        | ID LBRACK NUMCONST RBRACK
+                        ;
 
-typeSpec        : BOOL
-                | CHAR
-                | INT
-                ;
+typeSpec                : BOOL
+                        | CHAR
+                        | INT
+                        ;
 
-funDecl         : typeSpec ID LPAREN parms RPAREN compoundStmt
-                | ID LPAREN parms RPAREN compoundStmt
-                ;
+funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
+                        | ID LPAREN parms RPAREN compoundStmt
+                        ;
 
-parms           : parmList
-                |
-                ;
+parms                   : parmList
+                        |
+                        ;
 
-parmList        : parmList SEMICOLON parmTypeList
-                | parmTypeList
-                ;
+parmList                : parmList SEMICOLON parmTypeList
+                        | parmTypeList
+                        ;
 
-parmTypeList    : typeSpec parmIdList
-                ;
+parmTypeList            : typeSpec parmIdList
+                        ;
 
-parmIdList      : parmIdList COMMA parmId
-                | parmId
-                ;
+parmIdList              : parmIdList COMMA parmId
+                        | parmId
+                        ;
 
-parmId          : ID
-                | ID LBRACK RBRACK
-                ;
+parmId                  : ID
+                        | ID LBRACK RBRACK
+                        ;
 
-stmt            : expStmt
-                | compoundStmt
-                | selectStmt
-                | iterStmt
-                | returnStmt
-                | breakStmt
-                ;
+stmt                    : stmtUnmatched
+                        | stmtMatched
+                        ;
 
-expStmt         : exp SEMICOLON
-                | SEMICOLON
-                ;
+stmtUnmatched           : selectStmtUnmatched
+                        | iterStmtUnmatched
+                        ;
 
-compoundStmt    : LCURLY localDecls stmtList RCURLY
-                ;
+stmtMatched             : selectStmtMatched
+                        | iterStmtMatched
+                        | expStmt
+                        | compoundStmt
+                        | returnStmt
+                        | breakStmt
+                        ;
 
-localDecls      : localDecls scopedVarDecl
-                |
-                ;
+expStmt                 : exp SEMICOLON
+                        | SEMICOLON
+                        ;
 
-stmtList        : stmtList stmt
-                |
-                ;
+compoundStmt            : LCURLY localDecls stmtList RCURLY
+                        ;
 
-selectStmt      : IF simpleExp THEN stmt
-                | IF simpleExp THEN stmt ELSE stmt
-                ;
+localDecls              : localDecls scopedVarDecl
+                        |
+                        ;
 
-iterStmt        : WHILE simpleExp DO stmt
-                | FOR ID ASGN iterRange DO stmt
-                ;
+stmtList                : stmtList stmt
+                        |
+                        ;
 
-iterRange       : simpleExp TO simpleExp
-                | simpleExp TO simpleExp BY simpleExp
-                ;
+selectStmtUnmatched     : IF simpleExp THEN stmt
+                        | IF simpleExp THEN stmtMatched ELSE stmtUnmatched
+                        ;
 
-returnStmt      : RETURN SEMICOLON
-                | RETURN exp SEMICOLON
-                ;
+selectStmtMatched       : IF simpleExp THEN stmtMatched ELSE stmtMatched
+                        ;
 
-breakStmt       : BREAK SEMICOLON
-                ;
+iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
+                        | FOR ID ASGN iterRange DO stmtUnmatched
+                        ;
 
-exp             : mutable assignop exp
-                | mutable INC
-                | mutable DEC
-                | simpleExp
-                ;
+iterStmtMatched         : WHILE simpleExp DO stmtMatched
+                        | FOR ID ASGN iterRange DO stmtMatched
+                        ;
 
-assignop        : ASGN
-                | ADDASGN
-                | SUBASGN
-                | MULASGN
-                | DIVASGN
-                ;
+iterRange               : simpleExp TO simpleExp
+                        | simpleExp TO simpleExp BY simpleExp
+                        ;
 
-simpleExp       : simpleExp OR andExp
-                | andExp
-                ;
+returnStmt              : RETURN SEMICOLON
+                        | RETURN exp SEMICOLON
+                        ;
 
-andExp          : andExp AND unaryRelExp
-                | unaryRelExp
-                ;
+breakStmt               : BREAK SEMICOLON
+                        ;
 
-unaryRelExp     : NOT unaryRelExp
-                | relExp
-                ;
+exp                     : mutable assignop exp
+                        | mutable INC
+                        | mutable DEC
+                        | simpleExp
+                        ;
 
-relExp          : sumExp relop sumExp
-                | sumExp
-                ;
+assignop                : ASGN
+                        | ADDASGN
+                        | SUBASGN
+                        | MULASGN
+                        | DIVASGN
+                        ;
 
-relop           : LT
-                | LEQ
-                | GT
-                | GEQ
-                | EQ
-                | NEQ
-                ;
+simpleExp               : simpleExp OR andExp
+                        | andExp
+                        ;
 
-sumExp          : sumExp sumOp mulExp
-                | mulExp
-                ;
+andExp                  : andExp AND unaryRelExp
+                        | unaryRelExp
+                        ;
 
-sumOp           : ADD
-                | SUB
-                ;
+unaryRelExp             : NOT unaryRelExp
+                        | relExp
+                        ;
 
-mulExp          : mulExp mulOp unaryExp
-                | unaryExp
-                ;
+relExp                  : sumExp relop sumExp
+                        | sumExp
+                        ;
 
-mulOp           : MUL
-                | DIV
-                | MOD
-                ;
+relop                   : LT
+                        | LEQ
+                        | GT
+                        | GEQ
+                        | EQ
+                        | NEQ
+                        ;
 
-unaryExp        : unaryOp unaryExp
-                | factor
-                ;
+sumExp                  : sumExp sumOp mulExp
+                        | mulExp
+                        ;
 
-unaryOp         : SUB
-                | MUL
-                | QUESTION
-                ;
+sumOp                   : ADD
+                        | SUB
+                        ;
 
-factor          : mutable
-                | immutable
-                ;
+mulExp                  : mulExp mulOp unaryExp
+                        | unaryExp
+                        ;
 
-mutable         : ID
-                | ID LBRACK exp RBRACK
-                ;
+mulOp                   : MUL
+                        | DIV
+                        | MOD
+                        ;
 
-immutable       : LPAREN exp RPAREN
-                | call
-                | constant
+unaryExp                : unaryOp unaryExp
+                        | factor
+                        ;
 
-call            : ID LPAREN args RPAREN
-                ;
+unaryOp                 : SUB
+                        | MUL
+                        | QUESTION
+                        ;
 
-args            : argList
-                |
-                ;
+factor                  : mutable
+                        | immutable
+                        ;
 
-argList         : argList COMMA exp
-                | exp
-                ;
+mutable                 : ID
+                        | ID LBRACK exp RBRACK
+                        ;
 
-constant        : NUMCONST
-                | BOOLCONST
-                | CHARCONST
-                | STRINGCONST
-                ;
+immutable               : LPAREN exp RPAREN
+                        | call
+                        | constant
+                        ;
+
+call                    : ID LPAREN args RPAREN
+                        ;
+
+args                    : argList
+                        |
+                        ;
+
+argList                 : argList COMMA exp
+                        | exp
+                        ;
+
+constant                : NUMCONST
+                        | BOOLCONST
+                        | CHARCONST
+                        | STRINGCONST
+                        ;
 
 %%
 
