@@ -30,6 +30,7 @@ void yyerror(const char *msg)
 %}
 
 %union {
+    Node::ExpType *type;
     TokenData *tokenData;
     Node *node;
 }
@@ -44,6 +45,13 @@ void yyerror(const char *msg)
 %token <tokenData> ADD SUB QUESTION MUL DIV MOD INC DEC
 %token <tokenData> RPAREN LPAREN RBRACK LBRACK LCURLY RCURLY
 %token <tokenData> EQ NEQ LT LEQ GT GEQ
+
+%type <node> program declList decl varDecl scopedVarDecl varDeclList varDeclInit
+%type <node> varDeclId typeSpec funDecl parms parmList parmTypeList parmIdList parmId stmt
+%type <node> stmtUnmatched stmtMatched expStmt compoundStmt localDecls stmtList
+%type <node> selectStmtUnmatched selectStmtMatched iterStmtUnmatched iterStmtMatched iterRange
+%type <node> returnStmt breakStmt exp assignop simpleExp andExp unaryRelExp relExp relOp sumExp
+%type <node> sumOp mulExp mulOp unaryExp unaryOp factor mutable immutable call args argList constant
 
 %%
 
@@ -187,11 +195,11 @@ unaryRelExp             : NOT unaryRelExp
                         | relExp
                         ;
 
-relExp                  : sumExp relop sumExp
+relExp                  : sumExp relOp sumExp
                         | sumExp
                         ;
 
-relop                   : LT
+relOp                   : LT
                         | LEQ
                         | GT
                         | GEQ
