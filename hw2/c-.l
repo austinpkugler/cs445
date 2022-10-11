@@ -1,6 +1,7 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
+#include "Flags.hpp"
 #include "TokenData.hpp"
 #include "Node.hpp"
 #include "Util.hpp"

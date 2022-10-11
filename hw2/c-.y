@@ -1,5 +1,6 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
+#include "Flags.hpp"
 #include "TokenData.hpp"
 #include "Node.hpp"
 
@@ -258,16 +259,26 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
-    if (argc > 1)
+    Flags flags(argc, argv);
+    yydebug = flags.getDebugFlag();
+
+    std::string file = flags.getFile();
+    if (file.length())
     {
-        if (!(yyin = fopen(argv[1], "r")))
+        if ((yyin = fopen(file.c_str(), "r")))
         {
-            // Failed to open file
-            printf("ERROR: failed to open \'%s\'\n", argv[1]);
-            exit(1);
+            yyparse();
+        }
+        else
+        {
+            std::cout << "ERROR: failed to open \'" << file << "\'" << std::endl;
+            exit(EXIT_FAILURE);
         }
     }
+    else
+    {
+        yyparse();
+    }
 
-    yyparse();
     return 0;
 }
