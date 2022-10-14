@@ -3,8 +3,8 @@ CC = g++
 CC_ARGS = -std=c++17
 
 SRCS = $(BIN).y $(BIN).l
-CC_SRCS = Util.cpp Node.cpp Flags.cpp ourgetopt/ourgetopt.cpp
-HDRS = TokenData.hpp Util.hpp Node.hpp Flags.hpp ourgetopt/ourgetopt.h
+CC_SRCS = Util.cpp Tree/*.cpp Flags.cpp ourgetopt/ourgetopt.cpp
+HDRS = TokenData.hpp Util.hpp Tree/*.hpp Flags.hpp ourgetopt/ourgetopt.h
 OBJS = lex.yy.o $(BIN).tab.o
 
 $(BIN) : $(OBJS)

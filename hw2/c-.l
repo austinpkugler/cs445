@@ -3,7 +3,7 @@
 // The order of includes is mandatory
 #include "Flags.hpp"
 #include "TokenData.hpp"
-#include "Node.hpp"
+#include "Tree/Node.hpp"
 #include "Util.hpp"
 
 #include <string>
@@ -14,7 +14,7 @@
 int lineCount = 1;
 int errorCount;
 
-static int setValue(int tokenLineNum, int tokenClass, char *sValue)
+static int setValue(unsigned tokenLineNum, int tokenClass, char *sValue)
 {
     // Create the pass-back data space
     yylval.tokenData = new TokenData;
