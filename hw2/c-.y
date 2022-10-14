@@ -1,6 +1,8 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
+#include "Flags.hpp"
 #include "TokenData.hpp"
+#include "Tree/Tree.hpp"
 
 #include <iostream>
 #include <string>
@@ -15,6 +17,9 @@ extern FILE *yyin;
 extern int lineCount;
 extern int errorCount;
 
+// AST
+Node *root;
+
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
 {
@@ -25,47 +30,285 @@ void yyerror(const char *msg)
 %}
 
 %union {
+    Type::ExpType *type;
     TokenData *tokenData;
+    Node *node;
 }
 
-%token <tokenData> NUMCONST BOOLCONST CHARCONST STRINGCONST KEYWORD ID TOKEN
+%token <tokenData> NUMCONST BOOLCONST CHARCONST STRINGCONST ID
+%token <tokenData> INT BOOL CHAR STATIC
+%token <tokenData> ASGN ADDASGN SUBASGN MULASGN DIVASGN
+%token <tokenData> IF THEN ELSE WHILE FOR TO BY DO
+%token <tokenData> COLON SEMICOLON COMMA
+%token <tokenData> RETURN BREAK
+%token <tokenData> AND OR NOT
+%token <tokenData> ADD SUB MUL DIV MOD INC DEC QUESTION
+%token <tokenData> RPAREN LPAREN RBRACK LBRACK LCURLY RCURLY
+%token <tokenData> EQ NEQ LT LEQ GT GEQ
+
+%type <node> program declList decl varDecl scopedVarDecl varDeclList varDeclInit
+%type <node> varDeclId funDecl parms parmList parmTypeList parmIdList parmId stmt
+%type <node> stmtUnmatched stmtMatched expStmt compoundStmt localDecls stmtList
+%type <node> selectStmtUnmatched selectStmtMatched iterStmtUnmatched iterStmtMatched iterRange
+%type <node> returnStmt breakStmt exp assignop simpleExp andExp unaryRelExp relExp relOp sumExp
+%type <node> sumOp mulExp mulOp unaryExp unaryOp factor mutable immutable call args argList constant
+
+%type <type> typeSpec
 
 %%
 
-statementList   : statementList statement
-                | statement
-                ;
+program                 : declList
+                        {
+                            $$ = $1;
+                            root = $$;
+                        }
+                        ;
 
-statement       : '\n'
-                | NUMCONST      { std::cout << "Line " << $1->tokenLineNum << " Token: NUMCONST Value: " << $1->numValue << "  Input: " << $1->tokenContent << std::endl; }
-                | BOOLCONST     { std::cout << "Line " << $1->tokenLineNum << " Token: BOOLCONST Value: " << $1->numValue << "  Input: " << $1->tokenContent << std::endl; }
-                | CHARCONST     {
-                                    if ($1->charLengthWarning)
-                                    {
-                                        std::cout << "WARNING(" << $1->tokenLineNum << "): character is " << $1->tokenContent.length() - 2 << " characters long and not a single character: '" << $1->tokenContent << "'.  The first char will be used.\n";
-                                    }
-                                    std::cout << "Line " << $1->tokenLineNum << " Token: CHARCONST Value: '" << $1->charValue << "'  Input: " << $1->tokenContent << std::endl;
-                                }
-                | STRINGCONST   { std::cout << "Line " << $1->tokenLineNum << " Token: STRINGCONST Value: \"" << $1->stringValue << "\"  Len: " << $1->stringValue.length() << "  Input: " << $1->tokenContent << std::endl; }
-                | KEYWORD       { std::cout << "Line " << $1->tokenLineNum << " Token: " << $1->stringValue << std::endl; }
-                | ID            { std::cout << "Line " << $1->tokenLineNum << " Token: ID Value: " << $1->tokenContent << std::endl; }
-                | TOKEN         { std::cout << "Line " << $1->tokenLineNum << " Token: " << $1->stringValue << std::endl; }
-                ;
+declList                : declList decl
+                        {
+                            $$ = $1;
+                            $$->addSibling($2);
+                        }
+                        | decl
+                        {
+                            $$ = $1;
+                        }
+                        ;
+
+decl                    : varDecl
+                        {
+                            $$ = $1;
+                        }
+                        | funDecl
+                        {
+                            $$ = $1;
+                        }
+                        ;
+
+varDecl                 : typeSpec varDeclList SEMICOLON
+                        {
+                            
+                        }
+                        ;
+
+scopedVarDecl           : STATIC typeSpec varDeclList SEMICOLON
+                        | typeSpec varDeclList SEMICOLON
+                        ;
+
+varDeclList             : varDeclList COMMA varDeclInit
+                        | varDeclInit
+                        ;
+
+varDeclInit             : varDeclId
+                        | varDeclId COLON simpleExp
+                        ;
+
+varDeclId               : ID
+                        | ID LBRACK NUMCONST RBRACK
+                        ;
+
+typeSpec                : BOOL
+                        | CHAR
+                        | INT
+                        ;
+
+funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
+                        | ID LPAREN parms RPAREN compoundStmt
+                        ;
+
+parms                   : parmList
+                        |
+                        ;
+
+parmList                : parmList SEMICOLON parmTypeList
+                        | parmTypeList
+                        ;
+
+parmTypeList            : typeSpec parmIdList
+                        ;
+
+parmIdList              : parmIdList COMMA parmId
+                        | parmId
+                        ;
+
+parmId                  : ID
+                        | ID LBRACK RBRACK
+                        ;
+
+stmt                    : stmtUnmatched
+                        | stmtMatched
+                        ;
+
+stmtUnmatched           : selectStmtUnmatched
+                        | iterStmtUnmatched
+                        ;
+
+stmtMatched             : selectStmtMatched
+                        | iterStmtMatched
+                        | expStmt
+                        | compoundStmt
+                        | returnStmt
+                        | breakStmt
+                        ;
+
+expStmt                 : exp SEMICOLON
+                        | SEMICOLON
+                        ;
+
+compoundStmt            : LCURLY localDecls stmtList RCURLY
+                        ;
+
+localDecls              : localDecls scopedVarDecl
+                        |
+                        ;
+
+stmtList                : stmtList stmt
+                        |
+                        ;
+
+selectStmtUnmatched     : IF simpleExp THEN stmt
+                        | IF simpleExp THEN stmtMatched ELSE stmtUnmatched
+                        ;
+
+selectStmtMatched       : IF simpleExp THEN stmtMatched ELSE stmtMatched
+                        ;
+
+iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
+                        | FOR ID ASGN iterRange DO stmtUnmatched
+                        ;
+
+iterStmtMatched         : WHILE simpleExp DO stmtMatched
+                        | FOR ID ASGN iterRange DO stmtMatched
+                        ;
+
+iterRange               : simpleExp TO simpleExp
+                        | simpleExp TO simpleExp BY simpleExp
+                        ;
+
+returnStmt              : RETURN SEMICOLON
+                        | RETURN exp SEMICOLON
+                        ;
+
+breakStmt               : BREAK SEMICOLON
+                        ;
+
+exp                     : mutable assignop exp
+                        | mutable INC
+                        | mutable DEC
+                        | simpleExp
+                        ;
+
+assignop                : ASGN
+                        | ADDASGN
+                        | SUBASGN
+                        | MULASGN
+                        | DIVASGN
+                        ;
+
+simpleExp               : simpleExp OR andExp
+                        | andExp
+                        ;
+
+andExp                  : andExp AND unaryRelExp
+                        | unaryRelExp
+                        ;
+
+unaryRelExp             : NOT unaryRelExp
+                        | relExp
+                        ;
+
+relExp                  : sumExp relOp sumExp
+                        | sumExp
+                        ;
+
+relOp                   : LT
+                        | LEQ
+                        | GT
+                        | GEQ
+                        | EQ
+                        | NEQ
+                        ;
+
+sumExp                  : sumExp sumOp mulExp
+                        | mulExp
+                        ;
+
+sumOp                   : ADD
+                        | SUB
+                        ;
+
+mulExp                  : mulExp mulOp unaryExp
+                        | unaryExp
+                        ;
+
+mulOp                   : MUL
+                        | DIV
+                        | MOD
+                        ;
+
+unaryExp                : unaryOp unaryExp
+                        | factor
+                        ;
+
+unaryOp                 : SUB
+                        | MUL
+                        | QUESTION
+                        ;
+
+factor                  : mutable
+                        | immutable
+                        ;
+
+mutable                 : ID
+                        | ID LBRACK exp RBRACK
+                        ;
+
+immutable               : LPAREN exp RPAREN
+                        | call
+                        | constant
+                        ;
+
+call                    : ID LPAREN args RPAREN
+                        ;
+
+args                    : argList
+                        |
+                        ;
+
+argList                 : argList COMMA exp
+                        | exp
+                        ;
+
+constant                : NUMCONST
+                        | BOOLCONST
+                        | CHARCONST
+                        | STRINGCONST
+                        ;
 
 %%
 
 int main(int argc, char *argv[])
 {
-    if (argc > 1)
+    Flags flags(argc, argv);
+    yydebug = flags.getDebugFlag();
+
+    std::string file = flags.getFile();
+    if (file.length())
     {
-        if (!(yyin = fopen(argv[1], "r")))
+        if ((yyin = fopen(file.c_str(), "r")))
         {
-            // Failed to open file
-            printf("ERROR: failed to open \'%s\'\n", argv[1]);
-            exit(1);
+            yyparse();
+        }
+        else
+        {
+            std::cout << "ERROR: failed to open \'" << file << "\'" << std::endl;
+            exit(EXIT_FAILURE);
         }
     }
+    else
+    {
+        yyparse();
+    }
 
-    yyparse();
     return 0;
 }

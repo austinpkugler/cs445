@@ -1,19 +1,23 @@
+BIN = c-
 CC = g++
-SRCS = c-.y c-.l
-HDRS = Util.hpp TokenData.hpp
-OBJS = lex.yy.o c-.tab.o
+CC_ARGS = -std=c++17
 
-c- : $(OBJS)
-	$(CC) $(OBJS) Util.cpp -o c- -std=c++17
+SRCS = $(BIN).y $(BIN).l
+CC_SRCS = Util.cpp Tree/*.cpp Flags.cpp ourgetopt/ourgetopt.cpp
+HDRS = TokenData.hpp Util.hpp Tree/*.hpp Flags.hpp ourgetopt/ourgetopt.h
+OBJS = lex.yy.o $(BIN).tab.o
 
-lex.yy.c : c-.l c-.tab.h $(HDR)
-	flex c-.l
+$(BIN) : $(OBJS)
+	$(CC) $(OBJS) $(CC_SRCS) -o $(BIN) $(CC_ARGS)
 
-c-.tab.h c-.tab.c : c-.y
-	bison -v -t -d c-.y
+lex.yy.c : $(BIN).l $(BIN).tab.h $(HDR)
+	flex $(BIN).l
+
+$(BIN).tab.h $(BIN).tab.c : $(BIN).y
+	bison -v -t -d $(BIN).y
 
 clean :
-	rm -f *~ c- c-.output c-.tab.h c-.tab.c lex.yy.c $(OBJS)
+	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out
 
 tar : $(HDR) $(SRCS) makefile
-	tar -cvf c-.tar $(HDRS) $(SRCS) makefile
+	tar -cvf $(BIN).tar $(HDRS) $(SRCS) makefile
