@@ -39,6 +39,7 @@
 # Compiler
 c-
 *.tar
+.output
 
 # Test
 tmp/
