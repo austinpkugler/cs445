@@ -5,7 +5,7 @@ Const::Const(const unsigned tokenLineNum, const Type type, const std::string val
     switch(m_type)
     {
         case Type::Int:
-            m_intValue = std::atoi(value.c_str());
+            m_intValue = std::stoi(value);
             break;
         case Type::Bool:
             m_boolValue = (value == "true");
@@ -21,7 +21,7 @@ Const::Const(const unsigned tokenLineNum, const Type type, const std::string val
             break;
         }
         case Type::String:
-            m_stringValue = removeFirstAndLastChar(value);
+            m_stringValue = parseChars(removeFirstAndLastChar(value));
             break;
     }
 }
@@ -52,4 +52,55 @@ std::string Const::stringify() const
             break;
     }
     return stringy;
+}
+
+char Const::parseFirstChar(const std::string &str) const
+{
+    if (str.length() == 1)
+    {
+        return str[0];
+    }
+
+    char parsedChar;
+    if (str[0] == '\\')
+    {
+        if (str[1] == 'n')
+        {
+            return '\n';
+        }
+        else if (str[1] == '0')
+        {
+            return '\0';
+        }
+        else
+        {
+            return str[1];
+        }
+    }
+    return str[0];
+}
+
+std::string Const::removeFirstAndLastChar(const std::string &str) const
+{
+    return str.substr(1, str.length() - 2);
+}
+
+std::string Const::parseChars(const std::string &str) const
+{
+    std::string unparsedChars = str;
+    std::string parsedChars;
+    while (unparsedChars.length() > 0)
+    {
+        char currChar = unparsedChars[0];
+        parsedChars += parseFirstChar(unparsedChars);
+        if (currChar == '\\' && unparsedChars.length() >= 2)
+        {
+            unparsedChars = unparsedChars.substr(2);
+        }
+        else
+        {
+            unparsedChars = unparsedChars.substr(1);
+        }
+    }
+    return parsedChars;
 }

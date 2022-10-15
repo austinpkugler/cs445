@@ -21,8 +21,6 @@ class Node
         virtual void printNode() const;
 
     protected:
-        char parseFirstChar(const std::string &str) const;
-        std::string removeFirstAndLastChar(const std::string &str) const;
         virtual std::string stringify() const = 0;
 
         const unsigned m_tokenLineNum;

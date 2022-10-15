@@ -18,6 +18,10 @@ class Const : public Node
         std::string stringify() const;
 
     private:
+        char parseFirstChar(const std::string &str) const;
+        std::string removeFirstAndLastChar(const std::string &str) const;
+        std::string parseChars(const std::string &str) const;
+
         const Type m_type;
         bool m_charLengthWarning = false;
 };

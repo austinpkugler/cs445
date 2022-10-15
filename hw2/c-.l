@@ -3,7 +3,6 @@
 // The order of includes is mandatory
 #include "Flags.hpp"
 #include "TokenData.hpp"
-#include "Util.hpp"
 #include "Tree/Tree.hpp"
 
 #include <string>
@@ -21,32 +20,7 @@ static int setValue(unsigned tokenLineNum, int tokenClass, char *sValue)
 
     // Fill it up
     yylval.tokenData->tokenLineNum = tokenLineNum;
-    yylval.tokenData->tokenContent = strdup(sValue);
-
-    switch (tokenClass)
-    {
-        case NUMCONST:
-            yylval.tokenData->numValue = std::stoi(yylval.tokenData->tokenContent);
-            break;
-        case BOOLCONST:
-            yylval.tokenData->numValue = yylval.tokenData->tokenContent == "true";
-            break;
-        case CHARCONST:
-        {
-            std::string chars = Util::removeFirstAndLastChar(yylval.tokenData->tokenContent);
-            yylval.tokenData->charValue = Util::parseFirstChar(chars);
-            if (chars.length() > 1 && chars[0] != '\\')
-            {
-                yylval.tokenData->charLengthWarning = true;
-            }
-            break;
-        }
-        case STRINGCONST:
-            yylval.tokenData->stringValue = Util::parseChars(Util::removeFirstAndLastChar(yylval.tokenData->tokenContent));
-            break;
-        default:
-            break;
-    }
+    yylval.tokenData->tokenContent = std::string(sValue);
 
     return tokenClass;
 }
