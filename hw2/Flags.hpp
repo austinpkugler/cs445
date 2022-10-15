@@ -7,6 +7,7 @@ class Flags
     public:
         Flags();
         Flags(int argc, char *argv[]);
+
         void resetAll();
         std::string getFile() { return m_file; }
         bool getDebugFlag() { return m_debugFlag; }

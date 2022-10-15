@@ -50,3 +50,34 @@ void Node::addSibling(Node *node)
         m_sibling->addSibling(node);
     }
 }
+
+char Node::parseFirstChar(const std::string &str) const
+{
+    if (str.length() == 1)
+    {
+        return str[0];
+    }
+
+    char parsedChar;
+    if (str[0] == '\\')
+    {
+        if (str[1] == 'n')
+        {
+            return '\n';
+        }
+        else if (str[1] == '0')
+        {
+            return '\0';
+        }
+        else
+        {
+            return str[1];
+        }
+    }
+    return str[0];
+}
+
+std::string Node::removeFirstAndLastChar(const std::string &str) const
+{
+    return str.substr(1, str.length() - 2);
+}

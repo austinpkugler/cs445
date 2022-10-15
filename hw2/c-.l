@@ -3,8 +3,8 @@
 // The order of includes is mandatory
 #include "Flags.hpp"
 #include "TokenData.hpp"
-#include "Tree/Node.hpp"
 #include "Util.hpp"
+#include "Tree/Tree.hpp"
 
 #include <string>
 #include <iostream>

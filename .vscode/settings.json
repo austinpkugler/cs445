@@ -15,6 +15,7 @@
         "ostream": "cpp",
         "tokendata.hpp": "c",
         "flags.hpp": "c",
-        "vector": "cpp"
+        "vector": "cpp",
+        "variant": "cpp"
     }
 }

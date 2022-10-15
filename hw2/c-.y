@@ -2,6 +2,7 @@
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 #include "Flags.hpp"
 #include "TokenData.hpp"
+#include "Util.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
