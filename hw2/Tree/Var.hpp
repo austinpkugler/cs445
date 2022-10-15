@@ -14,10 +14,12 @@ class Var : public Node
          */
         Var(const unsigned tokenLineNum, const Primitive type, const std::string value, const bool isStatic=false);
 
+        void setType(const Primitive::Type type);
+        void makeStatic();
         void printNode() const;
         std::string stringify() const;
 
     private:
-        const Primitive m_type;
+        Primitive m_type;
         bool m_isStatic;
 };

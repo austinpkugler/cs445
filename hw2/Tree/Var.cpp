@@ -5,6 +5,24 @@ Var::Var(const unsigned tokenLineNum, const Primitive type, const std::string va
 
 }
 
+void Var::setType(const Primitive::Type type)
+{
+    if (m_sibling != nullptr)
+    {
+        Var *node = dynamic_cast<Var *>(m_sibling);
+        node->setType(type);
+    }
+}
+
+void Var::makeStatic()
+{
+    if (m_sibling != nullptr)
+    {
+        ((Var* )m_sibling)->makeStatic();
+    }
+    m_isStatic = true;
+}
+
 void Var::printNode() const
 {
     std::cout << stringify();

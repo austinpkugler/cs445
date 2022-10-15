@@ -21,7 +21,7 @@ class Node
         virtual void printNode() const;
 
     protected:
-        virtual std::string stringify() const = 0;
+        virtual std::string stringify() const;
 
         const unsigned m_tokenLineNum;
         std::vector<Node *> m_children;
@@ -30,4 +30,7 @@ class Node
         bool m_boolValue;
         char m_charValue;
         std::string m_stringValue;
+
+    private:
+        void printTabs(const unsigned tabCount) const;
 };

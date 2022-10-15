@@ -87,202 +87,523 @@ decl                    : varDecl
 
 varDecl                 : typeSpec varDeclList SEMICOLON
                         {
-                            
+                            // Var *node = (Var *)$2;
+                            // node->setType($1);
+                            // $$ = node;
                         }
                         ;
 
 scopedVarDecl           : STATIC typeSpec varDeclList SEMICOLON
+                        {
+                            // Var *node = (Var *)$3;
+                            // node->setType($2);
+                            // node->makeStatic();
+                            // $$ = node;
+                        }
                         | typeSpec varDeclList SEMICOLON
+                        {
+                            // Var *node = (Var *)$2;
+                            // node->setType($1);
+                            // $$ = node;
+                        }
                         ;
 
 varDeclList             : varDeclList COMMA varDeclInit
+                        {
+                            // $$ = $1;
+                            // $$->addSibling($3);
+                        }
                         | varDeclInit
+                        {
+                            // $$ = $1;
+                        }
                         ;
 
 varDeclInit             : varDeclId
+                        {
+                            // $$ = $1;
+                        }
                         | varDeclId COLON simpleExp
+                        {
+                            // $$ = $1;
+                            // $$->addChild($3);
+                        }
                         ;
 
 varDeclId               : ID
+                        {
+
+                        }
                         | ID LBRACK NUMCONST RBRACK
+                        {
+
+                        }
                         ;
 
 typeSpec                : BOOL
+                        {
+
+                        }
                         | CHAR
+                        {
+
+                        }
                         | INT
+                        {
+
+                        }
                         ;
 
 funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
+                        {
+
+                        }
                         | ID LPAREN parms RPAREN compoundStmt
+                        {
+
+                        }
                         ;
 
 parms                   : parmList
+                        {
+
+                        }
                         |
+                        {
+
+                        }
                         ;
 
 parmList                : parmList SEMICOLON parmTypeList
+                        {
+
+                        }
                         | parmTypeList
+                        {
+
+                        }
                         ;
 
 parmTypeList            : typeSpec parmIdList
+                        {
+
+                        }
                         ;
 
 parmIdList              : parmIdList COMMA parmId
+                        {
+
+                        }
                         | parmId
+                        {
+
+                        }
                         ;
 
 parmId                  : ID
+                        {
+
+                        }
                         | ID LBRACK RBRACK
+                        {
+
+                        }
                         ;
 
 stmt                    : stmtUnmatched
+                        {
+
+                        }
                         | stmtMatched
+                        {
+
+                        }
                         ;
 
 stmtUnmatched           : selectStmtUnmatched
+                        {
+
+                        }
                         | iterStmtUnmatched
+                        {
+
+                        }
                         ;
 
 stmtMatched             : selectStmtMatched
+                        {
+
+                        }
                         | iterStmtMatched
+                        {
+
+                        }
                         | expStmt
+                        {
+
+                        }
                         | compoundStmt
+                        {
+
+                        }
                         | returnStmt
+                        {
+
+                        }
                         | breakStmt
+                        {
+
+                        }
                         ;
 
 expStmt                 : exp SEMICOLON
+                        {
+
+                        }
                         | SEMICOLON
+                        {
+
+                        }
                         ;
 
 compoundStmt            : LCURLY localDecls stmtList RCURLY
+                        {
+
+                        }
                         ;
 
 localDecls              : localDecls scopedVarDecl
+                        {
+
+                        }
                         |
+                        {
+
+                        }
                         ;
 
 stmtList                : stmtList stmt
+                        {
+
+                        }
                         |
+                        {
+
+                        }
                         ;
 
 selectStmtUnmatched     : IF simpleExp THEN stmt
+                        {
+
+                        }
                         | IF simpleExp THEN stmtMatched ELSE stmtUnmatched
+                        {
+
+                        }
                         ;
 
 selectStmtMatched       : IF simpleExp THEN stmtMatched ELSE stmtMatched
+                        {
+
+                        }
                         ;
 
 iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
+                        {
+
+                        }
                         | FOR ID ASGN iterRange DO stmtUnmatched
+                        {
+
+                        }
                         ;
 
 iterStmtMatched         : WHILE simpleExp DO stmtMatched
+                        {
+
+                        }
                         | FOR ID ASGN iterRange DO stmtMatched
+                        {
+
+                        }
                         ;
 
 iterRange               : simpleExp TO simpleExp
+                        {
+
+                        }
                         | simpleExp TO simpleExp BY simpleExp
+                        {
+
+                        }
                         ;
 
 returnStmt              : RETURN SEMICOLON
+                        {
+
+                        }
                         | RETURN exp SEMICOLON
+                        {
+
+                        }
                         ;
 
 breakStmt               : BREAK SEMICOLON
+                        {
+
+                        }
                         ;
 
 exp                     : mutable assignop exp
+                        {
+
+                        }
                         | mutable INC
+                        {
+
+                        }
                         | mutable DEC
+                        {
+
+                        }
                         | simpleExp
+                        {
+
+                        }
                         ;
 
 assignop                : ASGN
+                        {
+
+                        }
                         | ADDASGN
+                        {
+
+                        }
                         | SUBASGN
+                        {
+
+                        }
                         | MULASGN
+                        {
+
+                        }
                         | DIVASGN
+                        {
+
+                        }
                         ;
 
 simpleExp               : simpleExp OR andExp
+                        {
+
+                        }
                         | andExp
+                        {
+
+                        }
                         ;
 
 andExp                  : andExp AND unaryRelExp
+                        {
+
+                        }
                         | unaryRelExp
+                        {
+
+                        }
                         ;
 
 unaryRelExp             : NOT unaryRelExp
+                        {
+
+                        }
                         | relExp
+                        {
+
+                        }
                         ;
 
 relExp                  : sumExp relOp sumExp
+                        {
+
+                        }
                         | sumExp
+                        {
+
+                        }
                         ;
 
 relOp                   : LT
+                        {
+
+                        }
                         | LEQ
+                        {
+
+                        }
                         | GT
+                        {
+
+                        }
                         | GEQ
+                        {
+
+                        }
                         | EQ
+                        {
+
+                        }
                         | NEQ
+                        {
+
+                        }
                         ;
 
 sumExp                  : sumExp sumOp mulExp
+                        {
+
+                        }
                         | mulExp
+                        {
+
+                        }
                         ;
 
 sumOp                   : ADD
+                        {
+
+                        }
                         | SUB
+                        {
+
+                        }
                         ;
 
 mulExp                  : mulExp mulOp unaryExp
+                        {
+
+                        }
                         | unaryExp
+                        {
+
+                        }
                         ;
 
 mulOp                   : MUL
+                        {
+
+                        }
                         | DIV
+                        {
+
+                        }
                         | MOD
+                        {
+
+                        }
                         ;
 
 unaryExp                : Unary unaryExp
+                        {
+
+                        }
                         | factor
+                        {
+
+                        }
                         ;
 
-Unary                 : SUB
+Unary                   : SUB
+                        {
+
+                        }
                         | MUL
+                        {
+
+                        }
                         | QUESTION
+                        {
+
+                        }
                         ;
 
 factor                  : mutable
+                        {
+
+                        }
                         | immutable
+                        {
+
+                        }
                         ;
 
 mutable                 : ID
+                        {
+
+                        }
                         | ID LBRACK exp RBRACK
+                        {
+
+                        }
                         ;
 
 immutable               : LPAREN exp RPAREN
+                        {
+
+                        }
                         | call
+                        {
+
+                        }
                         | constant
+                        {
+
+                        }
                         ;
 
 call                    : ID LPAREN args RPAREN
+                        {
+
+                        }
                         ;
 
 args                    : argList
+                        {
+
+                        }
                         |
+                        {
+
+                        }
                         ;
 
 argList                 : argList COMMA exp
+                        {
+
+                        }
                         | exp
+                        {
+
+                        }
                         ;
 
 constant                : NUMCONST
+                        {
+
+                        }
                         | BOOLCONST
+                        {
+
+                        }
                         | CHARCONST
+                        {
+
+                        }
                         | STRINGCONST
+                        {
+
+                        }
                         ;
 
 %%

@@ -28,7 +28,7 @@ Primitive::Primitive(Primitive *prim, const bool isArray, const bool isStatic) :
     }
 }
 
-void Primitive::setType(Type type)
+void Primitive::setType(const Type type)
 {
     if (m_next == nullptr)
     {

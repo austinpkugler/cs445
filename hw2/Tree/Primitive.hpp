@@ -16,7 +16,7 @@ class Primitive
         Primitive(Primitive *type, const bool isArray=false, const bool isStatic=false);
 
         Type getType() const { return m_type; }
-        void setType(Type type);
+        void setType(const Type type);
         void printNode() const;
         std::string stringify() const;
 
