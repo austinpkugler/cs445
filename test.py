@@ -3,121 +3,182 @@ import shutil
 import sys
 
 
-class bcolors:
+class Test:
+
+    def __init__(self, dir, name):
+        self._dir = dir
+        self._name = name
+
+    def __repr__(self):
+        return f'Test(dir=\'{self._dir}\', name=\'{self._name}\')'
+
+    def get_dir(self):
+        return self._dir
+
+    def get_name(self):
+        return self._name
+
+    def run(self, compiler, show_diff=True):
+        passed = True
+
+        src = os.path.join(self._dir, self._name + '.c-')
+        tmp, actual, expected, diff = self.mktmp()
+
+        out = os.path.join(self._dir, self._name + '.out')
+        expected_out = os.path.join(expected, self._name + '.out')
+        os.system(f'sort {out} > {expected_out}')
+
+        tmp_out = os.path.join(tmp, 'tmp.out')
+        os.system(f'{compiler} {src} > {tmp_out}')
+
+        actual_out = os.path.join(actual, self._name + '.out')
+        os.system(f'sort {tmp_out} > {actual_out}')
+
+        if Test.diff(expected_out, actual_out):
+            passed = False
+
+            diff_out = os.path.join(diff, self._name + '.out')
+            os.system(f'diff {expected_out} {actual_out} > {diff_out}')
+            if show_diff:
+                os.system(f'diff {expected_out} {actual_out}')
+
+        os.remove(tmp_out)
+
+        return passed
+
+    def mktmp(self):
+        tmp = os.path.join(self._dir, 'tmp')
+        actual = os.path.join(tmp, 'actual')
+        expected = os.path.join(tmp, 'expected')
+        diff = os.path.join(tmp, 'diff')
+
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+            os.mkdir(actual)
+            os.mkdir(expected)
+            os.mkdir(diff)
+
+        return tmp, actual, expected, diff
+
+    def rmtmp(self):
+        tmp = os.path.join(self._dir, 'tmp')
+        if os.path.exists(tmp):
+            shutil.rmtree(tmp)
+
+    @classmethod
+    def diff(cls, path1, path2):
+        are_different = True
+
+        file1 = open(path1, 'r')
+        file2 = open(path2, 'r')
+        if file1.read() == file2.read():
+            are_different = False
+
+        file1.close()
+        file2.close()
+        return are_different
+
+    @classmethod
+    def get_tests(cls, dir):
+        return [Test(dir, f[:-4]) for f in os.listdir(dir) if f.endswith('.out')]
+
+
+class Make:
+
+    def __init__(self, dir):
+        self._dir = dir
+
+    def __repr__(self):
+        return f'Make(dir=\'{self._dir}\')'
+
+    def get_dir(self):
+        return self._dir
+
+    def make(self):
+        self._execute('make')
+
+    def clean(self):
+        self._execute('make clean')
+
+    def tar(self):
+        self._execute('make tar')
+
+    def _execute(self, cmd):
+        cwd = os.getcwd()
+        os.chdir(self._dir)
+        os.system(cmd)
+        os.chdir(cwd)
+
+
+class Emit:
     HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
+    SUCCESS = '\033[92m'
+    WARN = '\033[93m'
+    ERROR = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+    @classmethod
+    def br(cls, length, endc='\n'):
+        print('=' * length, end=endc)
 
-def execute(dir, cmd):
-    assert os.path.exists(dir) and os.path.isdir(dir)
-    cwd = os.getcwd()
-    os.chdir(dir)
-    os.system(cmd)
-    os.chdir(cwd)
+    @classmethod
+    def bold(cls, msg, endc='\n'):
+        print(f'{Emit.BOLD}{msg}{Emit.ENDC}', end=endc)
 
+    @classmethod
+    def underline(cls, msg, endc='\n'):
+        print(f'{Emit.UNDERLINE}{msg}{Emit.ENDC}', endc)
 
-def make(src_dir):
-    execute(src_dir, 'make')
+    @classmethod
+    def success(cls, msg, endc='\n'):
+        Emit.bold(f'{Emit.SUCCESS}{msg}{Emit.ENDC}', endc)
 
+    @classmethod
+    def warn(cls, msg, endc='\n'):
+        Emit.bold(f'{Emit.WARN}{msg}{Emit.ENDC}', endc)
 
-def make_clean(src_dir):
-    execute(src_dir, 'make clean')
-
-
-def compile(src_dir, exe):
-    make(src_dir)
-    if not os.path.isfile(os.path.join(src_dir, exe)):
-        make_clean(src_dir)
-        raise Exception('Compilation failed!')
-    return os.path.join(src_dir, exe)
-
-
-def diff(path1, path2):
-    are_different = True
-
-    file1 = open(path1, 'r')
-    file2 = open(path2, 'r')
-    if file1.read() == file2.read():
-        are_different = False
-
-    file1.close()
-    file2.close()
-    return are_different
-
-
-def test(src_dir, test_dir, flags='', show_diff=True):
-    assert os.path.exists(src_dir) and os.path.isdir(src_dir)
-    assert os.path.exists(test_dir) and os.path.isdir(test_dir)
-
-    make_clean(src_dir)
-    compiler_path = compile(src_dir, 'c-')
-
-    tmp_dir = os.path.join(src_dir, 'tmp')
-    if os.path.exists(tmp_dir):
-        delete = input(f'{bcolors.WARNING}A \'tmp\' directory already exists. Would you like to delete it (Y/n)? {bcolors.ENDC}').lower()
-        if delete == 'y':
-            shutil.rmtree(tmp_dir)
-    os.mkdir(tmp_dir)
-
-    expected_dir = os.path.join(tmp_dir, 'expected')
-    os.mkdir(expected_dir)
-
-    actual_dir = os.path.join(tmp_dir, 'actual')
-    os.mkdir(actual_dir)
-
-    tests = [f[:-4] for f in os.listdir(test_dir) if f.endswith('.out') and os.path.isfile(os.path.join(test_dir, f))]
-    passed = 0
-    for i, test in enumerate(tests):
-        print(f'{bcolors.OKCYAN}Running test \'{test}\' {i + 1} / {len(tests)}...{bcolors.ENDC}', end='')
-
-        test_src = os.path.join(test_dir, test + '.c-')
-        tmp_out = os.path.join(tmp_dir, 'tmp.out')
-        os.system(f'{compiler_path} {flags} {test_src} > {tmp_out}')
-
-        test_out = os.path.join(test_dir, test + '.out')
-        expected_out = os.path.join(expected_dir, test + '.out')
-        actual_out = os.path.join(actual_dir, test + '.out')
-        os.system(f'sort {test_out} > {expected_out}')
-        os.system(f'sort {tmp_out} > {actual_out}')
-        os.remove(tmp_out)
-
-        if diff(expected_out, actual_out):
-            print(f'{bcolors.FAIL}[ Failed! ]{bcolors.ENDC}')
-            if show_diff:
-                os.system(f'diff {expected_out} {actual_out}')
-        else:
-            passed += 1
-            print(f'{bcolors.OKGREEN}[ Passed! ]{bcolors.ENDC}')
-
-    make_clean(src_dir)
-
-    print('===========================================')
-    print(f'Passed {passed}/{len(tests)} tests')
-    print('===========================================')
-
-    if os.path.exists(compiler_path):
-        os.remove(compiler_path)
-
-    delete = input(f'{bcolors.OKCYAN}Would you like to delete the \'tmp\' directory (Y/n)? {bcolors.ENDC}').lower()
-    if delete == 'y':
-        shutil.rmtree(tmp_dir)
+    @classmethod
+    def error(cls, msg, endc='\n'):
+        Emit.bold(f'{Emit.ERROR}{msg}{Emit.ENDC}', endc)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
+    argc = len(sys.argv)
+    if argc < 3:
         print('Usage: src_dir test_dir -flag -flag')
         print('For this project:')
         print('$ python3 test.py hw1/ hw1/test')
         print('$ python3 test.py hw2/ hw2/test -p')
-        print('$ python3 test.py hw3/ hw3/test -p -P')
-    elif len(sys.argv) == 3:
-        test(sys.argv[1], sys.argv[2])
-    elif len(sys.argv) > 3:
-        test(sys.argv[1], sys.argv[2], ' '.join(sys.argv[3:]))
+    elif argc == 3:
+        compiler = os.path.join(sys.argv[1], 'c-')
+    elif argc > 3:
+        compiler = os.path.join(sys.argv[1], 'c-') + ' '.join(sys.argv[3:])
+
+    make = Make(sys.argv[1])
+    if os.path.exists(compiler):
+        make.clean()
+
+    make.make()
+
+    passed = 0
+    tests = Test.get_tests(sys.argv[2])
+    for i, test in enumerate(tests):
+        print(f'Running test {test} {i + 1}/{len(tests)}...', end='')
+        if test.run(compiler):
+            passed += 1
+            Emit.success(f'[ PASSED ]')
+        else:
+            Emit.error(f'[ FAILED ]')
+
+    if passed == len(tests):
+        Emit.success('=' * 30)
+        Emit.success(f'Passed {passed}/{len(tests)} tests')
+        Emit.success('=' * 30)
+    else:
+        Emit.error('=' * 30)
+        Emit.error(f'Passed {passed}/{len(tests)} tests')
+        Emit.error('=' * 30)
+
+    make.clean()
