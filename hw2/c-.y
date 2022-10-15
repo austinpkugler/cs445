@@ -31,7 +31,7 @@ void yyerror(const char *msg)
 %}
 
 %union {
-    Type::ExpType *type;
+    Primitive::Type *type;
     TokenData *tokenData;
     Node *node;
 }
@@ -52,7 +52,7 @@ void yyerror(const char *msg)
 %type <node> stmtUnmatched stmtMatched expStmt compoundStmt localDecls stmtList
 %type <node> selectStmtUnmatched selectStmtMatched iterStmtUnmatched iterStmtMatched iterRange
 %type <node> returnStmt breakStmt exp assignop simpleExp andExp unaryRelExp relExp relOp sumExp
-%type <node> sumOp mulExp mulOp unaryExp unaryOp factor mutable immutable call args argList constant
+%type <node> sumOp mulExp mulOp unaryExp Unary factor mutable immutable call args argList constant
 
 %type <type> typeSpec
 
@@ -247,11 +247,11 @@ mulOp                   : MUL
                         | MOD
                         ;
 
-unaryExp                : unaryOp unaryExp
+unaryExp                : Unary unaryExp
                         | factor
                         ;
 
-unaryOp                 : SUB
+Unary                 : SUB
                         | MUL
                         | QUESTION
                         ;

@@ -1,6 +1,6 @@
 #include "Const.hpp"
 
-Const::Const(unsigned tokenLineNum, const Type type, const std::string value) : Node::Node(tokenLineNum), m_type(type)
+Const::Const(const unsigned tokenLineNum, const Type type, const std::string value) : Node::Node(tokenLineNum), m_type(type)
 {
     switch(m_type)
     {
@@ -26,29 +26,30 @@ Const::Const(unsigned tokenLineNum, const Type type, const std::string value) : 
     }
 }
 
-void Const::printNode() const
+std::string Const::stringify() const
 {
-    std::cout << "Const ";
+    std::string stringy = "Const ";
     switch(m_type)
     {
         case Type::Int:
-            std::cout << m_intValue;
+            stringy += std::to_string(m_intValue);
             break;
         case Type::Bool:
             if (m_boolValue)
             {
-                std::cout << "true";
+                stringy += "true";
             }
             else
             {
-                std::cout << "false";
+                stringy += "false";
             }
             break;
         case Type::Char:
-            std::cout << "'" << m_charValue << "'";
+            stringy += "'" + std::string(1, m_charValue) + "'";
             break;
         case Type::String:
-            std::cout << "\"" << m_stringValue << "\"";
+            stringy += "\"" + m_stringValue + "\"";
             break;
     }
+    return stringy;
 }

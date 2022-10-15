@@ -2,26 +2,30 @@
 
 #include <iostream>
 #include <vector>
-#include <variant>
 
 class Node
 {
     public:
         Node();
         Node(unsigned tokenLineNum);
+        Node(const unsigned tokenLineNum, const int value);
+        Node(const unsigned tokenLineNum, const bool value);
+        Node(const unsigned tokenLineNum, const char value);
+        Node(const unsigned tokenLineNum, const std::string value);
         ~Node();
 
         unsigned getTokenLineNum() const { return m_tokenLineNum; }
         void printTree() const;
         void addChild(Node *node);
         void addSibling(Node *node);
+        virtual void printNode() const;
 
     protected:
         char parseFirstChar(const std::string &str) const;
         std::string removeFirstAndLastChar(const std::string &str) const;
-        virtual void printNode() const = 0;
+        virtual std::string stringify() const = 0;
 
-        unsigned m_tokenLineNum;
+        const unsigned m_tokenLineNum;
         std::vector<Node *> m_children;
         Node *m_sibling;
         int m_intValue;
