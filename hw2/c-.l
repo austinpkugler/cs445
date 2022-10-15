@@ -92,8 +92,8 @@ static int setValue(unsigned tokenLineNum, int tokenClass, char *sValue)
 "true"|"false"              { return setValue(lineCount, BOOLCONST, yytext); }
 
 [a-zA-Z][a-zA-Z0-9]*        { return setValue(lineCount, ID, yytext); }             // Variable names (the id)
-[0-9]+                      { return setValue(lineCount, NUMCONST, yytext); }       // Number literals (includes bool)
-\"((\\\")|([^\n\"]))*\"     { return setValue(lineCount, STRINGCONST, yytext); }    // String literals (includes "EQ" for "==", "INC" for "++", etc.)
+[0-9]+                      { return setValue(lineCount, NUMCONST, yytext); }       // Number literals
+\"((\\\")|([^\n\"]))*\"     { return setValue(lineCount, STRINGCONST, yytext); }    // String literals
 \'((\\\')|([^\n\']))*\'     { return setValue(lineCount, CHARCONST, yytext); }      // Char literals
 
 . { std::cout << "ERROR(" << lineCount << "): Invalid or misplaced input character: '" << yytext[0] << "'. Character Ignored." << std::endl; errorCount++; }  // Any error-causing inputs
