@@ -39,10 +39,10 @@
 # Compiler
 c-
 *.tar
-.output
+*.output
 
 # Test
 tmp/
 
 # Downloads
-.Identifier
+*.Identifier
