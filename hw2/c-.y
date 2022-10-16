@@ -358,7 +358,7 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         | FOR ID ASGN iterRange DO stmtUnmatched
                         {
                             $$ = new For($1->tokenLineNum);
-                            Var *node = new Var($1->tokenLineNum, new Primitive(Primitive::Type::Int), $1->tokenContent);
+                            Var *node = new Var($2->tokenLineNum, new Primitive(Primitive::Type::Int), $2->tokenContent);
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -690,7 +690,36 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
+    if (argc > 1)
+    {
+        if (!(yyin = fopen(argv[1], "r")))
+        {
+            // Failed to open file
+            printf("ERROR: failed to open \'%s\'\n", argv[1]);
+            exit(1);
+        }
+    }
+
+    yyparse();
+
     Flags flags(argc, argv);
+    if (flags.getPrintFlag())
+    {
+        if (root == nullptr)
+        {
+            std::cout << "root is nullptr!" << std::endl;
+        }
+        else
+        {
+            root->printTree();
+        }
+    }
+
+    delete root;
+
+    return 0;
+
+    /* Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
 
     std::string filename = flags.getFile();
@@ -710,12 +739,12 @@ int main(int argc, char *argv[])
 
     if (flags.getPrintFlag() && root != nullptr)
     {
-        /* if (root == nullptr)
+        if (root == nullptr)
         {
             throw std::runtime_error("Cannot print root: nullptr");
-        } */
+        }
         root->printTree();
     }
 
-    return 0;
+    return 0; */
 }

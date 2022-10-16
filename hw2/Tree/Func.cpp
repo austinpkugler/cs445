@@ -8,10 +8,10 @@ Func::Func(const unsigned tokenLineNum, Primitive *type, const std::string value
 void Func::printNode() const
 {
     std::cout << stringify();
-    m_type->printNode();
+    // m_type->printNode();
 }
 
 std::string Func::stringify() const
 {
-    return "Func" + m_stringValue + " returns ";
+    return "Func: " + m_stringValue + " returns type " + m_type->stringify();
 }

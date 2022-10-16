@@ -14,7 +14,6 @@ class Parm : public Node
         Parm(const unsigned tokenLineNum, Primitive *type, const std::string value);
 
         void setType(Primitive::Type type);
-        void printNode() const;
         std::string stringify() const;
 
     private:
