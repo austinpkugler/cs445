@@ -1,6 +1,6 @@
 #include "Primitive.hpp"
 
-Primitive::Primitive(Type type, const bool isArray, const bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
+Primitive::Primitive(Type type, const bool isArray) : m_isArray(isArray)
 {
     m_next = nullptr;
     if (isArray)
@@ -14,21 +14,7 @@ Primitive::Primitive(Type type, const bool isArray, const bool isStatic) : m_isA
     }
 }
 
-Primitive::Primitive(Primitive *prim, const bool isArray, const bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
-{
-    m_next = nullptr;
-    if (isArray)
-    {
-        m_next = prim;
-        m_type = Type::Void;
-    }
-    else
-    {
-        m_type = prim->getType();
-    }
-}
-
-void Primitive::setType(const Type type)
+void Primitive::setType(Type type)
 {
     if (m_next == nullptr)
     {

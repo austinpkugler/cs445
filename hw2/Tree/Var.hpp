@@ -12,7 +12,7 @@ class Var : public Node
          * @param value Name of the variable.
          * @param isStatic Whether the variable is static.
          */
-        Var(const unsigned tokenLineNum, const Primitive type, const std::string value, const bool isStatic=false);
+        Var(const unsigned tokenLineNum, Primitive *type, const std::string value, const bool isStatic=false);
 
         void setType(const Primitive::Type type);
         void makeStatic();
@@ -20,6 +20,6 @@ class Var : public Node
         std::string stringify() const;
 
     private:
-        Primitive m_type;
+        Primitive *m_type;
         bool m_isStatic;
 };
