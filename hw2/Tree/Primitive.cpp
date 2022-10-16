@@ -16,19 +16,11 @@ Primitive::Primitive(Type type, const bool isArray) : m_isArray(isArray)
 
 void Primitive::setType(Type type)
 {
-    if (m_next == nullptr)
-    {
-        m_type = type;
-    }
-    else
+    m_type = type;
+    if (m_next != nullptr)
     {
         m_next->setType(type);
     }
-}
-
-void Primitive::printNode() const
-{
-
 }
 
 std::string Primitive::stringify() const

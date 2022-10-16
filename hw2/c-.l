@@ -31,9 +31,9 @@ static int setValue(unsigned tokenLineNum, int tokenClass, char *sValue)
 
 %%
 
-\/\/.*\n                    { }                 // Ignore comments
+\/\/.*\n                    { lineCount++; }                 // Ignore comments
 [ \t]                       { }                 // Ignore whitespace
-\n                          { lineCount++; }    // Newlines
+"\n"                        { lineCount++; }    // Newlines
 
 "int"                       { return INT; }
 "bool"                      { return BOOL; }

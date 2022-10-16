@@ -26,6 +26,8 @@ class Node
         const unsigned m_tokenLineNum;
         std::vector<Node *> m_children;
         Node *m_sibling;
+
+        // Storage values
         int m_intValue;
         bool m_boolValue;
         char m_charValue;

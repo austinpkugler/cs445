@@ -10,9 +10,9 @@ class Const : public Node
         /**
          * @param tokenLineNum Line number the constant occurred in.
          * @param type Datatype of the constant.
-         * @param value Stringified value of the constant.
+         * @param constValue Stringified value of the constant.
          */
-        Const(const unsigned tokenLineNum, const Type type, const std::string value);
+        Const(const unsigned tokenLineNum, const Type type, const std::string constValue);
 
         bool getCharLengthWarning() const { return m_charLengthWarning; }
         std::string stringify() const;

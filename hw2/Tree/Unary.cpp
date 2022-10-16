@@ -19,6 +19,9 @@ std::string Unary::stringify() const
         case Type::Question:
             stringy += "?";
             break;
+        case Type::Not:
+            stringy += "not";
+            break;
         default:
             throw std::runtime_error("Could not stringify Unary::Type");
             break;

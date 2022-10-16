@@ -358,7 +358,7 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         | FOR ID ASGN iterRange DO stmtUnmatched
                         {
                             $$ = new For($1->tokenLineNum);
-                            Var *node = new Var($1->tokenLineNum, new Primitive(Primitive::Type::Int), $1->tokenContent);
+                            Var *node = new Var($2->tokenLineNum, new Primitive(Primitive::Type::Int), $2->tokenContent);
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -694,28 +694,24 @@ int main(int argc, char *argv[])
     yydebug = flags.getDebugFlag();
 
     std::string filename = flags.getFile();
-    if (filename.length() > 0)
+    if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        FILE* file = fopen(filename.c_str(), "r");
-        if (file == NULL)
-        {
-            throw std::runtime_error("Cannot open file: \'" + filename + "\'");
-        }
-
-        yyin = file;
-        fclose(file);
+        throw std::runtime_error("Cannot open file: \'" + filename + "\'");
     }
 
     yyparse();
 
-    if (flags.getPrintFlag() && root != nullptr)
+    if (flags.getPrintFlag())
     {
-        /* if (root == nullptr)
+        if (root == nullptr)
         {
             throw std::runtime_error("Cannot print root: nullptr");
-        } */
+        }
         root->printTree();
     }
+
+    delete root;
+    fclose(yyin);
 
     return 0;
 }

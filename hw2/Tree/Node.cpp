@@ -42,7 +42,7 @@ void Node::printTree() const
 {
     static unsigned siblingCount = 0, tabCount = 0;
     printNode();
-    std::cout << std::endl;
+    std::cout << " [line: " << m_tokenLineNum << "]" << std::endl;
 
     tabCount++;
 

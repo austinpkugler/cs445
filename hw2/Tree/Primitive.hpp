@@ -14,9 +14,9 @@ class Primitive
          */
         Primitive(Type type, const bool isArray=false);
 
+        bool getIsArray() const { return m_isArray; }
         Type getType() const { return m_type; }
         void setType(Type type);
-        void printNode() const;
         std::string stringify() const;
 
     private:

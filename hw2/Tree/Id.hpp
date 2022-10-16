@@ -7,10 +7,10 @@ class Id : public Node
     public:
         /**
          * @param tokenLineNum Line number the call occurred in.
-         * @param value Name of the Id.
+         * @param idName Name of the Id.
          * @param isArray Whether the Id references an array.
          */
-        Id(const unsigned tokenLineNum, const std::string value, const bool isArray=false);
+        Id(const unsigned tokenLineNum, const std::string idName, const bool isArray=false);
         std::string stringify() const;
 
     private:
