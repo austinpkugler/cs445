@@ -9,11 +9,10 @@ class Func : public Node
         /**
          * @param tokenLineNum Line number the function occurred in.
          * @param type Return type of the function.
-         * @param value Name of the function.
+         * @param funcName Name of the function.
          */
-        Func(const unsigned tokenLineNum, Primitive *type, const std::string value);
+        Func(const unsigned tokenLineNum, Primitive *type, const std::string funcName);
 
-        void printNode() const;
         std::string stringify() const;
 
     private:

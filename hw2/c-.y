@@ -690,54 +690,18 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
-    if (argc > 1)
-    {
-        if (!(yyin = fopen(argv[1], "r")))
-        {
-            // Failed to open file
-            printf("ERROR: failed to open \'%s\'\n", argv[1]);
-            exit(1);
-        }
-    }
-
-    yyparse();
-
     Flags flags(argc, argv);
-    if (flags.getPrintFlag())
-    {
-        if (root == nullptr)
-        {
-            std::cout << "root is nullptr!" << std::endl;
-        }
-        else
-        {
-            root->printTree();
-        }
-    }
-
-    delete root;
-
-    return 0;
-
-    /* Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
 
     std::string filename = flags.getFile();
-    if (filename.length() > 0)
+    if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        FILE* file = fopen(filename.c_str(), "r");
-        if (file == NULL)
-        {
-            throw std::runtime_error("Cannot open file: \'" + filename + "\'");
-        }
-
-        yyin = file;
-        fclose(file);
+        throw std::runtime_error("Cannot open file: \'" + filename + "\'");
     }
 
     yyparse();
 
-    if (flags.getPrintFlag() && root != nullptr)
+    if (flags.getPrintFlag())
     {
         if (root == nullptr)
         {
@@ -746,5 +710,8 @@ int main(int argc, char *argv[])
         root->printTree();
     }
 
-    return 0; */
+    delete root;
+    fclose(yyin);
+
+    return 0;
 }

@@ -1,6 +1,6 @@
 #include "Id.hpp"
 
-Id::Id(const unsigned tokenLineNum, const std::string value, const bool isArray) : Node::Node(tokenLineNum, value), m_isArray(isArray)
+Id::Id(const unsigned tokenLineNum, const std::string idName, const bool isArray) : Node::Node(tokenLineNum, idName), m_isArray(isArray)
 {
 
 }

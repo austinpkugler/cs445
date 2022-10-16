@@ -1,6 +1,6 @@
 #include "Var.hpp"
 
-Var::Var(const unsigned tokenLineNum, Primitive *type, const std::string value, const bool isStatic) : Node::Node(tokenLineNum, value), m_type(type), m_isStatic(isStatic)
+Var::Var(const unsigned tokenLineNum, Primitive *type, const std::string varName, const bool isStatic) : Node::Node(tokenLineNum, varName), m_type(type), m_isStatic(isStatic)
 {
 
 }
@@ -22,11 +22,6 @@ void Var::makeStatic()
         ((Var* )m_sibling)->makeStatic();
     }
     m_isStatic = true;
-}
-
-void Var::printNode() const
-{
-    std::cout << stringify();
 }
 
 std::string Var::stringify() const

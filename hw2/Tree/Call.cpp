@@ -1,6 +1,6 @@
 #include "Call.hpp"
 
-Call::Call(const unsigned tokenLineNum, const std::string value) : Node::Node(tokenLineNum, value)
+Call::Call(const unsigned tokenLineNum, const std::string funcName) : Node::Node(tokenLineNum, funcName)
 {
 
 }

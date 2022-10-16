@@ -1,18 +1,18 @@
 #include "Const.hpp"
 
-Const::Const(const unsigned tokenLineNum, const Type type, const std::string value) : Node::Node(tokenLineNum), m_type(type)
+Const::Const(const unsigned tokenLineNum, const Type type, const std::string constValue) : Node::Node(tokenLineNum), m_type(type)
 {
     switch(m_type)
     {
         case Type::Int:
-            m_intValue = std::stoi(value);
+            m_intValue = std::stoi(constValue);
             break;
         case Type::Bool:
-            m_boolValue = (value == "true");
+            m_boolValue = (constValue == "true");
             break;
         case Type::Char:
         {
-            std::string chars = removeFirstAndLastChar(value);
+            std::string chars = removeFirstAndLastChar(constValue);
             m_charValue = parseFirstChar(chars);
             if (chars.length() > 1 && chars[0] != '\\')
             {
@@ -21,7 +21,7 @@ Const::Const(const unsigned tokenLineNum, const Type type, const std::string val
             break;
         }
         case Type::String:
-            m_stringValue = parseChars(removeFirstAndLastChar(value));
+            m_stringValue = parseChars(removeFirstAndLastChar(constValue));
             break;
     }
 }

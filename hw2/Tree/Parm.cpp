@@ -1,6 +1,6 @@
 #include "Parm.hpp"
 
-Parm::Parm(const unsigned tokenLineNum, Primitive *type, const std::string value) : Node::Node(tokenLineNum, value), m_type(type)
+Parm::Parm(const unsigned tokenLineNum, Primitive *type, const std::string parmName) : Node::Node(tokenLineNum, parmName), m_type(type)
 {
 
 }
