@@ -34,6 +34,12 @@ Flags::Flags(int argc, char *argv[])
                 case 'h':
                     helpFlag = true;
                     break;
+                case 'P':
+                    m_printSemanticsFlag = true;
+                    break;
+                case 'D':
+                    m_symTblDebugFlag = true;
+                    break;
                 default:
                     errorFlag = true;
             }
@@ -73,9 +79,11 @@ void Flags::resetAll()
 
 void Flags::emitHelp()
 {
-    std::cout << "Parser for the fictional C- language as part of CS445." << std::endl;
-    std::cout << "usage: ./c- [-dph] filepath" << std::endl;
-    std::cout << "-d: \t Provides debugging info." << std::endl;
-    std::cout << "-p: \t Displays the AST." << std::endl;
-    std::cout << "-h: \t Displays a help menu." << std::endl;
+    std::cout << "usage: ./c- [options] [sourcefile]" << std::endl;
+    std::cout << "options:" << std::endl;
+    std::cout << "-d: \t - turn on parser debugging" << std::endl;
+    std::cout << "-D: \t - turn on symbol table debugging" << std::endl;
+    std::cout << "-h: \t - print this usage message" << std::endl;
+    std::cout << "-p: \t - print the abstract syntax tree" << std::endl;
+    std::cout << "-P: \t - print the abstract syntax tree plus type information" << std::endl;
 }
