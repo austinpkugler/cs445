@@ -199,8 +199,15 @@ parmTypeList            : typeSpec parmIdList
 
 parmIdList              : parmIdList COMMA parmId
                         {
-                            $$ = $1;
-                            $$->addSibling($3);
+                            if ($1 == nullptr)
+                            {
+                                $$ = $3;
+                            }
+                            else
+                            {
+                                $$ = $1;
+                                $$->addSibling($3);
+                            }
                         }
                         | parmId
                         {
@@ -284,8 +291,15 @@ compoundStmt            : LCURLY localDecls stmtList RCURLY
 
 localDecls              : localDecls scopedVarDecl
                         {
-                            $$ = $1;
-                            $$->addSibling($2);
+                            if ($1 == nullptr)
+                            {
+                                $$ = $2;
+                            }
+                            else
+                            {
+                                $$ = $1;
+                                $$->addSibling($2);
+                            }
                         }
                         |
                         {
@@ -295,8 +309,15 @@ localDecls              : localDecls scopedVarDecl
 
 stmtList                : stmtList stmt
                         {
-                            $$ = $1;
-                            $$->addSibling($2);
+                            if ($1 == nullptr)
+                            {
+                                $$ = $2;
+                            }
+                            else
+                            {
+                                $$ = $1;
+                                $$->addSibling($2);
+                            }
                         }
                         |
                         {
@@ -331,13 +352,15 @@ selectStmtMatched       : IF simpleExp THEN stmtMatched ELSE stmtMatched
 iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         {
                             $$ = new While($1->tokenLineNum);
+                            $$->addChild($2);
                             $$->addChild($4);
                         }
                         | FOR ID ASGN iterRange DO stmtUnmatched
                         {
-                            $$ = new Range($1->tokenLineNum);
-                            Id *node = new Id($1->tokenLineNum, $1->tokenContent, true);
+                            $$ = new For($1->tokenLineNum);
+                            Var *node = new Var($1->tokenLineNum, new Primitive(Primitive::Type::Int), $1->tokenContent);
                             $$->addChild(node);
+                            $$->addChild($4);
                             $$->addChild($6);
                         }
                         ;
@@ -345,13 +368,15 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
 iterStmtMatched         : WHILE simpleExp DO stmtMatched
                         {
                             $$ = new While($1->tokenLineNum);
+                            $$->addChild($2);
                             $$->addChild($4);
                         }
                         | FOR ID ASGN iterRange DO stmtMatched
                         {
-                            $$ = new While($4->getTokenLineNum());
-                            Id *node = new Id($2->tokenLineNum, $2->tokenContent);
+                            $$ = new For($1->tokenLineNum);
+                            Var *node = new Var($2->tokenLineNum, new Primitive(Primitive::Type::Int), $2->tokenContent);
                             $$->addChild(node);
+                            $$->addChild($4);
                             $$->addChild($6);
                         }
                         ;
@@ -359,11 +384,13 @@ iterStmtMatched         : WHILE simpleExp DO stmtMatched
 iterRange               : simpleExp TO simpleExp
                         {
                             $$ = new Range($1->getTokenLineNum());
+                            $$->addChild($1);
                             $$->addChild($3);
                         }
                         | simpleExp TO simpleExp BY simpleExp
                         {
                             $$ = new Range($1->getTokenLineNum());
+                            $$->addChild($1);
                             $$->addChild($3);
                             $$->addChild($5);
                         }
@@ -375,7 +402,8 @@ returnStmt              : RETURN SEMICOLON
                         }
                         | RETURN exp SEMICOLON
                         {
-                            $$ = new Return($2->getTokenLineNum());
+                            $$ = new Return($1->tokenLineNum);
+                            $$->addChild($2);
                         }
                         ;
 
@@ -393,12 +421,12 @@ exp                     : mutable assignop exp
                         }
                         | mutable INC
                         {
-                            $$ = new UnaryAsgn($2->tokenLineNum, UnaryAsgn::Type::Inc);
+                            $$ = new UnaryAsgn($1->getTokenLineNum(), UnaryAsgn::Type::Inc);
                             $$->addChild($1);
                         }
                         | mutable DEC
                         {
-                            $$ = new UnaryAsgn($2->tokenLineNum, UnaryAsgn::Type::Dec);
+                            $$ = new UnaryAsgn($1->getTokenLineNum(), UnaryAsgn::Type::Dec);
                             $$->addChild($1);
                         }
                         | simpleExp
@@ -432,6 +460,7 @@ assignop                : ASGN
 simpleExp               : simpleExp OR andExp
                         {
                             $$ = new Binary($1->getTokenLineNum(), Binary::Type::Or);
+                            $$->addChild($1);
                             $$->addChild($3);
                         }
                         | andExp
@@ -443,6 +472,7 @@ simpleExp               : simpleExp OR andExp
 andExp                  : andExp AND unaryRelExp
                         {
                             $$ = new Binary($1->getTokenLineNum(), Binary::Type::And);
+                            $$->addChild($1);
                             $$->addChild($3);
                         }
                         | unaryRelExp
@@ -454,6 +484,7 @@ andExp                  : andExp AND unaryRelExp
 unaryRelExp             : NOT unaryRelExp
                         {
                             $$ = new Unary($1->tokenLineNum, Unary::Type::Not);
+                            $$->addChild($2);
                         }
                         | relExp
                         {
@@ -523,8 +554,8 @@ sumOp                   : ADD
 
 mulExp                  : mulExp mulOp unaryExp
                         {
-                            $$ = $1;
-                            $$->addChild($2);
+                            $$ = $2;
+                            $$->addChild($1);
                             $$->addChild($3);
                         }
                         | unaryExp
@@ -662,22 +693,28 @@ int main(int argc, char *argv[])
     Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
 
-    std::string file = flags.getFile();
-    if (file.length())
+    std::string filename = flags.getFile();
+    if (filename.length() > 0)
     {
-        if ((yyin = fopen(file.c_str(), "r")))
+        FILE* file = fopen(filename.c_str(), "r");
+        if (file == NULL)
         {
-            yyparse();
+            throw std::runtime_error("Cannot open file: \'" + filename + "\'");
         }
-        else
-        {
-            std::cout << "ERROR: failed to open \'" << file << "\'" << std::endl;
-            exit(EXIT_FAILURE);
-        }
+
+        yyin = file;
+        fclose(file);
     }
-    else
+
+    yyparse();
+
+    if (flags.getPrintFlag() && root != nullptr)
     {
-        yyparse();
+        /* if (root == nullptr)
+        {
+            throw std::runtime_error("Cannot print root: nullptr");
+        } */
+        root->printTree();
     }
 
     return 0;

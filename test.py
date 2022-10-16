@@ -69,8 +69,8 @@ class Test:
     def diff(cls, path1, path2):
         are_different = True
 
-        file1 = open(path1, 'r')
-        file2 = open(path2, 'r')
+        file1 = open(path1, 'rb')
+        file2 = open(path2, 'rb')
         if file1.read() == file2.read():
             are_different = False
 
@@ -154,19 +154,22 @@ if __name__ == '__main__':
     elif argc == 3:
         compiler = os.path.join(sys.argv[1], 'c-')
     elif argc > 3:
-        compiler = os.path.join(sys.argv[1], 'c-') + ' '.join(sys.argv[3:])
+        compiler = os.path.join(sys.argv[1], 'c-')
+        flags = ' '.join(sys.argv[3:])
 
     make = Make(sys.argv[1])
     if os.path.exists(compiler):
         make.clean()
 
     make.make()
+    if not os.path.exists(compiler):
+        raise Exception('Compilation failed')
 
     passed = 0
     tests = Test.get_tests(sys.argv[2])
     for i, test in enumerate(tests):
         print(f'Running test {test} {i + 1}/{len(tests)}...', end='')
-        if test.run(compiler):
+        if test.run(compiler + ' ' + flags):
             passed += 1
             Emit.success(f'[ PASSED ]')
         else:
