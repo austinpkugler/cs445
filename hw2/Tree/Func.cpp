@@ -1,6 +1,6 @@
 #include "Func.hpp"
 
-Func::Func(const unsigned tokenLineNum, const Primitive::Type type, const std::string value) : Node::Node(tokenLineNum, value), m_type(type)
+Func::Func(const unsigned tokenLineNum, Primitive *type, const std::string value) : Node::Node(tokenLineNum, value), m_type(type)
 {
 
 }
@@ -8,7 +8,7 @@ Func::Func(const unsigned tokenLineNum, const Primitive::Type type, const std::s
 void Func::printNode() const
 {
     std::cout << stringify();
-    m_type.printNode();
+    m_type->printNode();
 }
 
 std::string Func::stringify() const

@@ -11,11 +11,12 @@ class Parm : public Node
          * @param type Datatype of the parm.
          * @param value Name of the parm.
          */
-        Parm(const unsigned tokenLineNum, const Primitive::Type type, const std::string value);
+        Parm(const unsigned tokenLineNum, Primitive *type, const std::string value);
 
+        void setType(Primitive::Type type);
         void printNode() const;
         std::string stringify() const;
 
     private:
-        const Primitive m_type;
+        Primitive *m_type;
 };

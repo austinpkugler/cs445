@@ -16,7 +16,7 @@ class Flags
     private:
         void emitHelp();
 
-        std::string m_file;
+        std::string m_file = "";
         bool m_debugFlag = false;   // -d
         bool m_printFlag = false;   // -p
 };

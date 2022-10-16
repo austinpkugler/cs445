@@ -5,7 +5,7 @@
 class Unary : public Node
 {
     public:
-        enum class Type { Chsign, Sizeof, Question };
+        enum class Type { Chsign, Sizeof, Question, Not };
 
         /**
          * @param tokenLineNum Line number the unary operation occurred in.
