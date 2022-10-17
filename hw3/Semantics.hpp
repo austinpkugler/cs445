@@ -8,10 +8,10 @@ class Semantics
     public:
         Semantics(SymTable *symTable);
 
-        void analyze(Node *node) const;
+        void analyze(Node *node);
 
     private:
-        void analyzeDecl(Node *node) const;
+        void analyzeDecl(Node *node);
         void analyzeStmt(Node *node) const;
         void analyzeExp(Node *node) const;
 

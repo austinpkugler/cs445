@@ -12,17 +12,19 @@ class Var : public Node
          * @param varName Name of the variable.
          * @param isStatic Whether the variable is static.
          */
-        Var(const unsigned tokenLineNum, Primitive *type, const std::string varName, const bool isStatic=false);
+        Var(const unsigned tokenLineNum, Primitive *type, const std::string varName);
 
         // Overridden
         NodeKind getNodeKind() const { return NodeKind::Decl; }
         DeclKind getDeclKind() const { return DeclKind::Var; }
         std::string stringify() const;
 
+        bool getIsStatic() const;
+        bool getIsArray() const;
+        bool getIsParm() const;
         void setType(const Primitive::Type type);
         void makeStatic();
 
     private:
         Primitive *m_type;
-        bool m_isStatic;
 };

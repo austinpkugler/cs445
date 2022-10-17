@@ -20,9 +20,11 @@ class Node
         ~Node();
 
         unsigned getTokenLineNum() const { return m_tokenLineNum; }
-        void printTree() const;
+        std::vector<Node *> getChildren() const { return m_children; }
+        Node * getSibling() const { return m_sibling; }
         void addChild(Node *node);
         void addSibling(Node *node);
+        void printTree() const;
 
         // Virtual
         virtual int getIntValue() { return m_intValue; }

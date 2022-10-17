@@ -38,6 +38,28 @@ Node::~Node()
     }
 }
 
+void Node::addChild(Node *node)
+{
+    m_children.push_back(node);
+}
+
+void Node::addSibling(Node *node)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    if (m_sibling == nullptr)
+    {
+        m_sibling = node;
+    }
+    else
+    {
+        m_sibling->addSibling(node);
+    }
+}
+
 void Node::printTree() const
 {
     static unsigned siblingCount = 0, tabCount = 0;
@@ -74,28 +96,6 @@ void Node::printTree() const
     }
 
     siblingCount--;
-}
-
-void Node::addChild(Node *node)
-{
-    m_children.push_back(node);
-}
-
-void Node::addSibling(Node *node)
-{
-    if (node == nullptr)
-    {
-        return;
-    }
-
-    if (m_sibling == nullptr)
-    {
-        m_sibling = node;
-    }
-    else
-    {
-        m_sibling->addSibling(node);
-    }
 }
 
 void Node::printNode() const

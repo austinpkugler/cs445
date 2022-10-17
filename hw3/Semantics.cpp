@@ -5,7 +5,7 @@ Semantics::Semantics(SymTable *symTable) : m_symTable(symTable)
 
 }
 
-void Semantics::analyze(Node *node) const
+void Semantics::analyze(Node *node)
 {
     if (node == nullptr)
     {
@@ -32,7 +32,7 @@ void Semantics::analyze(Node *node) const
     }
 }
 
-void Semantics::analyzeDecl(Node *node) const
+void Semantics::analyzeDecl(Node *node)
 {
     if (node == nullptr)
     {
@@ -42,13 +42,38 @@ void Semantics::analyzeDecl(Node *node) const
     switch(node->getDeclKind())
     {
         case Node::DeclKind::Func:
+        {
+            Func *funcNode = (Func* )node;
+            m_symTable->insert(funcNode->getStringValue(), funcNode);
+
+            if (funcNode->getStringValue() == "main")
+            {
+                m_mainExists = true;
+            }
+
+            m_symTable->enter(funcNode->getStringValue());
+
+            Var *parmNode = (Var *)(funcNode->getChildren()[0]);
+            while (parmNode != nullptr)
+            {
+                m_symTable->insert(funcNode->getStringValue(), parmNode);
+                parmNode = (Var *)(parmNode->getSibling());
+            }
             break;
+        }
         case Node::DeclKind::Parm:
             break;
         case Node::DeclKind::Var:
         {
-            std::string varName = node->getStringValue();
-
+            Var *varNode = (Var* )node;
+            if (varNode->getIsStatic())
+            {
+                m_symTable->insertGlobal(varNode->getStringValue(), varNode);
+            }
+            else
+            {
+                m_symTable->insert(varNode->getStringValue(), varNode);
+            }
             break;
         }
         case Node::DeclKind::DeclNone:
