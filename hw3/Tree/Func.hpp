@@ -13,6 +13,9 @@ class Func : public Node
          */
         Func(const unsigned tokenLineNum, Primitive *type, const std::string funcName);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Decl; }
+        DeclKind getDeclKind() const { return DeclKind::Func; }
         std::string stringify() const;
 
     private:

@@ -2,6 +2,8 @@
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 #include "Flags.hpp"
 #include "TokenData.hpp"
+#include "Semantics.hpp"
+#include "SymTable.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -701,7 +703,7 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintFlag())
+    if (flags.getPrintSyntaxTreeFlag())
     {
         if (root == nullptr)
         {
@@ -709,6 +711,24 @@ int main(int argc, char *argv[])
         }
         root->printTree();
     }
+
+    SymTable symTable = SymTable();
+    symTable.debug(flags.getSymTableDebugFlag());
+
+    Semantics analyzer = Semantics(&symTable);
+    analyzer.analyze(root);
+
+    if (flags.getPrintAnnotatedSyntaxTreeFlag())
+    {
+        if (root == nullptr)
+        {
+            throw std::runtime_error("Cannot print root: nullptr");
+        }
+        // root->printTree() with types
+    }
+
+    std::cout << "Number of errors: " << errorCount << std::endl;
+    std::cout << "Number of warnings: " << errorCount << std::endl;
 
     delete root;
     fclose(yyin);

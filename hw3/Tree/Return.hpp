@@ -10,5 +10,8 @@ class Return : public Node
          */
         Return(const unsigned tokenLineNum);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Stmt; }
+        StmtKind getStmtKind() const { return StmtKind::Return; }
         std::string stringify() const;
 };

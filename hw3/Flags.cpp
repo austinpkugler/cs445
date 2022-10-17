@@ -26,19 +26,19 @@ Flags::Flags(int argc, char *argv[])
             switch (flag)
             {
                 case 'd':
-                    m_debugFlag = true;
+                    m_debug = true;
+                    break;
+                case 'D':
+                    m_symTableDebug = true;
                     break;
                 case 'p':
-                    m_printFlag = true;
+                    m_printSyntaxTree = true;
+                    break;
+                case 'P':
+                    m_printAnnotatedSyntaxTree = true;
                     break;
                 case 'h':
                     helpFlag = true;
-                    break;
-                case 'P':
-                    m_printSemanticsFlag = true;
-                    break;
-                case 'D':
-                    m_symTblDebugFlag = true;
                     break;
                 default:
                     errorFlag = true;
@@ -73,8 +73,10 @@ Flags::Flags(int argc, char *argv[])
 
 void Flags::resetAll()
 {
-    m_debugFlag = false;
-    m_printFlag = false;
+    m_debug = false;                       // -d
+    m_symTableDebug = false;               // -D
+    m_printSyntaxTree = false;             // -p
+    m_printAnnotatedSyntaxTree = false;    // -P
 }
 
 void Flags::emitHelp()

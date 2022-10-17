@@ -14,9 +14,13 @@ class Var : public Node
          */
         Var(const unsigned tokenLineNum, Primitive *type, const std::string varName, const bool isStatic=false);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Decl; }
+        DeclKind getDeclKind() const { return DeclKind::Var; }
+        std::string stringify() const;
+
         void setType(const Primitive::Type type);
         void makeStatic();
-        std::string stringify() const;
 
     private:
         Primitive *m_type;

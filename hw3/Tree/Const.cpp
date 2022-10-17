@@ -48,7 +48,7 @@ std::string Const::stringify() const
             stringy += "'" + std::string(1, m_charValue) + "'";
             break;
         case Type::String:
-            stringy += "\"" + m_stringValue + "\"";
+            stringy += "is array \"" + m_stringValue + "\"";
             break;
     }
     return stringy;

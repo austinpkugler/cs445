@@ -3,6 +3,8 @@
 // The order of includes is mandatory
 #include "Flags.hpp"
 #include "TokenData.hpp"
+#include "Semantics.hpp"
+#include "SymTable.hpp"
 #include "Tree/Tree.hpp"
 
 #include <string>

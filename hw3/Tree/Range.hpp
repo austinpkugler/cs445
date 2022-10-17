@@ -10,5 +10,8 @@ class Range : public Node
          */
         Range(const unsigned tokenLineNum);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Range; }
         std::string stringify() const;
 };

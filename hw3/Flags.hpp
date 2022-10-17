@@ -10,17 +10,17 @@ class Flags
 
         void resetAll();
         std::string getFile() { return m_file; }
-        bool getDebugFlag() { return m_debugFlag; }
-        bool getPrintFlag() { return m_printFlag; }
-        bool getPrintSemanticsFlag() { return m_printSemanticsFlag; }
-        bool getSymTblDebugFlag() { return m_symTblDebugFlag; }
+        bool getDebugFlag() { return m_debug; }
+        bool getSymTableDebugFlag() { return m_symTableDebug; }
+        bool getPrintSyntaxTreeFlag() { return m_printSyntaxTree; }
+        bool getPrintAnnotatedSyntaxTreeFlag() { return m_printAnnotatedSyntaxTree; }
 
     private:
         void emitHelp();
 
         std::string m_file = "";
-        bool m_debugFlag = false;           // -d
-        bool m_printFlag = false;           // -p
-        bool m_printSemanticsFlag = false;  // -P
-        bool m_symTblDebugFlag = false;     // -D
+        bool m_debug = false;                       // -d
+        bool m_symTableDebug = false;               // -D
+        bool m_printSyntaxTree = false;             // -p
+        bool m_printAnnotatedSyntaxTree = false;    // -P
 };

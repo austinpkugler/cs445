@@ -16,8 +16,8 @@ class Primitive
 
         bool getIsArray() const { return m_isArray; }
         Type getType() const { return m_type; }
-        void setType(Type type);
         std::string stringify() const;
+        void setType(Type type);
 
     private:
         const bool m_isArray;

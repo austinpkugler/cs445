@@ -14,8 +14,12 @@ class Const : public Node
          */
         Const(const unsigned tokenLineNum, const Type type, const std::string constValue);
 
-        bool getCharLengthWarning() const { return m_charLengthWarning; }
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Const; }
         std::string stringify() const;
+
+        bool getCharLengthWarning() const { return m_charLengthWarning; }
 
     private:
         char parseFirstChar(const std::string &str) const;

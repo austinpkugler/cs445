@@ -13,8 +13,12 @@ class Parm : public Node
          */
         Parm(const unsigned tokenLineNum, Primitive *type, const std::string parmName);
 
-        void setType(Primitive::Type type);
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Decl; }
+        DeclKind getDeclKind() const { return DeclKind::Parm; }
         std::string stringify() const;
+
+        void setType(Primitive::Type type);
 
     private:
         Primitive *m_type;

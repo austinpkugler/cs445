@@ -5,6 +5,15 @@ Parm::Parm(const unsigned tokenLineNum, Primitive *type, const std::string parmN
 
 }
 
+std::string Parm::stringify() const
+{
+    if (m_type->getIsArray())
+    {
+        return "Parm: " + m_stringValue + " is array of type " + m_type->stringify();
+    }
+    return "Parm: " + m_stringValue + " of type " + m_type->stringify();
+}
+
 void Parm::setType(Primitive::Type type)
 {
     m_type->setType(type);
@@ -15,11 +24,3 @@ void Parm::setType(Primitive::Type type)
     }
 }
 
-std::string Parm::stringify() const
-{
-    if (m_type->getIsArray())
-    {
-        return "Parm: " + m_stringValue + " of array of type " + m_type->stringify();
-    }
-    return "Parm: " + m_stringValue + " of type " + m_type->stringify();
-}

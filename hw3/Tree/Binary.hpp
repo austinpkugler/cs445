@@ -13,6 +13,9 @@ class Binary : public Node
          */
         Binary(const unsigned tokenLineNum, const Type type);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Binary; }
         std::string stringify() const;
 
     private:

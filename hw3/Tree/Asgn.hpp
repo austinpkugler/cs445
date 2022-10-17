@@ -13,6 +13,9 @@ class Asgn : public Node
          */
         Asgn(const unsigned tokenLineNum, const Type type);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Asgn; }
         std::string stringify() const;
 
     private:

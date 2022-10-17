@@ -14,15 +14,6 @@ Primitive::Primitive(Type type, const bool isArray) : m_isArray(isArray)
     }
 }
 
-void Primitive::setType(Type type)
-{
-    m_type = type;
-    if (m_next != nullptr)
-    {
-        m_next->setType(type);
-    }
-}
-
 std::string Primitive::stringify() const
 {
     std::string stringy;
@@ -48,4 +39,13 @@ std::string Primitive::stringify() const
             break;
     }
     return stringy;
+}
+
+void Primitive::setType(Type type)
+{
+    m_type = type;
+    if (m_next != nullptr)
+    {
+        m_next->setType(type);
+    }
 }

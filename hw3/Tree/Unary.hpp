@@ -13,6 +13,9 @@ class Unary : public Node
          */
         Unary(const unsigned tokenLineNum, const Type type);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Unary; }
         std::string stringify() const;
 
     private:

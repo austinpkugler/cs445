@@ -53,7 +53,7 @@ void Node::printTree() const
         if (child != nullptr)
         {
             printTabs(tabCount);
-            std::cout << "Child: " + std::to_string(i) << "  ";
+            std::cout << "Child: " << i << "  ";
 
             int tmp = siblingCount;
             siblingCount = 0;

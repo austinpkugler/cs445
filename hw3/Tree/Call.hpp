@@ -11,5 +11,8 @@ class Call : public Node
          */
         Call(const unsigned tokenLineNum, const std::string funcName);
 
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Call; }
         std::string stringify() const;
 };

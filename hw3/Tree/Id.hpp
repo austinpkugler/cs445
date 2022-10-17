@@ -11,6 +11,10 @@ class Id : public Node
          * @param isArray Whether the Id references an array.
          */
         Id(const unsigned tokenLineNum, const std::string idName, const bool isArray=false);
+
+        // Overridden
+        NodeKind getNodeKind() const { return NodeKind::Exp; }
+        ExpKind getExpKind() const { return ExpKind::Id; }
         std::string stringify() const;
 
     private:
