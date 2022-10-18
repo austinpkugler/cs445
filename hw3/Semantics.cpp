@@ -213,7 +213,10 @@ void Semantics::analyzeExp(Node *node) const
                     Emit::Error::generic(lhsIdNode->getLineNum(), "Symbol \'" + lhsIdNode->getName() + "\' is not declared.");
                 }
                 Var *prevDeclLhsNode = (Var *)(m_symTable->lookup(lhsIdNode->getName()));
-                prevDeclLhsNode->makeInitialized();
+                if (isVarNode(prevDeclLhsNode))
+                {
+                    prevDeclLhsNode->makeInitialized();
+                }
             }
             else
             {
@@ -249,6 +252,16 @@ void Semantics::analyzeExp(Node *node) const
                 case Binary::Type::Add:
                 case Binary::Type::Sub:
                 {
+                    // if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
+                    // {
+                    //     throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Op\' node: insufficient children");
+                    // }
+
+                    // Node *lhsNode = expChildren[0], *rhsNode = expChildren[1];
+                    // if ()
+                    // {
+
+                    // }
                     // Get LHS children[0] and get RHS children[1]
                     // checkAreSameType(children[0], children[1])
                     // check that the datatypes are right on both sides
@@ -259,7 +272,7 @@ void Semantics::analyzeExp(Node *node) const
                 {
                     if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
                     {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: no children found");
+                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: insufficient children");
                     }
 
                     if (!isIdNode(expChildren[0]))

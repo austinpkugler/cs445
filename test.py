@@ -221,7 +221,7 @@ if __name__ == '__main__':
         tests = [tests[0]]
 
     for i, test in enumerate(tests):
-        print(f'Running test {test} {i + 1}/{len(tests)}...', end='')
+        print(f'Running {test} {i + 1}/{len(tests)}...', end='')
         if test.run(compiler, flags, diff_flag, sort_flag):
             passed += 1
             Emit.success(f'[ PASSED ]')
