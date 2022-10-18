@@ -262,7 +262,33 @@ void Semantics::analyzeExp(Node *node) const
                         return;
                     }
 
-
+                    Node *arrayIndexNode = expChildren[1];
+                    switch (arrayIndexNode->getNodeKind())
+                    {
+                        case Node::Kind::Decl:
+                            break;
+                        case Node::Kind::Exp:
+                        {
+                            if (isIdNode(arrayIndexNode))
+                            {
+                                Id *arrayIndexIdNode = (Id *)arrayIndexNode;
+                                Decl *prevDeclNode = (Decl *)(m_symTable->lookup(arrayIndexIdNode->getName()));
+                                if (prevDeclNode->getData()->getType() != Data::Type::Int)
+                                {
+                                    Emit::Error::generic(arrayIndexNode->getLineNum(), "Array '" + arrayIdNode->getName() + "' should be indexed by type int but got type " + prevDeclNode->getData()->stringify() + ".");
+                                }
+                            }
+                            break;
+                        }
+                        case Node::Kind::Stmt:
+                            break;
+                        case Node::Kind::None:
+                            throw std::runtime_error("Semantics: analyze error: cannot get datatype of array indexed by \'None:Unknown\' node");
+                            break;
+                        default:
+                            throw std::runtime_error("Semantics: analyze error: cannot get datatype of array indexed by \'Unknown:Unknown\' node");
+                            break;
+                    }
                     break;
                 }
                 case Binary::Type::And:
@@ -274,6 +300,9 @@ void Semantics::analyzeExp(Node *node) const
                 case Binary::Type::GEQ:
                 case Binary::Type::EQ:
                 case Binary::Type::NEQ:
+                    break;
+                default:
+                    throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Binary\' node: unknown \'Binary::Type\'");
                     break;
             }
             break;
@@ -427,6 +456,9 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                     }
                     break;
                 }
+                default:
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Decl:Unknown\' node");
+                    break;
             }
             break;
         }
@@ -445,6 +477,9 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                 case Exp::Kind::UnaryAsgn:
                     throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Exp:Unknown\'");
                     break;
+                default:
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Exp:Unknown\' node");
+                    break;
             }
             break;
         }
@@ -460,6 +495,9 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                 case Stmt::Kind::Return:
                 case Stmt::Kind::While:
                     throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Stmt:Unknown\'");
+                    break;
+                default:
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Stmt:Unknown\' node");
                     break;
             }
             break;
