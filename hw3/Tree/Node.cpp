@@ -1,11 +1,11 @@
 #include "Node.hpp"
 
-Node::Node(const unsigned lineNum) : m_lineNum(lineNum), m_nodeKind(Node::Kind::None), m_sibling(nullptr), m_previousChild(nullptr)
+Node::Node(const unsigned lineNum) : m_lineNum(lineNum), m_nodeKind(Node::Kind::None), m_sibling(nullptr), m_parent(nullptr)
 {
 
 }
 
-Node::Node(const unsigned lineNum, const Node::Kind nodeKind) : m_lineNum(lineNum), m_nodeKind(nodeKind), m_sibling(nullptr), m_previousChild(nullptr)
+Node::Node(const unsigned lineNum, const Node::Kind nodeKind) : m_lineNum(lineNum), m_nodeKind(nodeKind), m_sibling(nullptr), m_parent(nullptr)
 {
 
 }
@@ -15,11 +15,6 @@ Node::~Node()
     if (m_sibling != nullptr)
     {
         delete m_sibling;
-    }
-
-    if (m_previousChild != nullptr)
-    {
-        delete m_previousChild;
     }
 
     for (auto &node : m_children)
@@ -33,7 +28,7 @@ void Node::addChild(Node *node)
     m_children.push_back(node);
     if (node != nullptr)
     {
-        m_previousChild = node;
+        node->m_parent = this;
     }
 }
 

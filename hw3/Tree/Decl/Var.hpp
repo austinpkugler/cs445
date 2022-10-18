@@ -15,10 +15,16 @@ class Var : public Decl
         // Overridden
         std::string stringify() const;
 
+        // Getters
+        bool getIsInitialized() const { return m_isInitialized; }
+        bool getIsUsed() const { return m_isUsed; }
+
         // Setters
         void makeInitialized();
         void makeStatic();
+        void makeUsed();
 
     private:
-        bool m_initialized = false;
+        bool m_isInitialized = false;
+        bool m_isUsed = false;
 };
