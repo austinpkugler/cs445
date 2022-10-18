@@ -716,8 +716,8 @@ int main(int argc, char *argv[])
     SymTable symTable = SymTable();
     symTable.debug(flags.getSymTableDebugFlag());
 
-    /* Semantics analyzer = Semantics(&symTable);
-    analyzer.analyze(root); */
+    Semantics analyzer = Semantics(&symTable);
+    analyzer.analyze(root);
 
     if (flags.getPrintAnnotatedSyntaxTreeFlag())
     {

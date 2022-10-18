@@ -2,7 +2,7 @@
 
 Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const), m_type(type)
 {
-    switch(m_type)
+    switch (m_type)
     {
         case Const::Type::Int:
             m_intValue = std::stoi(constValue);
@@ -29,7 +29,7 @@ Const::Const(const unsigned lineNum, const Const::Type type, const std::string c
 std::string Const::stringify() const
 {
     std::string stringy = "Const ";
-    switch(m_type)
+    switch (m_type)
     {
         case Const::Type::Int:
             stringy += std::to_string(m_intValue);

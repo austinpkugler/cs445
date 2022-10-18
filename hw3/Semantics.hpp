@@ -4,6 +4,9 @@
 #include "SymTable.hpp"
 #include "Emit.hpp"
 
+#include <string>
+#include <sstream>
+
 class Semantics
 {
     public:
@@ -15,14 +18,22 @@ class Semantics
         void analyze(Node *node);
 
     private:
+        // Analysis
         void analyzeTree(Node *node);
         void analyzeDecl(Node *node);
         void analyzeStmt(Node *node) const;
         void analyzeExp(Node *node) const;
 
-        // bool isValidIdNode(Node *node) const;
-        // bool isValidFuncNode(Node *node) const;
+        // Scope
+        void leaveScope();
 
+        // Symbol table
+        bool addToSymTable(const Node *node, const bool global=false);
+
+        // Determining node status
+        bool isFuncNode(Node *node) const;
+        bool isForNode(Node *node) const;
+        bool isIdNode(Node *node) const;
         bool isValidMainFunc(Func *funcNode) const;
         bool isDeclaredId(Id *idNode) const;
 
