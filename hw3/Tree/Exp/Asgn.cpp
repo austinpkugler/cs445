@@ -26,7 +26,7 @@ std::string Asgn::stringify() const
             stringy += "*=";
             break;
         default:
-            throw std::runtime_error("Could not stringify Asgn::Type");
+            throw std::runtime_error("Asgn: stringify error: cannot stringify unknown \'Asgn::Type\'");
             break;
     }
     return stringy;

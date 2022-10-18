@@ -17,7 +17,7 @@ std::string UnaryAsgn::stringify() const
             stringy += "--";
             break;
         default:
-            throw std::runtime_error("Could not stringify UnaryAsgn::Type");
+            throw std::runtime_error("UnaryAsgn: stringify error: cannot stringify unknown \'UnaryAsgn::Type\'");
             break;
     }
     return stringy;

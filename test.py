@@ -244,3 +244,7 @@ if __name__ == '__main__':
         remove_tmp = input()
         if remove_tmp == 'y':
             tests[0].rmtmp()
+
+    with open('test.history', 'a') as history:
+        cmd = ' '.join(sys.argv)
+        history.write(f'"{cmd}",{passed},{len(tests)}\n')
