@@ -19,31 +19,39 @@ class Test:
     def get_name(self):
         return self._name
 
-    def run(self, compiler, flags='', show_diff=False):
+    def run(self, compiler, flags='', show_diff=False, sort_outs=False):
         passed = True
 
         src = os.path.join(self._tst_dir, self._name + '.c-')
         tmp, actual, expected, diff = self.mktmp()
 
-        out = os.path.join(self._tst_dir, self._name + '.out')
         expected_out = os.path.join(expected, self._name + '.out')
-        os.system(f'sort {out} > {expected_out}')
+        out = os.path.join(self._tst_dir, self._name + '.out')
+        if sort_outs:
+            os.system(f'sort {out} > {expected_out}')
+        else:
+            os.system(f'cp {out} {expected_out}')
 
-        tmp_out = os.path.join(tmp, 'tmp.out')
-        os.system(f'{compiler} {src} {flags} > {tmp_out}')
-
-        actual_out = os.path.join(actual, self._name + '.out')
-        os.system(f'sort {tmp_out} > {actual_out}')
+        if sort_outs:
+            tmp_out = os.path.join(tmp, 'tmp.out')
+            os.system(f'{compiler} {src} {flags} > {tmp_out}')
+            actual_out = os.path.join(actual, self._name + '.out')
+            os.system(f'sort {tmp_out} > {actual_out}')
+        else:
+            actual_out = os.path.join(actual, self._name + '.out')
+            os.system(f'{compiler} {src} {flags} > {actual_out}')
 
         if Test.diff(expected_out, actual_out):
             passed = False
 
             diff_out = os.path.join(diff, self._name + '.diff')
             os.system(f'diff {expected_out} {actual_out} > {diff_out}')
+
             if show_diff:
                 os.system(f'diff {expected_out} {actual_out}')
 
-        os.remove(tmp_out)
+        if sort_outs:
+            os.remove(tmp_out)
 
         return passed
 
@@ -146,15 +154,22 @@ class Emit:
 
 
 if __name__ == '__main__':
-    show_diff = False
+    diff_flag = False
+    one_flag = False
+    sort_flag = False
+    removetmp_flag = False
     src_dir = ''
     tst_dir = ''
+    flags = ''
 
     argc = len(sys.argv)
     if argc < 3:
         print('Usage: src_dir test_dir -flag -flag')
         print('Test Flags:')
-        print('-diff \t Shows test diffs in the terminal.')
+        print('--diff \t Shows test diffs in the terminal.')
+        print('--one \t Only run the first test.')
+        print('--removetmp \t Prompt for removal of \'tmp\' directory.')
+        print('--sort \t Sort the output files before diff.')
         print('Compiler Flags:')
         print('-d: \t Provides debugging info.')
         print('-p: \t Displays the AST.')
@@ -172,9 +187,22 @@ if __name__ == '__main__':
         compiler = os.path.join(src_dir, 'c-')
 
         flag_list = sys.argv[3:]
-        if '-diff' in flag_list:
-            show_diff = True
-            flag_list.remove('-diff')
+        if '--diff' in flag_list:
+            diff_flag = True
+            flag_list.remove('--diff')
+
+        if '--one' in flag_list:
+            one_flag = True
+            flag_list.remove('--one')
+
+        if '--sort' in flag_list:
+            sort_flag = True
+            flag_list.remove('--sort')
+
+        if '--removetmp' in flag_list:
+            removetmp_flag = True
+            flag_list.remove('--removetmp')
+
         flags = ' '.join(flag_list)
 
     make = Make(src_dir)
@@ -188,9 +216,13 @@ if __name__ == '__main__':
     passed = 0
     tests = Test.get_tests(src_dir, tst_dir)
     tests[0].rmtmp()
+
+    if one_flag:
+        tests = [tests[0]]
+
     for i, test in enumerate(tests):
         print(f'Running test {test} {i + 1}/{len(tests)}...', end='')
-        if test.run(compiler, flags, show_diff):
+        if test.run(compiler, flags, diff_flag, sort_flag):
             passed += 1
             Emit.success(f'[ PASSED ]')
         else:
@@ -207,7 +239,8 @@ if __name__ == '__main__':
 
     make.clean()
 
-    # Emit.warn('Remove the \'tmp\' directory (y/n)? ', endc='')
-    # remove_tmp = input()
-    # if remove_tmp == 'y':
-    #     tests[0].rmtmp()
+    if removetmp_flag:
+        Emit.warn('Remove the \'tmp\' directory (y/n)? ', endc='')
+        remove_tmp = input()
+        if remove_tmp == 'y':
+            tests[0].rmtmp()
