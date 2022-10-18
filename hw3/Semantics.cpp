@@ -150,10 +150,17 @@ void Semantics::analyzeStmt(Node *node) const
         case Stmt::Kind::Return:
         {
             Return *returnNode = (Return *)stmtNode;
-            Var *varNode = (Var *)(returnNode->getChildren()[0]);
-            if (varNode != nullptr && varNode->getData()->getIsArray())
+            if (returnNode->getChildren().size() > 0)
             {
-                Emit::Error::generic(returnNode->getLineNum(), "Cannot return an array.");
+                Exp *expNode = (Exp *)(returnNode->getChildren()[0]);
+                if (expNode != nullptr && expNode->getExpKind() == Exp::Kind::Id)
+                {
+                    Id *idNode = (Id *)expNode;
+                    if (idNode->getIsArray())
+                    {
+                        Emit::Error::generic(returnNode->getLineNum(), "Cannot return an array.");
+                    }
+                }
             }
             break;
         }
@@ -280,6 +287,10 @@ void Semantics::analyzeExp(Node *node) const
         }
         case Exp::Kind::Id:
         {
+            // if (node->getNodeKind() == Decl::Kind::Func)
+            // {
+
+            // }
             Id *idNode = (Id *)expNode;
             break;
         }

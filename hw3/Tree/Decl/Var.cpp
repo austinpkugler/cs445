@@ -7,6 +7,11 @@ Var::Var(const unsigned lineNum, const std::string varName, Data *data) : Decl::
 
 std::string Var::stringify() const
 {
+    if (m_data == nullptr)
+    {
+        throw std::runtime_error("Cannot stringify Var node of \'Decl\' kind as no data exists");
+    }
+
     if (m_data->getIsArray() && m_data->getIsStatic())
     {
         return "Var: " + m_name + " is array of type " + m_data->stringify();

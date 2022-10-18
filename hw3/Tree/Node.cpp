@@ -17,11 +17,6 @@ Node::~Node()
         delete m_sibling;
     }
 
-    if (m_previousChild != nullptr)
-    {
-        delete m_previousChild;
-    }
-
     for (auto &node : m_children)
     {
         delete node;
