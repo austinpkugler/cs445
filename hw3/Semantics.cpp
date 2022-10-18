@@ -289,7 +289,7 @@ bool Semantics::isValidMainFunc(Func *funcNode) const
     }
 
     // Return type is not void
-    if (funcNode->getPrimitiveType() != Primitive::Type::Void)
+    if (funcNode->getPrimType() != Prim::Type::Void)
     {
         return false;
     }

@@ -1,11 +1,11 @@
-#include "Primitive.hpp"
+#include "Prim.hpp"
 
-Primitive::Primitive(Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
+Prim::Prim(Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
 {
     m_next = nullptr;
     if (isArray)
     {
-        m_next = new Primitive(type, false, false);
+        m_next = new Prim(type, false, false);
         m_type = Type::Void;
     }
     else
@@ -14,17 +14,17 @@ Primitive::Primitive(Type type, bool isArray, bool isStatic) : m_isArray(isArray
     }
 }
 
-void Primitive::setIsArray(bool isArray)
+void Prim::setIsArray(bool isArray)
 {
     m_isArray = isArray;
 }
 
-void Primitive::setIsStatic(bool isStatic)
+void Prim::setIsStatic(bool isStatic)
 {
     m_isStatic = isStatic;
 }
 
-void Primitive::setType(Type type)
+void Prim::setType(Type type)
 {
     m_type = type;
     if (m_next != nullptr)
@@ -33,7 +33,7 @@ void Primitive::setType(Type type)
     }
 }
 
-std::string Primitive::stringify() const
+std::string Prim::stringify() const
 {
     std::string stringy;
     switch(m_type)
@@ -54,7 +54,7 @@ std::string Primitive::stringify() const
             stringy = "void";
             break;
         default:
-            throw std::runtime_error("Could not stringify Primitive::Type");
+            throw std::runtime_error("Could not stringify Prim::Type");
             break;
     }
     return stringy;

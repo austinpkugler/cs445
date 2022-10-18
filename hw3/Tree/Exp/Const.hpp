@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.hpp"
+#include "../Node.hpp"
 
 class Const : public Node
 {

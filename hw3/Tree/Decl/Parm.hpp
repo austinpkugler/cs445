@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Node.hpp"
-#include "Primitive.hpp"
+#include "../Node.hpp"
+#include "../Prim.hpp"
 
 class Parm : public Node
 {
@@ -11,15 +11,15 @@ class Parm : public Node
          * @param type Datatype of the parm.
          * @param parmName Name of the parm.
          */
-        Parm(const unsigned tokenLineNum, Primitive *type, const std::string parmName);
+        Parm(const unsigned tokenLineNum, Prim *type, const std::string parmName);
 
         // Overridden
         NodeKind getNodeKind() const { return NodeKind::Decl; }
         DeclKind getDeclKind() const { return DeclKind::Parm; }
         std::string stringify() const;
 
-        void setType(Primitive::Type type);
+        void setType(Prim::Type type);
 
     private:
-        Primitive *m_type;
+        Prim *m_type;
 };

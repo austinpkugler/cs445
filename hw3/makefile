@@ -2,8 +2,8 @@ BIN = c-
 CC = g++ -std=c++17 -g
 
 SRCS = $(BIN).y $(BIN).l
-CC_SRCS = *.cpp Tree/*.cpp ourgetopt/ourgetopt.cpp
-HDRS = *.hpp Tree/*.hpp ourgetopt/ourgetopt.h
+CC_SRCS = *.cpp Tree/*.cpp Tree/*/*.cpp ourgetopt/ourgetopt.cpp
+HDRS = *.hpp Tree/*.hpp Tree/*/*.hpp ourgetopt/ourgetopt.h
 OBJS = lex.yy.o $(BIN).tab.o
 
 $(BIN) : $(OBJS)

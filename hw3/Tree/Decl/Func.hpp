@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Node.hpp"
-#include "Primitive.hpp"
+#include "../Node.hpp"
+#include "../Prim.hpp"
 
 class Func : public Node
 {
@@ -11,15 +11,15 @@ class Func : public Node
          * @param type Return type of the function.
          * @param funcName Name of the function.
          */
-        Func(const unsigned tokenLineNum, Primitive *type, const std::string funcName);
+        Func(const unsigned tokenLineNum, Prim *type, const std::string funcName);
 
         // Overridden
         NodeKind getNodeKind() const { return NodeKind::Decl; }
         DeclKind getDeclKind() const { return DeclKind::Func; }
         std::string stringify() const;
 
-        Primitive::Type getPrimitiveType() { return m_type->getType(); }
+        Prim::Type getPrimType() { return m_type->getType(); }
 
     private:
-        const Primitive *m_type;
+        const Prim *m_type;
 };

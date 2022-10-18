@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-class Primitive
+class Prim
 {
     public:
         enum class Type { Int, Bool, Char, String, Void };
@@ -12,7 +12,7 @@ class Primitive
          * @param isArray Whether the primitive is an array.
          * @param isStatic Whether the primitive is static.
          */
-        Primitive(Type type, bool isArray, bool isStatic);
+        Prim(Type type, bool isArray, bool isStatic);
 
         bool getIsArray() const { return m_isArray; }
         bool getIsStatic() const { return m_isStatic; }
@@ -28,5 +28,5 @@ class Primitive
         bool m_isArray = false;
         bool m_isStatic = false;
         Type m_type;
-        Primitive *m_next;
+        Prim *m_next;
 };

@@ -1,6 +1,6 @@
 #include "Func.hpp"
 
-Func::Func(const unsigned tokenLineNum, Primitive *type, const std::string funcName) : Node::Node(tokenLineNum, funcName), m_type(type)
+Func::Func(const unsigned tokenLineNum, Prim *type, const std::string funcName) : Node::Node(tokenLineNum, funcName), m_type(type)
 {
 
 }

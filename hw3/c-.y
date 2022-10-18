@@ -33,7 +33,7 @@ void yyerror(const char *msg)
 %}
 
 %union {
-    Primitive::Type type;
+    Prim::Type type;
     TokenData *tokenData;
     Node *node;
 }
@@ -135,37 +135,37 @@ varDeclInit             : varDeclId
 
 varDeclId               : ID
                         {
-                            $$ = new Var($1->tokenLineNum, new Primitive(Primitive::Type::Void, false, false), $1->tokenContent);
+                            $$ = new Var($1->tokenLineNum, new Prim(Prim::Type::Void, false, false), $1->tokenContent);
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->tokenLineNum, new Primitive(Primitive::Type::Void, true, false), $1->tokenContent);
+                            $$ = new Var($1->tokenLineNum, new Prim(Prim::Type::Void, true, false), $1->tokenContent);
                         }
                         ;
 
 typeSpec                : INT
                         {
-                            $$ = Primitive::Type::Int;
+                            $$ = Prim::Type::Int;
                         }
                         | BOOL
                         {
-                            $$ = Primitive::Type::Bool;
+                            $$ = Prim::Type::Bool;
                         }
                         | CHAR
                         {
-                            $$ = Primitive::Type::Char;
+                            $$ = Prim::Type::Char;
                         }
                         ;
 
 funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($2->tokenLineNum, new Primitive($1, false, false), $2->tokenContent);
+                            $$ = new Func($2->tokenLineNum, new Prim($1, false, false), $2->tokenContent);
                             $$->addChild($4);
                             $$->addChild($6);
                         }
                         | ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($1->tokenLineNum, new Primitive(Primitive::Type::Void, false, false), $1->tokenContent);
+                            $$ = new Func($1->tokenLineNum, new Prim(Prim::Type::Void, false, false), $1->tokenContent);
                             $$->addChild($3);
                             $$->addChild($5);
                         }
@@ -220,11 +220,11 @@ parmIdList              : parmIdList COMMA parmId
 
 parmId                  : ID
                         {
-                            $$ = new Parm($1->tokenLineNum, new Primitive(Primitive::Type::Void, false, false), $1->tokenContent);
+                            $$ = new Parm($1->tokenLineNum, new Prim(Prim::Type::Void, false, false), $1->tokenContent);
                         }
                         | ID LBRACK RBRACK
                         {
-                            $$ = new Parm($1->tokenLineNum, new Primitive(Primitive::Type::Void, true, false), $1->tokenContent);
+                            $$ = new Parm($1->tokenLineNum, new Prim(Prim::Type::Void, true, false), $1->tokenContent);
                         }
                         ;
 
@@ -361,7 +361,7 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         | FOR ID ASGN iterRange DO stmtUnmatched
                         {
                             $$ = new For($1->tokenLineNum);
-                            Var *node = new Var($2->tokenLineNum, new Primitive(Primitive::Type::Int, false, false), $2->tokenContent);
+                            Var *node = new Var($2->tokenLineNum, new Prim(Prim::Type::Int, false, false), $2->tokenContent);
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -377,7 +377,7 @@ iterStmtMatched         : WHILE simpleExp DO stmtMatched
                         | FOR ID ASGN iterRange DO stmtMatched
                         {
                             $$ = new For($1->tokenLineNum);
-                            Var *node = new Var($2->tokenLineNum, new Primitive(Primitive::Type::Int, false, false), $2->tokenContent);
+                            Var *node = new Var($2->tokenLineNum, new Prim(Prim::Type::Int, false, false), $2->tokenContent);
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);

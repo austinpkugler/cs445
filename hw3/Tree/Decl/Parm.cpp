@@ -1,6 +1,6 @@
 #include "Parm.hpp"
 
-Parm::Parm(const unsigned tokenLineNum, Primitive *type, const std::string parmName) : Node::Node(tokenLineNum, parmName), m_type(type)
+Parm::Parm(const unsigned tokenLineNum, Prim *type, const std::string parmName) : Node::Node(tokenLineNum, parmName), m_type(type)
 {
 
 }
@@ -14,7 +14,7 @@ std::string Parm::stringify() const
     return "Parm: " + m_stringValue + " of type " + m_type->stringify();
 }
 
-void Parm::setType(Primitive::Type type)
+void Parm::setType(Prim::Type type)
 {
     m_type->setType(type);
     if (m_sibling != nullptr)

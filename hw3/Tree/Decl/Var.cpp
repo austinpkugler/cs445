@@ -1,6 +1,6 @@
 #include "Var.hpp"
 
-Var::Var(const unsigned tokenLineNum, Primitive *type, const std::string varName) : Node::Node(tokenLineNum, varName), m_type(type)
+Var::Var(const unsigned tokenLineNum, Prim *type, const std::string varName) : Node::Node(tokenLineNum, varName), m_type(type)
 {
 
 }
@@ -32,7 +32,7 @@ bool Var::getIsArray() const
     return m_type->getIsArray();
 }
 
-void Var::setType(const Primitive::Type type)
+void Var::setType(const Prim::Type type)
 {
     m_type->setType(type);
     if (m_sibling != nullptr)
