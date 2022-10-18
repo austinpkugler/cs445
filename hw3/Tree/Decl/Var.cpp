@@ -29,7 +29,7 @@ std::string Var::stringify() const
 
 void Var::makeInitialized()
 {
-    m_initialized = true;
+    m_isInitialized = true;
 }
 
 void Var::makeStatic()
@@ -39,4 +39,9 @@ void Var::makeStatic()
         ((Var* )m_sibling)->makeStatic();
     }
     m_data->setIsStatic(true);
+}
+
+void Var::makeUsed()
+{
+    m_isUsed = true;
 }

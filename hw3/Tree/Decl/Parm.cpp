@@ -18,3 +18,8 @@ std::string Parm::stringify() const
     }
     return "Parm: " + m_name + " of type " + m_data->stringify();
 }
+
+void Parm::makeUsed()
+{
+    m_isUsed = true;
+}

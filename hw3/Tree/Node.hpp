@@ -22,7 +22,7 @@ class Node
         Node::Kind getNodeKind() const { return m_nodeKind; }
         std::vector<Node *> getChildren() const { return m_children; }
         Node * getSibling() const { return m_sibling; }
-        Node * getPreviousChild() const { return m_previousChild; }
+        Node * getParent() const { return m_parent; }
 
         // Setters
         void addChild(Node *node);
@@ -44,5 +44,5 @@ class Node
         const unsigned m_lineNum;
         const Node::Kind m_nodeKind;
         std::vector<Node *> m_children;
-        Node *m_previousChild;
+        Node *m_parent;
 };

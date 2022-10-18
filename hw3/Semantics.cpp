@@ -9,7 +9,7 @@ void Semantics::analyze(Node *node)
 {
     analyzeTree(node);
 
-    //  A function named 'main()' must be defined
+    // A function named 'main()' must be defined
     if (!m_validMainExists)
     {
         Emit::Error::undefinedMain();
@@ -49,7 +49,31 @@ void Semantics::analyzeTree(Node *node)
         analyzeTree(children[i]);
     }
 
-    // Leave the scope
+    // Leave the scope for every scope that was previously entered
+    if (node->getNodeKind() == Node::Kind::Decl)
+    {
+        Decl *declNode = (Decl *)node;
+        if (declNode->getDeclKind() == Decl::Kind::Func)
+        {
+            leaveScope();
+        }
+    }
+    else if(node->getNodeKind() == Node::Kind::Stmt)
+    {
+        Stmt *stmtNode = (Stmt *)node;
+        if (stmtNode->getStmtKind() == Stmt::Kind::For)
+        {
+            leaveScope();
+        }
+        else if (stmtNode->getStmtKind() == Stmt::Kind::Compound)
+        {
+            // Don't leave the scope if the parent is a func or for
+            if (!isFuncNode(stmtNode->getParent()) && !isForNode(stmtNode->getParent()))
+            {
+                leaveScope();
+            }
+        }
+    }
 
     // Analyze sibling
     analyzeTree(node->getSibling());
@@ -75,7 +99,7 @@ void Semantics::analyzeDecl(Node *node)
                 m_validMainExists = true;
             }
 
-            m_symTable->enter(funcNode->getName());
+            m_symTable->enter("Function: " + funcNode->getName());
             break;
         }
         case Decl::Kind::Parm:
@@ -129,12 +153,12 @@ void Semantics::analyzeStmt(Node *node) const
         case Stmt::Kind::Compound:
         {
             // Ignore compounds following func or for
-            Node *prevChild = stmtNode->getPreviousChild();
-            if (isFuncNode(prevChild) || isForNode(prevChild))
+            Node *stmtParentNode = stmtNode->getParent();
+            if (isFuncNode(stmtParentNode) || isForNode(stmtParentNode))
             {
                 return;
             }
-            m_symTable->enter("Compound");
+            m_symTable->enter("Compound Statement");
             break;
         }
         case Stmt::Kind::For:
@@ -276,6 +300,16 @@ void Semantics::analyzeExp(Node *node) const
             if (declNode->getDeclKind() != Decl::Kind::Func)
             {
                 Emit::Error::generic(expNode->getLineNum(), "'" + callNode->getName() + "' is a simple variable and cannot be called.");
+                if (declNode->getDeclKind() == Decl::Kind::Var)
+                {
+                    Var *varNode = (Var *)declNode;
+                    varNode->makeUsed();
+                }
+                else if (declNode->getDeclKind() == Decl::Kind::Parm)
+                {
+                    Parm *parmNode = (Parm *)declNode;
+                    parmNode->makeUsed();
+                }
                 return;
             }
             break;
@@ -287,11 +321,30 @@ void Semantics::analyzeExp(Node *node) const
         }
         case Exp::Kind::Id:
         {
-            // if (node->getNodeKind() == Decl::Kind::Func)
-            // {
-
-            // }
             Id *idNode = (Id *)expNode;
+            Decl *prevDeclare = (Decl *)(m_symTable->lookup(idNode->getName()));
+            if (prevDeclare == nullptr)
+            {
+                Emit::Error::generic(idNode->getLineNum(), "Symbol '" + idNode->getName() + "' is not declared.");
+                return;
+            }
+
+            if (prevDeclare->getDeclKind() == Decl::Kind::Func)
+            {
+                Emit::Error::generic(idNode->getLineNum(), "Cannot use function '" + idNode->getName() + "' as a variable.");
+            }
+
+            if (prevDeclare->getDeclKind() == Decl::Kind::Var)
+            {
+                Var *varNode = (Var *)prevDeclare;
+                varNode->makeUsed();
+            }
+            else if (prevDeclare->getDeclKind() == Decl::Kind::Parm)
+            {
+                Parm *parmNode = (Parm *)prevDeclare;
+                parmNode->makeUsed();
+            }
+
             break;
         }
         // Not analyzed
@@ -317,7 +370,35 @@ void Semantics::analyzeExp(Node *node) const
 
 void Semantics::leaveScope()
 {
+    std::map<std::string, void *> syms = m_symTable->getSyms();
+    for (auto const& [name, voidNode] : syms)
+    {
+        Node *node = (Node *)voidNode;
+        if (node->getNodeKind() != Node::Kind::Decl)
+        {
+            throw std::runtime_error("Failed to check if non-Decl node causes an unused var warning");
+        }
 
+        Decl *declNode = (Decl *)node;
+        if (declNode->getDeclKind() == Decl::Kind::Var)
+        {
+            Var *varNode = (Var *)declNode;
+            if (varNode->getIsUsed() == false)
+            {
+                Emit::Warn::generic(varNode->getLineNum(), "The variable '" + varNode->getName() + "' seems not to be used.");
+            }
+        }
+        else if (declNode->getDeclKind() == Decl::Kind::Parm)
+        {
+            Parm *parmNode = (Parm *)declNode;
+            if (parmNode->getIsUsed() == false)
+            {
+                Emit::Warn::generic(parmNode->getLineNum(), "The variable '" + parmNode->getName() + "' seems not to be used.");
+            }
+        }
+    }
+
+    m_symTable->leave();
 }
 
 bool Semantics::addToSymTable(const Node *node, const bool global)
@@ -349,7 +430,7 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                         }
                         std::stringstream msg;
                         msg << "Symbol '" << declNode->getName() << "' is already declared at line " << prevDeclare->getLineNum() << ".";
-                        Emit::Error::generic(prevDeclare->getLineNum(), msg.str());
+                        Emit::Error::generic(declNode->getLineNum(), msg.str());
                     }
                     break;
                 }
