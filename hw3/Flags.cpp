@@ -21,7 +21,7 @@ Flags::Flags(int argc, char *argv[])
     while (true)
     {
         // Hunt for a string of options
-        while ((flag = ourGetopt(argc, argv, (char *)"dph")) != EOF)
+        while ((flag = ourGetopt(argc, argv, (char *)"dDpPh")) != EOF)
         {
             switch (flag)
             {

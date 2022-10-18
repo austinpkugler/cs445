@@ -18,6 +18,8 @@ class Func : public Node
         DeclKind getDeclKind() const { return DeclKind::Func; }
         std::string stringify() const;
 
+        Primitive::Type getPrimitiveType() { return m_type->getType(); }
+
     private:
         const Primitive *m_type;
 };

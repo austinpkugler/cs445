@@ -32,12 +32,6 @@ bool Var::getIsArray() const
     return m_type->getIsArray();
 }
 
-bool Var::getIsParm() const
-{
-    return m_type->getIsParm();
-}
-
-
 void Var::setType(const Primitive::Type type)
 {
     m_type->setType(type);
@@ -55,4 +49,9 @@ void Var::makeStatic()
         ((Var* )m_sibling)->makeStatic();
     }
     m_type->setIsStatic(true);
+}
+
+void Var::makeInitialized()
+{
+    bool m_initialized = true;
 }

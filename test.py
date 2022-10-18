@@ -149,6 +149,7 @@ if __name__ == '__main__':
     show_diff = False
     src_dir = ''
     tst_dir = ''
+    flags = ''
 
     argc = len(sys.argv)
     if argc < 3:

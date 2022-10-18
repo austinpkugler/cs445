@@ -1,11 +1,11 @@
 #include "Primitive.hpp"
 
-Primitive::Primitive(Type type, bool isArray, bool isStatic, bool isParm) : m_isArray(isArray), m_isStatic(isStatic), m_isParm(isParm)
+Primitive::Primitive(Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
 {
     m_next = nullptr;
     if (isArray)
     {
-        m_next = new Primitive(type, false, false, false);
+        m_next = new Primitive(type, false, false);
         m_type = Type::Void;
     }
     else
@@ -22,11 +22,6 @@ void Primitive::setIsArray(bool isArray)
 void Primitive::setIsStatic(bool isStatic)
 {
     m_isStatic = isStatic;
-}
-
-void Primitive::setIsParm(bool isParm)
-{
-    m_isParm = isParm;
 }
 
 void Primitive::setType(Type type)

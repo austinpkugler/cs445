@@ -21,10 +21,11 @@ class Var : public Node
 
         bool getIsStatic() const;
         bool getIsArray() const;
-        bool getIsParm() const;
         void setType(const Primitive::Type type);
+        void makeInitialized();
         void makeStatic();
 
     private:
         Primitive *m_type;
+        bool m_initialized = false;
 };
