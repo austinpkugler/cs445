@@ -1,6 +1,6 @@
 #include "If.hpp"
 
-If::If(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+If::If(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::If)
 {
 
 }

@@ -1,16 +1,16 @@
 #include "Const.hpp"
 
-Const::Const(const unsigned tokenLineNum, const Type type, const std::string constValue) : Node::Node(tokenLineNum), m_type(type)
+Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const), m_type(type)
 {
     switch(m_type)
     {
-        case Type::Int:
+        case Const::Type::Int:
             m_intValue = std::stoi(constValue);
             break;
-        case Type::Bool:
+        case Const::Type::Bool:
             m_boolValue = (constValue == "true");
             break;
-        case Type::Char:
+        case Const::Type::Char:
         {
             std::string chars = removeFirstAndLastChar(constValue);
             m_charValue = parseFirstChar(chars);
@@ -20,7 +20,7 @@ Const::Const(const unsigned tokenLineNum, const Type type, const std::string con
             }
             break;
         }
-        case Type::String:
+        case Const::Type::String:
             m_stringValue = parseChars(removeFirstAndLastChar(constValue));
             break;
     }
@@ -31,10 +31,10 @@ std::string Const::stringify() const
     std::string stringy = "Const ";
     switch(m_type)
     {
-        case Type::Int:
+        case Const::Type::Int:
             stringy += std::to_string(m_intValue);
             break;
-        case Type::Bool:
+        case Const::Type::Bool:
             if (m_boolValue)
             {
                 stringy += "true";
@@ -44,10 +44,10 @@ std::string Const::stringify() const
                 stringy += "false";
             }
             break;
-        case Type::Char:
+        case Const::Type::Char:
             stringy += "'" + std::string(1, m_charValue) + "'";
             break;
-        case Type::String:
+        case Const::Type::String:
             stringy += "is array \"" + m_stringValue + "\"";
             break;
     }

@@ -1,25 +1,17 @@
 #pragma once
 
-#include "../Node.hpp"
-#include "../Prim.hpp"
+#include "Decl.hpp"
 
-class Func : public Node
+class Func : public Decl
 {
     public:
         /**
-         * @param tokenLineNum Line number the function occurred in.
-         * @param type Return type of the function.
-         * @param funcName Name of the function.
+         * @param lineNum Line number of occurrence.
+         * @param name Name of the function
+         * @param data Data associated with the decl (e.g. type, isArray, isStatic)
          */
-        Func(const unsigned tokenLineNum, Prim *type, const std::string funcName);
+        Func(const unsigned lineNum, const std::string funcName, Data *data);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Decl; }
-        DeclKind getDeclKind() const { return DeclKind::Func; }
         std::string stringify() const;
-
-        Prim::Type getPrimType() { return m_type->getType(); }
-
-    private:
-        const Prim *m_type;
 };

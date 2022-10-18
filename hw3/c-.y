@@ -33,7 +33,7 @@ void yyerror(const char *msg)
 %}
 
 %union {
-    Prim::Type type;
+    Data::Type type;
     TokenData *tokenData;
     Node *node;
 }
@@ -135,37 +135,37 @@ varDeclInit             : varDeclId
 
 varDeclId               : ID
                         {
-                            $$ = new Var($1->tokenLineNum, new Prim(Prim::Type::Void, false, false), $1->tokenContent);
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->tokenLineNum, new Prim(Prim::Type::Void, true, false), $1->tokenContent);
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, true, false));
                         }
                         ;
 
 typeSpec                : INT
                         {
-                            $$ = Prim::Type::Int;
+                            $$ = Data::Type::Int;
                         }
                         | BOOL
                         {
-                            $$ = Prim::Type::Bool;
+                            $$ = Data::Type::Bool;
                         }
                         | CHAR
                         {
-                            $$ = Prim::Type::Char;
+                            $$ = Data::Type::Char;
                         }
                         ;
 
 funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($2->tokenLineNum, new Prim($1, false, false), $2->tokenContent);
+                            $$ = new Func($2->lineNum, $2->tokenContent, new Data($1, false, false));
                             $$->addChild($4);
                             $$->addChild($6);
                         }
                         | ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($1->tokenLineNum, new Prim(Prim::Type::Void, false, false), $1->tokenContent);
+                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
                             $$->addChild($3);
                             $$->addChild($5);
                         }
@@ -220,11 +220,11 @@ parmIdList              : parmIdList COMMA parmId
 
 parmId                  : ID
                         {
-                            $$ = new Parm($1->tokenLineNum, new Prim(Prim::Type::Void, false, false), $1->tokenContent);
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
                         }
                         | ID LBRACK RBRACK
                         {
-                            $$ = new Parm($1->tokenLineNum, new Prim(Prim::Type::Void, true, false), $1->tokenContent);
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, true, false));
                         }
                         ;
 
@@ -286,7 +286,7 @@ expStmt                 : exp SEMICOLON
 
 compoundStmt            : LCURLY localDecls stmtList RCURLY
                         {
-                            $$ = new Compound($1->tokenLineNum);
+                            $$ = new Compound($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($3);
                         }
@@ -330,13 +330,13 @@ stmtList                : stmtList stmt
 
 selectStmtUnmatched     : IF simpleExp THEN stmt
                         {
-                            $$ = new If($1->tokenLineNum);
+                            $$ = new If($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($4);
                         }
                         | IF simpleExp THEN stmtMatched ELSE stmtUnmatched
                         {
-                            $$ = new If($1->tokenLineNum);
+                            $$ = new If($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -345,7 +345,7 @@ selectStmtUnmatched     : IF simpleExp THEN stmt
 
 selectStmtMatched       : IF simpleExp THEN stmtMatched ELSE stmtMatched
                         {
-                            $$ = new If($1->tokenLineNum);
+                            $$ = new If($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -354,14 +354,14 @@ selectStmtMatched       : IF simpleExp THEN stmtMatched ELSE stmtMatched
 
 iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         {
-                            $$ = new While($1->tokenLineNum);
+                            $$ = new While($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($4);
                         }
                         | FOR ID ASGN iterRange DO stmtUnmatched
                         {
-                            $$ = new For($1->tokenLineNum);
-                            Var *node = new Var($2->tokenLineNum, new Prim(Prim::Type::Int, false, false), $2->tokenContent);
+                            $$ = new For($1->lineNum);
+                            Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -370,14 +370,14 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
 
 iterStmtMatched         : WHILE simpleExp DO stmtMatched
                         {
-                            $$ = new While($1->tokenLineNum);
+                            $$ = new While($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($4);
                         }
                         | FOR ID ASGN iterRange DO stmtMatched
                         {
-                            $$ = new For($1->tokenLineNum);
-                            Var *node = new Var($2->tokenLineNum, new Prim(Prim::Type::Int, false, false), $2->tokenContent);
+                            $$ = new For($1->lineNum);
+                            Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -386,13 +386,13 @@ iterStmtMatched         : WHILE simpleExp DO stmtMatched
 
 iterRange               : simpleExp TO simpleExp
                         {
-                            $$ = new Range($1->getTokenLineNum());
+                            $$ = new Range($1->getLineNum());
                             $$->addChild($1);
                             $$->addChild($3);
                         }
                         | simpleExp TO simpleExp BY simpleExp
                         {
-                            $$ = new Range($1->getTokenLineNum());
+                            $$ = new Range($1->getLineNum());
                             $$->addChild($1);
                             $$->addChild($3);
                             $$->addChild($5);
@@ -401,18 +401,18 @@ iterRange               : simpleExp TO simpleExp
 
 returnStmt              : RETURN SEMICOLON
                         {
-                            $$ = new Return($1->tokenLineNum);
+                            $$ = new Return($1->lineNum);
                         }
                         | RETURN exp SEMICOLON
                         {
-                            $$ = new Return($1->tokenLineNum);
+                            $$ = new Return($1->lineNum);
                             $$->addChild($2);
                         }
                         ;
 
 breakStmt               : BREAK SEMICOLON
                         {
-                            $$ = new Break($1->tokenLineNum);
+                            $$ = new Break($1->lineNum);
                         }
                         ;
 
@@ -424,12 +424,12 @@ exp                     : mutable assignop exp
                         }
                         | mutable INC
                         {
-                            $$ = new UnaryAsgn($1->getTokenLineNum(), UnaryAsgn::Type::Inc);
+                            $$ = new UnaryAsgn($1->getLineNum(), UnaryAsgn::Type::Inc);
                             $$->addChild($1);
                         }
                         | mutable DEC
                         {
-                            $$ = new UnaryAsgn($1->getTokenLineNum(), UnaryAsgn::Type::Dec);
+                            $$ = new UnaryAsgn($1->getLineNum(), UnaryAsgn::Type::Dec);
                             $$->addChild($1);
                         }
                         | simpleExp
@@ -440,29 +440,29 @@ exp                     : mutable assignop exp
 
 assignop                : ASGN
                         {
-                            $$ = new Asgn($1->tokenLineNum, Asgn::Type::Asgn);
+                            $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
                         }
                         | ADDASGN
                         {
-                            $$ = new Asgn($1->tokenLineNum, Asgn::Type::AddAsgn);
+                            $$ = new Asgn($1->lineNum, Asgn::Type::AddAsgn);
                         }
                         | SUBASGN
                         {
-                            $$ = new Asgn($1->tokenLineNum, Asgn::Type::SubAsgn);
+                            $$ = new Asgn($1->lineNum, Asgn::Type::SubAsgn);
                         }
                         | MULASGN
                         {
-                            $$ = new Asgn($1->tokenLineNum, Asgn::Type::MulAsgn);
+                            $$ = new Asgn($1->lineNum, Asgn::Type::MulAsgn);
                         }
                         | DIVASGN
                         {
-                            $$ = new Asgn($1->tokenLineNum, Asgn::Type::DivAsgn);
+                            $$ = new Asgn($1->lineNum, Asgn::Type::DivAsgn);
                         }
                         ;
 
 simpleExp               : simpleExp OR andExp
                         {
-                            $$ = new Binary($1->getTokenLineNum(), Binary::Type::Or);
+                            $$ = new Binary($1->getLineNum(), Binary::Type::Or);
                             $$->addChild($1);
                             $$->addChild($3);
                         }
@@ -474,7 +474,7 @@ simpleExp               : simpleExp OR andExp
 
 andExp                  : andExp AND unaryRelExp
                         {
-                            $$ = new Binary($1->getTokenLineNum(), Binary::Type::And);
+                            $$ = new Binary($1->getLineNum(), Binary::Type::And);
                             $$->addChild($1);
                             $$->addChild($3);
                         }
@@ -486,7 +486,7 @@ andExp                  : andExp AND unaryRelExp
 
 unaryRelExp             : NOT unaryRelExp
                         {
-                            $$ = new Unary($1->tokenLineNum, Unary::Type::Not);
+                            $$ = new Unary($1->lineNum, Unary::Type::Not);
                             $$->addChild($2);
                         }
                         | relExp
@@ -509,27 +509,27 @@ relExp                  : sumExp relOp sumExp
 
 relOp                   : LT
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::LT);
+                            $$ = new Binary($1->lineNum, Binary::Type::LT);
                         }
                         | LEQ
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::LEQ);
+                            $$ = new Binary($1->lineNum, Binary::Type::LEQ);
                         }
                         | GT
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::GT);
+                            $$ = new Binary($1->lineNum, Binary::Type::GT);
                         }
                         | GEQ
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::GEQ);
+                            $$ = new Binary($1->lineNum, Binary::Type::GEQ);
                         }
                         | EQ
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::EQ);
+                            $$ = new Binary($1->lineNum, Binary::Type::EQ);
                         }
                         | NEQ
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::NEQ);
+                            $$ = new Binary($1->lineNum, Binary::Type::NEQ);
                         }
                         ;
 
@@ -547,11 +547,11 @@ sumExp                  : sumExp sumOp mulExp
 
 sumOp                   : ADD
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::Add);
+                            $$ = new Binary($1->lineNum, Binary::Type::Add);
                         }
                         | SUB
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::Sub);
+                            $$ = new Binary($1->lineNum, Binary::Type::Sub);
                         }
                         ;
 
@@ -569,15 +569,15 @@ mulExp                  : mulExp mulOp unaryExp
 
 mulOp                   : MUL
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::Mul);
+                            $$ = new Binary($1->lineNum, Binary::Type::Mul);
                         }
                         | DIV
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::Div);
+                            $$ = new Binary($1->lineNum, Binary::Type::Div);
                         }
                         | MOD
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::Mod);
+                            $$ = new Binary($1->lineNum, Binary::Type::Mod);
                         }
                         ;
 
@@ -594,15 +594,15 @@ unaryExp                : unaryOp unaryExp
 
 unaryOp                 : SUB
                         {
-                            $$ = new Unary($1->tokenLineNum, Unary::Type::Chsign);
+                            $$ = new Unary($1->lineNum, Unary::Type::Chsign);
                         }
                         | MUL
                         {
-                            $$ = new Unary($1->tokenLineNum, Unary::Type::Sizeof);
+                            $$ = new Unary($1->lineNum, Unary::Type::Sizeof);
                         }
                         | QUESTION
                         {
-                            $$ = new Unary($1->tokenLineNum, Unary::Type::Question);
+                            $$ = new Unary($1->lineNum, Unary::Type::Question);
                         }
                         ;
 
@@ -618,12 +618,12 @@ factor                  : mutable
 
 mutable                 : ID
                         {
-                            $$ = new Id($1->tokenLineNum, $1->tokenContent);
+                            $$ = new Id($1->lineNum, $1->tokenContent);
                         }
                         | ID LBRACK exp RBRACK
                         {
-                            $$ = new Binary($1->tokenLineNum, Binary::Type::Index);
-                            Id *node = new Id($1->tokenLineNum, $1->tokenContent, true);
+                            $$ = new Binary($1->lineNum, Binary::Type::Index);
+                            Id *node = new Id($1->lineNum, $1->tokenContent, true);
                             $$->addChild(node);
                             $$->addChild($3);
                         }
@@ -645,7 +645,7 @@ immutable               : LPAREN exp RPAREN
 
 call                    : ID LPAREN args RPAREN
                         {
-                            $$ = new Call($1->tokenLineNum, $1->tokenContent);
+                            $$ = new Call($1->lineNum, $1->tokenContent);
                             $$->addChild($3);
                         }
                         ;
@@ -673,19 +673,19 @@ argList                 : argList COMMA exp
 
 constant                : NUMCONST
                         {
-                            $$ = new Const($1->tokenLineNum, Const::Type::Int, $1->tokenContent);
+                            $$ = new Const($1->lineNum, Const::Type::Int, $1->tokenContent);
                         }
                         | BOOLCONST
                         {
-                            $$ = new Const($1->tokenLineNum, Const::Type::Bool, $1->tokenContent);
+                            $$ = new Const($1->lineNum, Const::Type::Bool, $1->tokenContent);
                         }
                         | CHARCONST
                         {
-                            $$ = new Const($1->tokenLineNum, Const::Type::Char, $1->tokenContent);
+                            $$ = new Const($1->lineNum, Const::Type::Char, $1->tokenContent);
                         }
                         | STRINGCONST
                         {
-                            $$ = new Const($1->tokenLineNum, Const::Type::String, $1->tokenContent);
+                            $$ = new Const($1->lineNum, Const::Type::String, $1->tokenContent);
                         }
                         ;
 
@@ -716,8 +716,8 @@ int main(int argc, char *argv[])
     SymTable symTable = SymTable();
     symTable.debug(flags.getSymTableDebugFlag());
 
-    Semantics analyzer = Semantics(&symTable);
-    analyzer.analyze(root);
+    /* Semantics analyzer = Semantics(&symTable);
+    analyzer.analyze(root); */
 
     if (flags.getPrintAnnotatedSyntaxTreeFlag())
     {

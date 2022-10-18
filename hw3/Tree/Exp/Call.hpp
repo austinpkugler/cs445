@@ -1,18 +1,22 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Exp.hpp"
 
-class Call : public Node
+class Call : public Exp
 {
     public:
         /**
-         * @param tokenLineNum Line number the call occurred in.
-         * @param funcName Name of the function called.
+         * @param lineNum Line number of occurrence.
+         * @param funcName Name of the function being called.
          */
-        Call(const unsigned tokenLineNum, const std::string funcName);
+        Call(const unsigned lineNum, const std::string funcName);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Exp; }
-        ExpKind getExpKind() const { return ExpKind::Call; }
         std::string stringify() const;
+
+        // Getters
+        std::string getName() const { return m_name; }
+
+    private:
+        const std::string m_name;
 };

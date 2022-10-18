@@ -1,6 +1,6 @@
 #include "While.hpp"
 
-While::While(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+While::While(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::While)
 {
 
 }

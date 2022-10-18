@@ -1,25 +1,25 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Exp.hpp"
 
-class Binary : public Node
+class Binary : public Exp
 {
     public:
+        // Enums
         enum class Type { Mul, Div, Mod, Add, Sub, Index, And, Or, LT, LEQ, GT, GEQ, EQ, NEQ };
 
         /**
-         * @param tokenLineNum Line number the binary operation occurred in.
-         * @param type Datatype of the binary operation.
+         * @param lineNum Line number of occurrence.
+         * @param type Type of binary operation.
          */
-        Binary(const unsigned tokenLineNum, const Type type);
+        Binary(const unsigned lineNum, const Binary::Type type);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Exp; }
-        ExpKind getExpKind() const { return ExpKind::Binary; }
         std::string stringify() const;
 
-        Type getType() const { return m_type; }
+        // Getters
+        Binary::Type getType() const { return m_type; }
 
     private:
-        const Type m_type;
+        const Binary::Type m_type;
 };

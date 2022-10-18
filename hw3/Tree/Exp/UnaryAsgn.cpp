@@ -1,6 +1,6 @@
 #include "UnaryAsgn.hpp"
 
-UnaryAsgn::UnaryAsgn(const unsigned tokenLineNum, const Type type) : Node::Node(tokenLineNum), m_type(type)
+UnaryAsgn::UnaryAsgn(const unsigned lineNum, const UnaryAsgn::Type type) : Exp::Exp(lineNum, Exp::Kind::UnaryAsgn), m_type(type)
 {
 
 }

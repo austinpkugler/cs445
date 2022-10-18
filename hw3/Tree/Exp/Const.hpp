@@ -1,31 +1,36 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Exp.hpp"
 
-class Const : public Node
+class Const : public Exp
 {
     public:
+        // Enums
         enum class Type { Int, Bool, Char, String };
 
         /**
-         * @param tokenLineNum Line number the constant occurred in.
-         * @param type Datatype of the constant.
-         * @param constValue Stringified value of the constant.
+         * @param lineNum Line number of occurrence.
+         * @param type Type of the const.
+         * @param value Stringified value of the const
          */
-        Const(const unsigned tokenLineNum, const Type type, const std::string constValue);
+        Const(const unsigned lineNum, const Const::Type type, const std::string value);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Exp; }
-        ExpKind getExpKind() const { return ExpKind::Const; }
         std::string stringify() const;
 
+        // Getters
         bool getCharLengthWarning() const { return m_charLengthWarning; }
 
     private:
+        // Helpers
         char parseFirstChar(const std::string &str) const;
         std::string removeFirstAndLastChar(const std::string &str) const;
         std::string parseChars(const std::string &str) const;
 
-        const Type m_type;
+        const Const::Type m_type;
         bool m_charLengthWarning = false;
+        int m_intValue;
+        bool m_boolValue;
+        char m_charValue;
+        std::string m_stringValue;
 };

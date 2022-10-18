@@ -1,26 +1,15 @@
 #include "Parm.hpp"
 
-Parm::Parm(const unsigned tokenLineNum, Prim *type, const std::string parmName) : Node::Node(tokenLineNum, parmName), m_type(type)
+Parm::Parm(const unsigned lineNum, const std::string parmName, Data *data) : Decl::Decl(lineNum, Decl::Kind::Parm, parmName, data)
 {
 
 }
 
 std::string Parm::stringify() const
 {
-    if (m_type->getIsArray())
+    if (m_data->getIsArray())
     {
-        return "Parm: " + m_stringValue + " is array of type " + m_type->stringify();
+        return "Parm: " + m_name + " is array of type " + m_data->stringify();
     }
-    return "Parm: " + m_stringValue + " of type " + m_type->stringify();
+    return "Parm: " + m_name + " of type " + m_data->stringify();
 }
-
-void Parm::setType(Prim::Type type)
-{
-    m_type->setType(type);
-    if (m_sibling != nullptr)
-    {
-        Parm *node = (Parm *)m_sibling;
-        node->setType(type);
-    }
-}
-

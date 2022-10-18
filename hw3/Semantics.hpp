@@ -20,8 +20,8 @@ class Semantics
         void analyzeStmt(Node *node) const;
         void analyzeExp(Node *node) const;
 
-        bool isValidIdNode(Node *node) const;
-        bool isValidFuncNode(Node *node) const;
+        // bool isValidIdNode(Node *node) const;
+        // bool isValidFuncNode(Node *node) const;
 
         bool isValidMainFunc(Func *funcNode) const;
         bool isDeclaredId(Id *idNode) const;

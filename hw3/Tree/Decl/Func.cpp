@@ -1,11 +1,11 @@
 #include "Func.hpp"
 
-Func::Func(const unsigned tokenLineNum, Prim *type, const std::string funcName) : Node::Node(tokenLineNum, funcName), m_type(type)
+Func::Func(const unsigned lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, Decl::Kind::Func, funcName, data)
 {
 
 }
 
 std::string Func::stringify() const
 {
-    return "Func: " + m_stringValue + " returns type " + m_type->stringify();
+    return "Func: " + m_name + " returns type " + m_data->stringify();
 }

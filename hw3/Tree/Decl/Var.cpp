@@ -1,45 +1,30 @@
 #include "Var.hpp"
 
-Var::Var(const unsigned tokenLineNum, Prim *type, const std::string varName) : Node::Node(tokenLineNum, varName), m_type(type)
+Var::Var(const unsigned lineNum, const std::string varName, Data *data) : Decl::Decl(lineNum, Decl::Kind::Var, varName, data)
 {
 
 }
 
 std::string Var::stringify() const
 {
-    if (m_type->getIsArray() && getIsStatic())
+    if (m_data->getIsArray() && m_data->getIsStatic())
     {
-        return "Var: " + m_stringValue + " is array of type " + m_type->stringify();
+        return "Var: " + m_name + " is array of type " + m_data->stringify();
     }
-    else if (m_type->getIsArray())
+    else if (m_data->getIsArray())
     {
-        return "Var: " + m_stringValue + " is array of type " + m_type->stringify();
+        return "Var: " + m_name + " is array of type " + m_data->stringify();
     }
-    else if (getIsStatic())
+    else if (m_data->getIsStatic())
     {
-        return "Var: " + m_stringValue + " of type " + m_type->stringify();
+        return "Var: " + m_name + " of type " + m_data->stringify();
     }
-    return "Var: " + m_stringValue + " of type " + m_type->stringify();
+    return "Var: " + m_name + " of type " + m_data->stringify();
 }
 
-bool Var::getIsStatic() const
+void Var::makeInitialized()
 {
-    return m_type->getIsStatic();
-}
-
-bool Var::getIsArray() const
-{
-    return m_type->getIsArray();
-}
-
-void Var::setType(const Prim::Type type)
-{
-    m_type->setType(type);
-    if (m_sibling != nullptr)
-    {
-        Var *node = (Var *)m_sibling;
-        node->setType(type);
-    }
+    m_initialized = true;
 }
 
 void Var::makeStatic()
@@ -48,10 +33,5 @@ void Var::makeStatic()
     {
         ((Var* )m_sibling)->makeStatic();
     }
-    m_type->setIsStatic(true);
-}
-
-void Var::makeInitialized()
-{
-    bool m_initialized = true;
+    m_data->setIsStatic(true);
 }

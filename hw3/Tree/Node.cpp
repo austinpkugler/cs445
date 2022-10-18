@@ -1,28 +1,13 @@
 #include "Node.hpp"
 
-Node::Node(const unsigned tokenLineNum) : m_tokenLineNum(tokenLineNum), m_sibling(nullptr)
+Node::Node(const unsigned lineNum) : m_lineNum(lineNum), m_nodeKind(Node::Kind::None), m_sibling(nullptr)
 {
 
 }
 
-Node::Node(const unsigned tokenLineNum, const int value) : m_tokenLineNum(tokenLineNum), m_sibling(nullptr)
+Node::Node(const unsigned lineNum, const Node::Kind nodeKind) : m_lineNum(lineNum), m_nodeKind(nodeKind), m_sibling(nullptr)
 {
-    m_intValue = value;
-}
 
-Node::Node(const unsigned tokenLineNum, const bool value) : m_tokenLineNum(tokenLineNum), m_sibling(nullptr)
-{
-    m_boolValue = value;
-}
-
-Node::Node(const unsigned tokenLineNum, const char value) : m_tokenLineNum(tokenLineNum), m_sibling(nullptr)
-{
-    m_charValue = value;
-}
-
-Node::Node(const unsigned tokenLineNum, const std::string value) : m_tokenLineNum(tokenLineNum), m_sibling(nullptr)
-{
-    m_stringValue = value;
 }
 
 Node::~Node()
@@ -64,7 +49,7 @@ void Node::printTree() const
 {
     static unsigned siblingCount = 0, tabCount = 0;
     printNode();
-    std::cout << " [line: " << m_tokenLineNum << "]" << std::endl;
+    std::cout << " [line: " << m_lineNum << "]" << std::endl;
 
     tabCount++;
 
@@ -98,33 +83,6 @@ void Node::printTree() const
     siblingCount--;
 }
 
-Node::DeclKind Node::getDeclKind() const
-{
-    if (getNodeKind() != Node::NodeKind::Decl)
-    {
-        throw std::runtime_error("Cannot get \'DeclKind\' for non-Decl node");
-    }
-    return Node::DeclKind::DeclNone;
-}
-
-Node::StmtKind Node::getStmtKind() const
-{
-    if (getNodeKind() != Node::NodeKind::Stmt)
-    {
-        throw std::runtime_error("Cannot get \'DeclKind\' for non-Stmt node");
-    }
-    return Node::StmtKind::StmtNone;
-}
-
-Node::ExpKind Node::getExpKind() const
-{
-    if (getNodeKind() != Node::NodeKind::Exp)
-    {
-        throw std::runtime_error("Cannot get \'DeclKind\' for non-Exp node");
-    }
-    return Node::ExpKind::ExpNone;
-}
-
 void Node::printNode() const
 {
     std::cout << stringify();
@@ -132,7 +90,7 @@ void Node::printNode() const
 
 std::string Node::stringify() const
 {
-    return " [line: " + std::to_string(m_tokenLineNum) + "]";
+    return " [line: " + std::to_string(m_lineNum) + "]";
 }
 
 void Node::printTabs(const unsigned tabCount) const

@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Exp.hpp"
 
-class Range : public Node
+class Range : public Exp
 {
     public:
         /**
-         * @param tokenLineNum Line number the range occurred in.
+         * @param lineNum Line number of occurrence.
          */
-        Range(const unsigned tokenLineNum);
+        Range(const unsigned lineNum);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Exp; }
-        ExpKind getExpKind() const { return ExpKind::Range; }
         std::string stringify() const;
 };

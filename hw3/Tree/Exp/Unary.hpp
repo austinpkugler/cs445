@@ -1,23 +1,25 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Exp.hpp"
 
-class Unary : public Node
+class Unary : public Exp
 {
     public:
+        // Enums
         enum class Type { Chsign, Sizeof, Question, Not };
 
         /**
-         * @param tokenLineNum Line number the unary operation occurred in.
-         * @param type Datatype of the unary operation.
+         * @param lineNum Line number of occurrence.
+         * @param type Type of unary operation.
          */
-        Unary(const unsigned tokenLineNum, const Type type);
+        Unary(const unsigned lineNum, const Unary::Type type);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Exp; }
-        ExpKind getExpKind() const { return ExpKind::Unary; }
         std::string stringify() const;
 
+        // Getters
+        Unary::Type getType() const { return m_type; }
+
     private:
-        const Type m_type;
+        const Unary::Type m_type;
 };

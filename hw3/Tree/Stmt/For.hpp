@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Stmt.hpp"
 
-class For : public Node
+class For : public Stmt
 {
     public:
         /**
-         * @param tokenLineNum Line number the for occurred in.
+         * @param lineNum Line number of occurrence.
          */
-        For(const unsigned tokenLineNum);
+        For(const unsigned lineNum);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Stmt; }
-        StmtKind getStmtKind() const { return StmtKind::For; }
         std::string stringify() const;
 };

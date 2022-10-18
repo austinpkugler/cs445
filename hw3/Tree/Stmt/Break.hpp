@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Stmt.hpp"
 
-class Break : public Node
+class Break : public Stmt
 {
     public:
         /**
-         * @param tokenLineNum Line number the break occurred in.
+         * @param lineNum Line number of occurrence.
          */
-        Break(const unsigned tokenLineNum);
+        Break(const unsigned lineNum);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Stmt; }
-        StmtKind getStmtKind() const { return StmtKind::Break; }
         std::string stringify() const;
 };

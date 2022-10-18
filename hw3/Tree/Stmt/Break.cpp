@@ -1,6 +1,6 @@
 #include "Break.hpp"
 
-Break::Break(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+Break::Break(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Break)
 {
 
 }

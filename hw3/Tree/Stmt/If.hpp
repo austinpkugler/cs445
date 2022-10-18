@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Stmt.hpp"
 
-class If : public Node
+class If : public Stmt
 {
     public:
         /**
-         * @param tokenLineNum Line number the if occurred in.
+         * @param lineNum Line number of occurrence.
          */
-        If(const unsigned tokenLineNum);
+        If(const unsigned lineNum);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Stmt; }
-        StmtKind getStmtKind() const { return StmtKind::If; }
         std::string stringify() const;
 };

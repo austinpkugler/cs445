@@ -1,22 +1,25 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Exp.hpp"
 
-class Id : public Node
+class Id : public Exp
 {
     public:
         /**
-         * @param tokenLineNum Line number the call occurred in.
-         * @param idName Name of the Id.
-         * @param isArray Whether the Id references an array.
+         * @param lineNum Line number of occurrence.
+         * @param idName Name of the id.
+         * @param isArray Whether the id references an array. False by default.
          */
-        Id(const unsigned tokenLineNum, const std::string idName, const bool isArray=false);
+        Id(const unsigned lineNum, const std::string idName, const bool isArray=false);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Exp; }
-        ExpKind getExpKind() const { return ExpKind::Id; }
         std::string stringify() const;
 
+        // Getters
+        std::string getName() const { return m_name; }
+        bool getIsArray() const { return m_isArray; }
+
     private:
+        const std::string m_name;
         const bool m_isArray;
 };

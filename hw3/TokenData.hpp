@@ -5,6 +5,6 @@
 
 struct TokenData
 {
-    unsigned tokenLineNum;              // Line number of token occurrence
+    unsigned lineNum;              // Line number of token occurrence
     std::string tokenContent;           // The string that was read
 };

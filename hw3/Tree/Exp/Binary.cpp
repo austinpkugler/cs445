@@ -1,6 +1,6 @@
 #include "Binary.hpp"
 
-Binary::Binary(const unsigned tokenLineNum, const Type type) : Node::Node(tokenLineNum), m_type(type)
+Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineNum, Exp::Kind::Binary), m_type(type)
 {
 
 }
@@ -10,50 +10,50 @@ std::string Binary::stringify() const
     std::string stringy = "Op: ";
     switch(m_type)
     {
-        case Type::Mul:
+        case Binary::Type::Mul:
             stringy += "*";
             break;
-        case Type::Div:
+        case Binary::Type::Div:
             stringy += "/";
             break;
-        case Type::Mod:
+        case Binary::Type::Mod:
             stringy += "%";
             break;
-        case Type::Add:
+        case Binary::Type::Add:
             stringy += "+";
             break;
-        case Type::Sub:
+        case Binary::Type::Sub:
             stringy += "-";
             break;
-        case Type::Index:
+        case Binary::Type::Index:
             stringy += "[";
             break;
-        case Type::And:
+        case Binary::Type::And:
             stringy += "and";
             break;
-        case Type::Or:
+        case Binary::Type::Or:
             stringy += "or";
             break;
-        case Type::LT:
+        case Binary::Type::LT:
             stringy += "<";
             break;
-        case Type::LEQ:
+        case Binary::Type::LEQ:
             stringy += "<=";
             break;
-        case Type::GT:
+        case Binary::Type::GT:
             stringy += ">";
             break;
-        case Type::GEQ:
+        case Binary::Type::GEQ:
             stringy += ">=";
             break;
-        case Type::EQ:
+        case Binary::Type::EQ:
             stringy += "==";
             break;
-        case Type::NEQ:
+        case Binary::Type::NEQ:
             stringy += "!=";
             break;
         default:
-            throw std::runtime_error("Could not stringify Binary::Type");
+            throw std::runtime_error("Could not stringify Binary::Binary::Type");
             break;
     }
     return stringy;

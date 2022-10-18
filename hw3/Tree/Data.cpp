@@ -1,12 +1,12 @@
-#include "Prim.hpp"
+#include "Data.hpp"
 
-Prim::Prim(Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
+Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
 {
     m_next = nullptr;
     if (isArray)
     {
-        m_next = new Prim(type, false, false);
-        m_type = Type::Void;
+        m_next = new Data(type, false, false);
+        m_type = Data::Type::Void;
     }
     else
     {
@@ -14,17 +14,17 @@ Prim::Prim(Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isSta
     }
 }
 
-void Prim::setIsArray(bool isArray)
+void Data::setIsArray(bool isArray)
 {
     m_isArray = isArray;
 }
 
-void Prim::setIsStatic(bool isStatic)
+void Data::setIsStatic(bool isStatic)
 {
     m_isStatic = isStatic;
 }
 
-void Prim::setType(Type type)
+void Data::setType(Data::Type type)
 {
     m_type = type;
     if (m_next != nullptr)
@@ -33,28 +33,28 @@ void Prim::setType(Type type)
     }
 }
 
-std::string Prim::stringify() const
+std::string Data::stringify() const
 {
     std::string stringy;
     switch(m_type)
     {
-        case Type::Int:
+        case Data::Type::Int:
             stringy = "int";
             break;
-        case Type::Bool:
+        case Data::Type::Bool:
             stringy = "bool";
             break;
-        case Type::Char:
+        case Data::Type::Char:
             stringy = "char";
             break;
-        case Type::String:
+        case Data::Type::String:
             stringy = "string";
             break;
-        case Type::Void:
+        case Data::Type::Void:
             stringy = "void";
             break;
         default:
-            throw std::runtime_error("Could not stringify Prim::Type");
+            throw std::runtime_error("Could not stringify Data::Type");
             break;
     }
     return stringy;

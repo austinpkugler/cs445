@@ -1,6 +1,6 @@
 #include "For.hpp"
 
-For::For(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+For::For(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::For)
 {
 
 }

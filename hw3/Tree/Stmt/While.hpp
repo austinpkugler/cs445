@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Stmt.hpp"
 
-class While : public Node
+class While : public Stmt
 {
     public:
         /**
-         * @param tokenLineNum Line number the while occurred in.
+         * @param lineNum Line number of occurrence.
          */
-        While(const unsigned tokenLineNum);
+        While(const unsigned lineNum);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Stmt; }
-        StmtKind getStmtKind() const { return StmtKind::While; }
         std::string stringify() const;
 };

@@ -1,6 +1,6 @@
 #include "Compound.hpp"
 
-Compound::Compound(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+Compound::Compound(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Compound)
 {
 
 }

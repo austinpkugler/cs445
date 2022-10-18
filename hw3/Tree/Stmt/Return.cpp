@@ -1,6 +1,6 @@
 #include "Return.hpp"
 
-Return::Return(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+Return::Return(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Return)
 {
 
 }

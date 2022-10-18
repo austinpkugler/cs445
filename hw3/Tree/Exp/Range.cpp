@@ -1,6 +1,6 @@
 #include "Range.hpp"
 
-Range::Range(const unsigned tokenLineNum) : Node::Node(tokenLineNum)
+Range::Range(const unsigned lineNum) : Exp::Exp(lineNum, Exp::Kind::Range)
 {
 
 }

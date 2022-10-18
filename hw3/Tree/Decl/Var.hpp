@@ -1,31 +1,24 @@
 #pragma once
 
-#include "../Node.hpp"
-#include "../Prim.hpp"
+#include "Decl.hpp"
 
-class Var : public Node
+class Var : public Decl
 {
     public:
         /**
-         * @param tokenLineNum Line number the variable occurred in.
-         * @param type Prim type of the variable.
-         * @param varName Name of the variable.
-         * @param isStatic Whether the variable is static.
+         * @param lineNum Line number of occurrence.
+         * @param varName Name of the var
+         * @param data Data associated with the decl (e.g. type, isArray, isStatic)
          */
-        Var(const unsigned tokenLineNum, Prim *type, const std::string varName);
+        Var(const unsigned lineNum, const std::string varName, Data *data);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Decl; }
-        DeclKind getDeclKind() const { return DeclKind::Var; }
         std::string stringify() const;
 
-        bool getIsStatic() const;
-        bool getIsArray() const;
-        void setType(const Prim::Type type);
+        // Setters
         void makeInitialized();
         void makeStatic();
 
     private:
-        Prim *m_type;
         bool m_initialized = false;
 };

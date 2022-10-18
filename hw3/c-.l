@@ -16,13 +16,13 @@
 int lineCount = 1;
 int errorCount;
 
-static int setValue(unsigned tokenLineNum, int tokenClass, char *sValue)
+static int setValue(unsigned lineNum, int tokenClass, char *sValue)
 {
     // Create the pass-back data space
     yylval.tokenData = new TokenData;
 
     // Fill it up
-    yylval.tokenData->tokenLineNum = tokenLineNum;
+    yylval.tokenData->lineNum = lineNum;
     yylval.tokenData->tokenContent = std::string(sValue);
 
     return tokenClass;

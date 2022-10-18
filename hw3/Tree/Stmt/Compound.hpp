@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../Node.hpp"
+#include "Stmt.hpp"
 
-class Compound : public Node
+class Compound : public Stmt
 {
     public:
         /**
-         * @param tokenLineNum Line number the call occurred in.
+         * @param lineNum Line number of occurrence.
          */
-        Compound(const unsigned tokenLineNum);
+        Compound(const unsigned lineNum);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Stmt; }
-        StmtKind getStmtKind() const { return StmtKind::Compound; }
         std::string stringify() const;
 };

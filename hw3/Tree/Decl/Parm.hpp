@@ -1,25 +1,17 @@
 #pragma once
 
-#include "../Node.hpp"
-#include "../Prim.hpp"
+#include "Decl.hpp"
 
-class Parm : public Node
+class Parm : public Decl
 {
     public:
         /**
-         * @param tokenLineNum Line number the parm occurred in.
-         * @param type Datatype of the parm.
-         * @param parmName Name of the parm.
+         * @param lineNum Line number of occurrence.
+         * @param parmName Name of the parm
+         * @param data Data associated with the decl (e.g. type, isArray, isStatic)
          */
-        Parm(const unsigned tokenLineNum, Prim *type, const std::string parmName);
+        Parm(const unsigned lineNum, const std::string parmName, Data *data);
 
         // Overridden
-        NodeKind getNodeKind() const { return NodeKind::Decl; }
-        DeclKind getDeclKind() const { return DeclKind::Parm; }
         std::string stringify() const;
-
-        void setType(Prim::Type type);
-
-    private:
-        Prim *m_type;
 };

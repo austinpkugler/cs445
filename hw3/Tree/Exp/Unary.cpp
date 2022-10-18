@@ -1,6 +1,6 @@
 #include "Unary.hpp"
 
-Unary::Unary(const unsigned tokenLineNum, const Type type) : Node::Node(tokenLineNum), m_type(type)
+Unary::Unary(const unsigned lineNum, const Unary::Type type) : Exp::Exp(lineNum, Exp::Kind::Unary), m_type(type)
 {
 
 }
@@ -10,16 +10,16 @@ std::string Unary::stringify() const
     std::string stringy = "Op: ";
     switch(m_type)
     {
-        case Type::Chsign:
+        case Unary::Type::Chsign:
             stringy += "chsign";
             break;
-        case Type::Sizeof:
+        case Unary::Type::Sizeof:
             stringy += "sizeof";
             break;
-        case Type::Question:
+        case Unary::Type::Question:
             stringy += "?";
             break;
-        case Type::Not:
+        case Unary::Type::Not:
             stringy += "not";
             break;
         default:
