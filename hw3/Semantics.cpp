@@ -255,10 +255,10 @@ void Semantics::analyzeExp(Node *node) const
                         throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: first child is not \'Exp:Id\' node");
                     }
 
-                    Id *lhsIdNode = (Id *)(expChildren[0]);
-                    if (lhsIdNode->getIsArray())
+                    Id *arrayIdNode = (Id *)(expChildren[0]);
+                    if (!arrayIdNode->getIsArray())
                     {
-                        Emit::Error::generic(expNode->getLineNum(), "Cannot index nonarray '" + lhsIdNode->getName() + "'.");
+                        Emit::Error::generic(arrayIdNode->getLineNum(), "Cannot index nonarray '" + arrayIdNode->getName() + "'.");
                         return;
                     }
 
