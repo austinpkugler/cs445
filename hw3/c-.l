@@ -5,6 +5,7 @@
 #include "TokenData.hpp"
 #include "Semantics.hpp"
 #include "SymTable.hpp"
+#include "Emit.hpp"
 #include "Tree/Tree.hpp"
 
 #include <string>

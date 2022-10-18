@@ -30,13 +30,11 @@ class Node
         virtual int getIntValue() { return m_intValue; }
         virtual bool getBoolValue() { return m_boolValue; }
         virtual char getCharValue() { return m_charValue; }
-
-        virtual DeclKind getDeclKind() const { return DeclKind::DeclNone; }
-        virtual StmtKind getStmtKind() const { return StmtKind::StmtNone; }
-        virtual ExpKind getExpKind() const { return ExpKind::ExpNone; }
-
         virtual std::string getStringValue() { return m_stringValue; }
         virtual NodeKind getNodeKind() const { return NodeKind::None; }
+        virtual DeclKind getDeclKind() const; //{ return DeclKind::DeclNone; }
+        virtual StmtKind getStmtKind() const; //{ return StmtKind::StmtNone; }
+        virtual ExpKind getExpKind() const; //{ return ExpKind::ExpNone; }
         virtual void printNode() const;
 
     protected:

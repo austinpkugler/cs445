@@ -19,7 +19,12 @@ class Semantics
         void analyzeDecl(Node *node);
         void analyzeStmt(Node *node) const;
         void analyzeExp(Node *node) const;
+
+        bool isValidIdNode(Node *node) const;
+        bool isValidFuncNode(Node *node) const;
+
         bool isValidMainFunc(Func *funcNode) const;
+        bool isDeclaredId(Id *idNode) const;
 
         SymTable *m_symTable;
         Node *m_root;

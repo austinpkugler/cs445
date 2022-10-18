@@ -18,6 +18,8 @@ class Binary : public Node
         ExpKind getExpKind() const { return ExpKind::Binary; }
         std::string stringify() const;
 
+        Type getType() const { return m_type; }
+
     private:
         const Type m_type;
 };

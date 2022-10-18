@@ -4,6 +4,7 @@
 #include "TokenData.hpp"
 #include "Semantics.hpp"
 #include "SymTable.hpp"
+#include "Emit.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -727,8 +728,8 @@ int main(int argc, char *argv[])
         root->printTree();
     }
 
-    std::cout << "Number of errors: " << errorCount << std::endl;
-    std::cout << "Number of warnings: " << errorCount << std::endl;
+    Emit::Warn::count();
+    Emit::Error::count();
 
     delete root;
     fclose(yyin);

@@ -168,11 +168,48 @@ void Semantics::analyzeExp(Node *node) const
         case Node::ExpKind::Asgn:
         {
             Asgn *asgnNode = (Asgn *)node;
+            std::vector<Node *> asgnChildren = asgnNode->getChildren();
+            
+
+            // Check if the LHS is declared, if the LHS is an Id
+            if (isValidIdNode(asgnChildren[0]))
+            {
+                Id *lhsIdNode = (Id *)(asgnChildren[0]);
+                if (!isDeclaredId(lhsIdNode))
+                {
+                    Emit::Error::generic(lhsIdNode->getTokenLineNum(), "Symbol \'" + lhsIdNode->getStringValue() + "\' is not declared.");
+                }
+            }
+
+            // Check if the RHS is declared, if the RHS is an Id
+            if (isValidIdNode(asgnChildren[1]))
+            {
+                Id *rhsIdNode = (Id *)(asgnChildren[1]);
+                if (!isDeclaredId(rhsIdNode))
+                {
+                    Emit::Error::generic(rhsIdNode->getTokenLineNum(), "Symbol \'" + rhsIdNode->getStringValue() + "\' is not declared.");
+                }
+            }
+            // Need to check LHS and RHS are the same type
             break;
         }
         case Node::ExpKind::Binary:
         {
             Binary *binaryNode = (Binary *)node;
+            std::vector<Node *> binaryChildren = binaryNode->getChildren();
+            switch(binaryNode->getType())
+            {
+                case Binary::Type::Add:
+                {
+                    // If the the LHS is an Id
+                    if (isValidIdNode(binaryChildren[0]))
+                    {
+
+                    }
+                    // std::cout << "Add lhs -- " << "getTokenLineNum()=" << binaryChildren[0]->getTokenLineNum() << " getNodeKind()=" << binaryChildren[0]->getNodeKind() << " getExpKind()=" << binaryChildren[0]->getExpKind() << " getStringValue()=" << binaryChildren[0]->getStringValue() << std::endl;
+                    break;
+                }
+            }
             break;
         }
         case Node::ExpKind::Call:
@@ -214,8 +251,31 @@ void Semantics::analyzeExp(Node *node) const
     }
 }
 
+bool Semantics::isValidIdNode(Node *node) const
+{
+    if (node == nullptr || node->getNodeKind() != Node::NodeKind::Exp || node->getExpKind() != Node::ExpKind::Id)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isValidFuncNode(Node *node) const
+{
+    if (node == nullptr || node->getNodeKind() != Node::NodeKind::Decl || node->getDeclKind() != Node::DeclKind::Func)
+    {
+        return false;
+    }
+    return true;
+}
+
 bool Semantics::isValidMainFunc(Func *funcNode) const
 {
+    if (!isValidFuncNode(funcNode))
+    {
+        throw std::runtime_error("Cannot determine valid main status of non-Func or nullptr node");
+    }
+
     // Function name is not main
     if (funcNode->getStringValue() != "main")
     {
@@ -253,5 +313,20 @@ bool Semantics::isValidMainFunc(Func *funcNode) const
         return false;
     }
 
+    return true;
+}
+
+bool Semantics::isDeclaredId(Id *idNode) const
+{
+    if (!isValidIdNode(idNode))
+    {
+        throw std::runtime_error("Cannot determine declaration status of non-Id or nullptr node");
+    }
+
+    // If the id name is not in the symbol table
+    if (m_symTable->lookup(idNode->getStringValue()) == nullptr)
+    {
+        return false;
+    }
     return true;
 }

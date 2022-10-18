@@ -98,6 +98,33 @@ void Node::printTree() const
     siblingCount--;
 }
 
+Node::DeclKind Node::getDeclKind() const
+{
+    if (getNodeKind() != Node::NodeKind::Decl)
+    {
+        throw std::runtime_error("Cannot get \'DeclKind\' for non-Decl node");
+    }
+    return Node::DeclKind::DeclNone;
+}
+
+Node::StmtKind Node::getStmtKind() const
+{
+    if (getNodeKind() != Node::NodeKind::Stmt)
+    {
+        throw std::runtime_error("Cannot get \'DeclKind\' for non-Stmt node");
+    }
+    return Node::StmtKind::StmtNone;
+}
+
+Node::ExpKind Node::getExpKind() const
+{
+    if (getNodeKind() != Node::NodeKind::Exp)
+    {
+        throw std::runtime_error("Cannot get \'DeclKind\' for non-Exp node");
+    }
+    return Node::ExpKind::ExpNone;
+}
+
 void Node::printNode() const
 {
     std::cout << stringify();
