@@ -43,6 +43,7 @@ c-
 
 # Test
 tmp/
+test.history
 
 # Downloads
 *.Identifier
