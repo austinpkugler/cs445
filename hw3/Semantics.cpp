@@ -50,28 +50,21 @@ void Semantics::analyzeTree(Node *node)
     }
 
     // Leave the scope for every scope that was previously entered
-    if (node->getNodeKind() == Node::Kind::Decl)
+    if (isFuncNode(node))
     {
-        Decl *declNode = (Decl *)node;
-        if (declNode->getDeclKind() == Decl::Kind::Func)
-        {
-            leaveScope();
-        }
+        leaveScope();
     }
-    else if(node->getNodeKind() == Node::Kind::Stmt)
+    else if (isForNode(node))
     {
+        leaveScope();
+    }
+    else if(isCompoundNode(node))
+    {
+        // Don't leave the scope if the parent is a func or for
         Stmt *stmtNode = (Stmt *)node;
-        if (stmtNode->getStmtKind() == Stmt::Kind::For)
+        if (!isFuncNode(stmtNode->getParent()) && !isForNode(stmtNode->getParent()))
         {
             leaveScope();
-        }
-        else if (stmtNode->getStmtKind() == Stmt::Kind::Compound)
-        {
-            // Don't leave the scope if the parent is a func or for
-            if (!isFuncNode(stmtNode->getParent()) && !isForNode(stmtNode->getParent()))
-            {
-                leaveScope();
-            }
         }
     }
 
@@ -143,6 +136,7 @@ void Semantics::analyzeStmt(Node *node) const
     }
 
     Stmt *stmtNode = (Stmt *)node;
+    std::vector<Node *> stmtChildren = stmtNode->getChildren();
     switch (stmtNode->getStmtKind())
     {
         // Not analyzed
@@ -153,12 +147,10 @@ void Semantics::analyzeStmt(Node *node) const
         case Stmt::Kind::Compound:
         {
             // Ignore compounds following func or for
-            Node *stmtParentNode = stmtNode->getParent();
-            if (isFuncNode(stmtParentNode) || isForNode(stmtParentNode))
+            if (!isFuncNode(stmtNode->getParent()) && !isForNode(stmtNode->getParent()))
             {
-                return;
+                m_symTable->enter("Compound Statement");
             }
-            m_symTable->enter("Compound Statement");
             break;
         }
         case Stmt::Kind::For:
@@ -174,12 +166,12 @@ void Semantics::analyzeStmt(Node *node) const
         case Stmt::Kind::Return:
         {
             Return *returnNode = (Return *)stmtNode;
-            if (returnNode->getChildren().size() > 0)
+            if (stmtChildren.size() > 0)
             {
-                Exp *expNode = (Exp *)(returnNode->getChildren()[0]);
-                if (expNode != nullptr && expNode->getExpKind() == Exp::Kind::Id)
+                Exp *returnNodeChild = (Exp *)(stmtChildren[0]);
+                if (isIdNode(returnNodeChild))
                 {
-                    Id *idNode = (Id *)expNode;
+                    Id *idNode = (Id *)returnNodeChild;
                     if (idNode->getIsArray())
                     {
                         Emit::Error::generic(returnNode->getLineNum(), "Cannot return an array.");
@@ -207,27 +199,25 @@ void Semantics::analyzeExp(Node *node) const
     }
 
     Exp *expNode = (Exp *)node;
+    std::vector<Node *> expChildren = expNode->getChildren();
     switch (expNode->getExpKind())
     {
         case Exp::Kind::Asgn:
         {
-            Asgn *asgnNode = (Asgn *)expNode;
-            std::vector<Node *> asgnChildren = asgnNode->getChildren();
-
-            // Check if the LHS is declared, if the LHS is an Id
-            if (isIdNode(asgnChildren[0]))
+            // If the lhs is an id, it must have been declared
+            if (isIdNode(expChildren[0]))
             {
-                Id *lhsIdNode = (Id *)(asgnChildren[0]);
+                Id *lhsIdNode = (Id *)(expChildren[0]);
                 if (!isDeclaredId(lhsIdNode))
                 {
                     Emit::Error::generic(lhsIdNode->getLineNum(), "Symbol \'" + lhsIdNode->getName() + "\' is not declared.");
                 }
             }
 
-            // Check if the RHS is declared, if the RHS is an Id
-            if (isIdNode(asgnChildren[1]))
+            // If the rhs is an id, it must have been declared
+            if (isIdNode(expChildren[1]))
             {
-                Id *rhsIdNode = (Id *)(asgnChildren[1]);
+                Id *rhsIdNode = (Id *)(expChildren[1]);
                 if (!isDeclaredId(rhsIdNode))
                 {
                     Emit::Error::generic(rhsIdNode->getLineNum(), "Symbol \'" + rhsIdNode->getName() + "\' is not declared.");
@@ -239,7 +229,6 @@ void Semantics::analyzeExp(Node *node) const
         case Exp::Kind::Binary:
         {
             Binary *binaryNode = (Binary *)expNode;
-            std::vector<Node *> binaryChildren = binaryNode->getChildren();
             switch (binaryNode->getType())
             {
                 case Binary::Type::Mul:
@@ -247,28 +236,30 @@ void Semantics::analyzeExp(Node *node) const
                 case Binary::Type::Mod:
                 case Binary::Type::Add:
                 case Binary::Type::Sub:
+                {
+                    // Get LHS children[0] and get RHS children[1]
+                    // checkAreSameType(children[0], children[1])
+                    // check that the datatypes are right on both sides
+                    // check that both sides have the same datatype
                     break;
+                }
                 case Binary::Type::Index:
                 {
-                    if (binaryChildren[0] == nullptr || binaryChildren[1] == nullptr)
+                    if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
                     {
                         throw std::runtime_error("Cannot analyze Index node of \'Binary\' kind as children are not found");
                     }
 
-                    Id *lhsExpNode = (Id *)(binaryChildren[0]);
-                    if (lhsExpNode->getIsArray())
+                    if (!isIdNode(expChildren[0]))
                     {
-                        Emit::Error::generic(expNode->getLineNum(), "Cannot index nonarray '" + lhsExpNode->getName() + "'.");
+                        throw std::runtime_error("Cannot analyze Index node of \'Binary\' kind as the first child is not an Id node");
                     }
-                    // Decl *prevDeclare = (Decl *)(m_symTable->lookup(lhsExpNode->getName()));
 
-                    // If the id is not declared
-                    // if (prevDeclare == nullptr)
-                    // {
-
-                    // }
-
-                    // Exp *rhsExpNode = (Exp *)(binaryChildren[1]);
+                    Id *lhsIdNode = (Id *)(expChildren[0]);
+                    if (lhsIdNode->getIsArray())
+                    {
+                        Emit::Error::generic(expNode->getLineNum(), "Cannot index nonarray '" + lhsIdNode->getName() + "'.");
+                    }
                     break;
                 }
                 case Binary::Type::And:
@@ -287,27 +278,27 @@ void Semantics::analyzeExp(Node *node) const
         case Exp::Kind::Call:
         {
             Call *callNode = (Call *)expNode;
-            Decl *declNode = (Decl *)(m_symTable->lookup(callNode->getName()));
+            Decl *prevDeclNode = (Decl *)(m_symTable->lookup(callNode->getName()));
 
             // If the function name is not in the symbol table
-            if (declNode == nullptr)
+            if (prevDeclNode == nullptr)
             {
                 Emit::Error::generic(expNode->getLineNum(), "Symbol '" + callNode->getName() + "' is not declared.");
                 return;
             }
 
             // If the function name is not associated with a function
-            if (declNode->getDeclKind() != Decl::Kind::Func)
+            if (!isFuncNode(prevDeclNode))
             {
                 Emit::Error::generic(expNode->getLineNum(), "'" + callNode->getName() + "' is a simple variable and cannot be called.");
-                if (declNode->getDeclKind() == Decl::Kind::Var)
+                if (isVarNode(prevDeclNode))
                 {
-                    Var *varNode = (Var *)declNode;
+                    Var *varNode = (Var *)prevDeclNode;
                     varNode->makeUsed();
                 }
-                else if (declNode->getDeclKind() == Decl::Kind::Parm)
+                else if (isParmNode(prevDeclNode))
                 {
-                    Parm *parmNode = (Parm *)declNode;
+                    Parm *parmNode = (Parm *)prevDeclNode;
                     parmNode->makeUsed();
                 }
                 return;
@@ -322,26 +313,25 @@ void Semantics::analyzeExp(Node *node) const
         case Exp::Kind::Id:
         {
             Id *idNode = (Id *)expNode;
-            Decl *prevDeclare = (Decl *)(m_symTable->lookup(idNode->getName()));
-            if (prevDeclare == nullptr)
+            Decl *prevDeclNode = (Decl *)(m_symTable->lookup(idNode->getName()));
+            if (prevDeclNode == nullptr)
             {
                 Emit::Error::generic(idNode->getLineNum(), "Symbol '" + idNode->getName() + "' is not declared.");
                 return;
             }
 
-            if (prevDeclare->getDeclKind() == Decl::Kind::Func)
+            if (isFuncNode(prevDeclNode))
             {
                 Emit::Error::generic(idNode->getLineNum(), "Cannot use function '" + idNode->getName() + "' as a variable.");
             }
-
-            if (prevDeclare->getDeclKind() == Decl::Kind::Var)
+            else if (isVarNode(prevDeclNode))
             {
-                Var *varNode = (Var *)prevDeclare;
+                Var *varNode = (Var *)prevDeclNode;
                 varNode->makeUsed();
             }
-            else if (prevDeclare->getDeclKind() == Decl::Kind::Parm)
+            else if (isParmNode(prevDeclNode))
             {
-                Parm *parmNode = (Parm *)prevDeclare;
+                Parm *parmNode = (Parm *)prevDeclNode;
                 parmNode->makeUsed();
             }
 
@@ -374,13 +364,13 @@ void Semantics::leaveScope()
     for (auto const& [name, voidNode] : syms)
     {
         Node *node = (Node *)voidNode;
-        if (node->getNodeKind() != Node::Kind::Decl)
+        if (!isDeclNode(node))
         {
             throw std::runtime_error("Failed to check if non-Decl node causes an unused var warning");
         }
 
         Decl *declNode = (Decl *)node;
-        if (declNode->getDeclKind() == Decl::Kind::Var)
+        if (isVarNode(declNode))
         {
             Var *varNode = (Var *)declNode;
             if (varNode->getIsUsed() == false)
@@ -388,7 +378,7 @@ void Semantics::leaveScope()
                 Emit::Warn::generic(varNode->getLineNum(), "The variable '" + varNode->getName() + "' seems not to be used.");
             }
         }
-        else if (declNode->getDeclKind() == Decl::Kind::Parm)
+        else if (isParmNode(declNode))
         {
             Parm *parmNode = (Parm *)declNode;
             if (parmNode->getIsUsed() == false)
@@ -423,13 +413,13 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                     inserted = m_symTable->insert(declNode->getName(), declNode);
                     if (!inserted)
                     {
-                        Decl *prevDeclare = (Decl *)(m_symTable->lookup(declNode->getName()));
-                        if (prevDeclare == nullptr)
+                        Decl *prevDeclNode = (Decl *)(m_symTable->lookup(declNode->getName()));
+                        if (prevDeclNode == nullptr)
                         {
                             throw std::runtime_error("Failed to insert \'Decl\' node and it was not already in the symbol table");
                         }
                         std::stringstream msg;
-                        msg << "Symbol '" << declNode->getName() << "' is already declared at line " << prevDeclare->getLineNum() << ".";
+                        msg << "Symbol '" << declNode->getName() << "' is already declared at line " << prevDeclNode->getLineNum() << ".";
                         Emit::Error::generic(declNode->getLineNum(), msg.str());
                     }
                     break;
@@ -479,9 +469,18 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
     return inserted;
 }
 
-bool Semantics::isFuncNode(Node *node) const
+bool Semantics::isDeclNode(const Node *node) const
 {
     if (node == nullptr || node->getNodeKind() != Node::Kind::Decl)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isFuncNode(const Node *node) const
+{
+    if (!isDeclNode(node))
     {
         return false;
     }
@@ -493,23 +492,46 @@ bool Semantics::isFuncNode(Node *node) const
     return true;
 }
 
-bool Semantics::isForNode(Node *node) const
+bool Semantics::isParmNode(const Node *node) const
 {
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Stmt)
+    if (!isDeclNode(node))
     {
         return false;
     }
-    Stmt *stmtNode = (Stmt *)node;
-    if (stmtNode->getStmtKind() != Stmt::Kind::For)
+    Decl *declNode = (Decl *)node;
+    if (declNode->getDeclKind() != Decl::Kind::Parm)
     {
         return false;
     }
     return true;
 }
 
-bool Semantics::isIdNode(Node *node) const
+bool Semantics::isVarNode(const Node *node) const
+{
+    if (!isDeclNode(node))
+    {
+        return false;
+    }
+    Decl *declNode = (Decl *)node;
+    if (declNode->getDeclKind() != Decl::Kind::Var)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isExpNode(const Node *node) const
 {
     if (node == nullptr || node->getNodeKind() != Node::Kind::Exp)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isIdNode(const Node *node) const
+{
+    if (!isExpNode(node))
     {
         return false;
     }
@@ -521,7 +543,44 @@ bool Semantics::isIdNode(Node *node) const
     return true;
 }
 
-bool Semantics::isValidMainFunc(Func *funcNode) const
+bool Semantics::isStmtNode(const Node *node) const
+{
+    if (node == nullptr || node->getNodeKind() != Node::Kind::Stmt)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isCompoundNode(const Node *node) const
+{
+    if (!isStmtNode(node))
+    {
+        return false;
+    }
+    Stmt *stmtNode = (Stmt *)node;
+    if (stmtNode->getStmtKind() != Stmt::Kind::Compound)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isForNode(const Node *node) const
+{
+    if (!isStmtNode(node))
+    {
+        return false;
+    }
+    Stmt *stmtNode = (Stmt *)node;
+    if (stmtNode->getStmtKind() != Stmt::Kind::For)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isValidMainFunc(const Func *funcNode) const
 {
     if (!isFuncNode(funcNode))
     {
@@ -568,7 +627,7 @@ bool Semantics::isValidMainFunc(Func *funcNode) const
     return true;
 }
 
-bool Semantics::isDeclaredId(Id *idNode) const
+bool Semantics::isDeclaredId(const Id *idNode) const
 {
     if (!isIdNode(idNode))
     {

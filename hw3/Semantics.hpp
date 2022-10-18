@@ -31,11 +31,17 @@ class Semantics
         bool addToSymTable(const Node *node, const bool global=false);
 
         // Determining node status
-        bool isFuncNode(Node *node) const;
-        bool isForNode(Node *node) const;
-        bool isIdNode(Node *node) const;
-        bool isValidMainFunc(Func *funcNode) const;
-        bool isDeclaredId(Id *idNode) const;
+        bool isDeclNode(const Node *node) const;
+        bool isFuncNode(const Node *node) const;
+        bool isParmNode(const Node *node) const;
+        bool isVarNode(const Node *node) const;
+        bool isExpNode(const Node *node) const;
+        bool isIdNode(const Node *node) const;
+        bool isStmtNode(const Node *node) const;
+        bool isCompoundNode(const Node *node) const;
+        bool isForNode(const Node *node) const;
+        bool isValidMainFunc(const Func *funcNode) const;
+        bool isDeclaredId(const Id *idNode) const;
 
         SymTable *m_symTable;
         Node *m_root;
