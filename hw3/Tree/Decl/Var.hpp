@@ -21,8 +21,8 @@ class Var : public Decl
 
         // Setters
         void makeInitialized();
-        void makeStatic();
         void makeUsed();
+        void makeStatic();
 
     private:
         bool m_isInitialized = false;

@@ -212,6 +212,18 @@ void Semantics::analyzeExp(Node *node) const
                 {
                     Emit::Error::generic(lhsIdNode->getLineNum(), "Symbol \'" + lhsIdNode->getName() + "\' is not declared.");
                 }
+                Var *prevDeclLhsNode = (Var *)(m_symTable->lookup(lhsIdNode->getName()));
+                prevDeclLhsNode->makeInitialized();
+            }
+            else
+            {
+                Binary *lhsBinaryNode = (Binary *)(expChildren[0]);
+                Id *arrayIdNode = (Id *)(lhsBinaryNode->getChildren()[0]);
+                Var *prevDeclArrayVarNode = (Var *)(m_symTable->lookup(arrayIdNode->getName()));
+                if (prevDeclArrayVarNode != nullptr)
+                {
+                    prevDeclArrayVarNode->makeInitialized();
+                }
             }
 
             // If the rhs is an id, it must have been declared
@@ -341,13 +353,17 @@ void Semantics::analyzeExp(Node *node) const
             }
             else if (isVarNode(prevDeclNode))
             {
-                Var *varNode = (Var *)prevDeclNode;
-                varNode->makeUsed();
+                Var *prevDeclVarNode = (Var *)prevDeclNode;
+                prevDeclVarNode->makeUsed();
+                if (!prevDeclVarNode->getIsInitialized())
+                {
+                    Emit::Warn::generic(idNode->getLineNum(), "Variable '" + idNode->getName() + "' may be uninitialized when used here.");
+                }
             }
             else if (isParmNode(prevDeclNode))
             {
-                Parm *parmNode = (Parm *)prevDeclNode;
-                parmNode->makeUsed();
+                Parm *prevDeclParmNode = (Parm *)prevDeclNode;
+                prevDeclParmNode->makeUsed();
             }
 
             break;
