@@ -207,25 +207,50 @@ void Semantics::analyzeExp(Node *node) const
         }
         case Exp::Kind::Binary:
         {
-//             Binary *binaryNode = (Binary *)expNode;
-//             std::vector<Node *> binaryChildren = binaryNode->getChildren();
-//             switch (binaryNode->getType())
-//             {
-//                 case Binary::Type::Add:
-//                 {
-//                     // If the the LHS is an Id
-//                     if (isValidIdNode(binaryChildren[0]))
-//                     {
-//                         // 1 + 2 + name
+            Binary *binaryNode = (Binary *)expNode;
+            std::vector<Node *> binaryChildren = binaryNode->getChildren();
+            switch (binaryNode->getType())
+            {
+                case Binary::Type::Mul:
+                case Binary::Type::Div:
+                case Binary::Type::Mod:
+                case Binary::Type::Add:
+                case Binary::Type::Sub:
+                    break;
+                case Binary::Type::Index:
+                {
+                    if (binaryChildren[0] == nullptr || binaryChildren[1] == nullptr)
+                    {
+                        throw std::runtime_error("Cannot analyze Index node of \'Binary\' kind as children are not found");
+                    }
 
-//                         //  +
-//                         // 1 +
-//                         //  2 name
-//                     }
-//                     // std::cout << "Add lhs -- " << "getLineNum()=" << binaryChildren[0]->getLineNum() << " getNodeKind()=" << binaryChildren[0]->getNodeKind() << " getExpKind()=" << binaryChildren[0]->getExpKind() << " getStringValue()=" << binaryChildren[0]->getStringValue() << std::endl;
-//                     break;
-//                 }
-//             }
+                    Id *lhsExpNode = (Id *)(binaryChildren[0]);
+                    if (lhsExpNode->getIsArray())
+                    {
+                        Emit::Error::generic(expNode->getLineNum(), "Cannot index nonarray '" + lhsExpNode->getName() + "'.");
+                    }
+                    // Decl *prevDeclare = (Decl *)(m_symTable->lookup(lhsExpNode->getName()));
+
+                    // If the id is not declared
+                    // if (prevDeclare == nullptr)
+                    // {
+
+                    // }
+
+                    // Exp *rhsExpNode = (Exp *)(binaryChildren[1]);
+                    break;
+                }
+                case Binary::Type::And:
+                case Binary::Type::Or:
+                    break;
+                case Binary::Type::LT:
+                case Binary::Type::LEQ:
+                case Binary::Type::GT:
+                case Binary::Type::GEQ:
+                case Binary::Type::EQ:
+                case Binary::Type::NEQ:
+                    break;
+            }
             break;
         }
         case Exp::Kind::Call:
