@@ -263,31 +263,14 @@ void Semantics::analyzeExp(Node *node) const
                     }
 
                     Node *arrayIndexNode = expChildren[1];
-                    switch (arrayIndexNode->getNodeKind())
+                    if (isIdNode(arrayIndexNode))
                     {
-                        case Node::Kind::Decl:
-                            break;
-                        case Node::Kind::Exp:
+                        Id *arrayIndexIdNode = (Id *)arrayIndexNode;
+                        Decl *prevDeclNode = (Decl *)(m_symTable->lookup(arrayIndexIdNode->getName()));
+                        if (prevDeclNode->getData()->getType() != Data::Type::Int)
                         {
-                            if (isIdNode(arrayIndexNode))
-                            {
-                                Id *arrayIndexIdNode = (Id *)arrayIndexNode;
-                                Decl *prevDeclNode = (Decl *)(m_symTable->lookup(arrayIndexIdNode->getName()));
-                                if (prevDeclNode->getData()->getType() != Data::Type::Int)
-                                {
-                                    Emit::Error::generic(arrayIndexNode->getLineNum(), "Array '" + arrayIdNode->getName() + "' should be indexed by type int but got type " + prevDeclNode->getData()->stringify() + ".");
-                                }
-                            }
-                            break;
+                            Emit::Error::generic(arrayIndexNode->getLineNum(), "Array '" + arrayIdNode->getName() + "' should be indexed by type int but got type " + prevDeclNode->getData()->stringify() + ".");
                         }
-                        case Node::Kind::Stmt:
-                            break;
-                        case Node::Kind::None:
-                            throw std::runtime_error("Semantics: analyze error: cannot get datatype of array indexed by \'None:Unknown\' node");
-                            break;
-                        default:
-                            throw std::runtime_error("Semantics: analyze error: cannot get datatype of array indexed by \'Unknown:Unknown\' node");
-                            break;
                     }
                     break;
                 }
