@@ -24,10 +24,8 @@ class Semantics
         void analyzeStmt(Node *node) const;
         void analyzeExp(Node *node) const;
 
-        // Scope
-        void leaveScope();
-
         // Symbol table
+        void leaveScope();
         bool addToSymTable(const Node *node, const bool global=false);
 
         // Determining node status
@@ -40,8 +38,12 @@ class Semantics
         bool isStmtNode(const Node *node) const;
         bool isCompoundNode(const Node *node) const;
         bool isForNode(const Node *node) const;
-        bool isValidMainFunc(const Func *funcNode) const;
-        bool isDeclaredId(const Id *idNode) const;
+        bool isValidMainFunc(const Func *func) const;
+        bool isDeclaredId(const Id *id) const;
+
+        // Helpers
+        bool haveSameType(const Exp *lhsExp, const Exp *rhsExp) const;
+        Data::Type getDataType(const Exp *exp) const;
 
         SymTable *m_symTable;
         Node *m_root;
