@@ -23,7 +23,7 @@ std::string Unary::stringify() const
             stringy += "not";
             break;
         default:
-            throw std::runtime_error("Could not stringify Unary::Type");
+            throw std::runtime_error("Unary: stringify error: cannot stringify unknown \'Unary::Type\'");
             break;
     }
     return stringy;

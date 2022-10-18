@@ -9,7 +9,7 @@ std::string Var::stringify() const
 {
     if (m_data == nullptr)
     {
-        throw std::runtime_error("Cannot stringify Var node of \'Decl\' kind as no data exists");
+        throw std::runtime_error("Var: stringify error: cannot stringify \'Data\' instance: instance is nullptr");
     }
 
     if (m_data->getIsArray() && m_data->getIsStatic())

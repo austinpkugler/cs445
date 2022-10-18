@@ -9,7 +9,7 @@ std::string Parm::stringify() const
 {
     if (m_data == nullptr)
     {
-        throw std::runtime_error("Cannot stringify Parm node of \'Decl\' kind as no data exists");
+        throw std::runtime_error("Parm: stringify error: cannot stringify \'Data\' instance: instance is nullptr");
     }
 
     if (m_data->getIsArray())

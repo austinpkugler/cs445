@@ -53,7 +53,7 @@ std::string Binary::stringify() const
             stringy += "!=";
             break;
         default:
-            throw std::runtime_error("Could not stringify Binary::Binary::Type");
+            throw std::runtime_error("Binary: stringify error: cannot stringify unknown \'Binary::Type\'");
             break;
     }
     return stringy;
