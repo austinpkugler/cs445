@@ -36,7 +36,7 @@ void Data::setType(Data::Type type)
 std::string Data::stringify() const
 {
     std::string stringy;
-    switch(m_type)
+    switch (m_type)
     {
         case Data::Type::Int:
             stringy = "int";

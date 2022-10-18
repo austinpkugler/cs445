@@ -8,7 +8,7 @@ Unary::Unary(const unsigned lineNum, const Unary::Type type) : Exp::Exp(lineNum,
 std::string Unary::stringify() const
 {
     std::string stringy = "Op: ";
-    switch(m_type)
+    switch (m_type)
     {
         case Unary::Type::Chsign:
             stringy += "chsign";

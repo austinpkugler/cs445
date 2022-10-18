@@ -22,6 +22,7 @@ class Node
         Node::Kind getNodeKind() const { return m_nodeKind; }
         std::vector<Node *> getChildren() const { return m_children; }
         Node * getSibling() const { return m_sibling; }
+        Node * getPreviousChild() const { return m_previousChild; }
 
         // Setters
         void addChild(Node *node);
@@ -35,11 +36,13 @@ class Node
         // Virtual
         virtual std::string stringify() const;
 
-        const unsigned m_lineNum;
-        const Node::Kind m_nodeKind;
-        std::vector<Node *> m_children;
-        Node *m_sibling;
+        Node *m_sibling;    // Used by decl
 
     private:
         void printTabs(const unsigned tabCount) const;
+
+        const unsigned m_lineNum;
+        const Node::Kind m_nodeKind;
+        std::vector<Node *> m_children;
+        Node *m_previousChild;
 };

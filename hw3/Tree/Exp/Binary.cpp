@@ -8,7 +8,7 @@ Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineN
 std::string Binary::stringify() const
 {
     std::string stringy = "Op: ";
-    switch(m_type)
+    switch (m_type)
     {
         case Binary::Type::Mul:
             stringy += "*";

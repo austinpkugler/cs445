@@ -8,7 +8,7 @@ Asgn::Asgn(const unsigned lineNum, const Asgn::Type type) : Exp::Exp(lineNum, Ex
 std::string Asgn::stringify() const
 {
     std::string stringy = "Assign: ";
-    switch(m_type)
+    switch (m_type)
     {
         case Asgn::Type::Asgn:
             stringy += "=";

@@ -17,6 +17,9 @@ $(BIN).tab.h $(BIN).tab.c : $(BIN).y
 
 clean :
 	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out
+
+deepclean :
+	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out
 	rm -rf tmp/
 
 tar : $(HDR) $(SRCS) makefile

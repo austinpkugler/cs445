@@ -8,7 +8,7 @@ UnaryAsgn::UnaryAsgn(const unsigned lineNum, const UnaryAsgn::Type type) : Exp::
 std::string UnaryAsgn::stringify() const
 {
     std::string stringy = "Assign: ";
-    switch(m_type)
+    switch (m_type)
     {
         case Type::Inc:
             stringy += "++";

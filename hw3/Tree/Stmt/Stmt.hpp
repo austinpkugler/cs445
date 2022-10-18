@@ -15,7 +15,7 @@ class Stmt : public Node
         Stmt(const unsigned lineNum, const Stmt::Kind stmtKind);
 
         // Getters
-        Stmt::Kind getExpKind() const { return m_stmtKind; }
+        Stmt::Kind getStmtKind() const { return m_stmtKind; }
 
     private:
         const Stmt::Kind m_stmtKind;
