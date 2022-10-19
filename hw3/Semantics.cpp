@@ -320,7 +320,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
     // LHS and RHS must be the same type
     if (asgn->getType() == Asgn::Type::Asgn)
     {
-        checkOperandsAreSameType(asgn);
+        checkOperandsAreSameType((Exp *)asgn);
     }
     else
     {
@@ -364,7 +364,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::GEQ:
         case Binary::Type::EQ:
         case Binary::Type::NEQ:
-            checkOperandsAreSameType(binary);
+            checkOperandsAreSameType((Exp *)binary);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeBinary() - Unknown Binary");
@@ -907,7 +907,7 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
     }
 }
 
-void Semantics::checkOperandsAreCorrectType(Exp *exp) const
+void Semantics::checkOperandsAreCorrectType(const Exp *exp) const
 {
     if (!isExp(exp))
     {
