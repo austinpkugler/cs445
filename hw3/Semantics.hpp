@@ -27,6 +27,7 @@ class Semantics
         // Symbol table
         void leaveScope();
         bool addToSymTable(const Node *node, const bool global=false);
+        Decl * getFromSymTable(const std::string name) const;
 
         // Determining node status
         bool isDeclNode(const Node *node) const;
@@ -42,8 +43,7 @@ class Semantics
         bool isDeclaredId(const Id *id) const;
 
         // Helpers
-        bool haveSameType(const Exp *lhsExp, const Exp *rhsExp) const;
-        Data::Type getDataType(const Exp *exp) const;
+        Data * setAndGetExpData(const Exp *exp) const;
 
         SymTable *m_symTable;
         Node *m_root;

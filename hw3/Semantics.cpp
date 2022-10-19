@@ -35,10 +35,10 @@ void Semantics::analyzeTree(Node *node)
             analyzeExp(node);
             break;
         case Node::Kind::None:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'None:Unknown\' node");
+            throw std::runtime_error("Semantics: analyze error: cannot analyze \'None:{ any }\' node");
             break;
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Unknown:Unknown\' node");
+            throw std::runtime_error("Semantics: analyze error: cannot analyze \'{ any }:{ any }\' node");
             break;
     }
 
@@ -76,7 +76,7 @@ void Semantics::analyzeDecl(Node *node)
 {
     if (node == nullptr)
     {
-        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Decl:Unknown\' node: node is nullptr");
+        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Decl:{ any }\' node: node is nullptr");
     }
 
     Decl *decl = (Decl *)node;
@@ -123,7 +123,7 @@ void Semantics::analyzeDecl(Node *node)
             break;
         }
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Decl:Unknown\' node");
+            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Decl:{ any }\' node");
             break;
     }
 }
@@ -132,7 +132,7 @@ void Semantics::analyzeStmt(Node *node) const
 {
     if (node == nullptr)
     {
-        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Stmt:Unknown\' node: node is nullptr");
+        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Stmt:{ any }\' node: node is nullptr");
     }
 
     Stmt *stmt = (Stmt *)node;
@@ -185,8 +185,13 @@ void Semantics::analyzeStmt(Node *node) const
         {
             break;
         }
+        // Not analyzed
+        case Stmt::Kind::Range:
+        {
+            break;
+        }
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Stmt:Unknown\' node");
+            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Stmt:{ any }\' node");
             break;
     }
 }
@@ -195,7 +200,7 @@ void Semantics::analyzeExp(Node *node) const
 {
     if (node == nullptr)
     {
-        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Unknown\' node: node is nullptr");
+        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:{ any }\' node: node is nullptr");
     }
 
     Exp *exp = (Exp *)node;
@@ -243,6 +248,16 @@ void Semantics::analyzeExp(Node *node) const
         }
         case Exp::Kind::Binary:
         {
+            if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
+            {
+                throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Op\' node: insufficient children");
+            }
+
+            if (!isExpNode(expChildren[0]) || !isExpNode(expChildren[1]))
+            {
+                throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Op\' node: lhs and rhs must be \'Exp:{ any }\'");
+            }
+
             Binary *binary = (Binary *)exp;
             switch (binary->getType())
             {
@@ -252,23 +267,6 @@ void Semantics::analyzeExp(Node *node) const
                 case Binary::Type::Add:
                 case Binary::Type::Sub:
                 {
-                    if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
-                    {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Op\' node: insufficient children");
-                    }
-
-                    if (!isExpNode(expChildren[0]) || !isExpNode(expChildren[1]))
-                    {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Op\' node: lhs and rhs must be \'Exp:Unknown\'");
-                    }
-
-                    Exp *lhsExp = (Exp *)(expChildren[0]), *rhsExp = (Exp *)(expChildren[1]);
-
-
-                    // Get LHS children[0] and get RHS children[1]
-                    // checkAreSameType(children[0], children[1])
-                    // check that the datatypes are right on both sides
-                    // check that both sides have the same datatype
                     break;
                 }
                 case Binary::Type::Index:
@@ -311,7 +309,15 @@ void Semantics::analyzeExp(Node *node) const
                 case Binary::Type::GEQ:
                 case Binary::Type::EQ:
                 case Binary::Type::NEQ:
+                {
+                    Exp *lhsExp = (Exp *)(expChildren[0]), *rhsExp = (Exp *)(expChildren[1]);
+                    Data *lhsData = setAndGetExpData(lhsExp), *rhsData = setAndGetExpData(rhsExp);
+                    if (lhsData->getType() != Data::Type::None && lhsData->getType() != rhsData->getType())
+                    {
+                        Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->stringify() + "' requires operands of the same type but lhs is " + lhsData->stringify() + " and rhs is " + rhsData->stringify() + ".");
+                    }
                     break;
+                }
                 default:
                     throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Binary\' node: unknown \'Binary::Type\'");
                     break;
@@ -384,11 +390,6 @@ void Semantics::analyzeExp(Node *node) const
 
             break;
         }
-        // Not analyzed
-        case Exp::Kind::Range:
-        {
-            break;
-        }
         case Exp::Kind::Unary:
         {
             Unary *unary = (Unary *)exp;
@@ -400,7 +401,7 @@ void Semantics::analyzeExp(Node *node) const
             break;
         }
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Unknown\' node");
+            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:{ any }\' node");
             break;
     }
 }
@@ -413,7 +414,7 @@ void Semantics::leaveScope()
         Node *node = (Node *)voidNode;
         if (!isDeclNode(node))
         {
-            throw std::runtime_error("Semantics: symbol table error: \'NonDecl\' node found in symbol table: node is \'NonDecl:Unknown\' or nullptr");
+            throw std::runtime_error("Semantics: symbol table error: \'NonDecl\' node found in symbol table: node is \'NonDecl:{ any }\' or nullptr");
         }
 
         Decl *decl = (Decl *)node;
@@ -472,7 +473,7 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                     break;
                 }
                 default:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Decl:Unknown\' node");
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Decl:{ any }\' node");
                     break;
             }
             break;
@@ -487,13 +488,12 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                 case Exp::Kind::Call:
                 case Exp::Kind::Const:
                 case Exp::Kind::Id:
-                case Exp::Kind::Range:
                 case Exp::Kind::Unary:
                 case Exp::Kind::UnaryAsgn:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Exp:Unknown\'");
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Exp:{ any }\'");
                     break;
                 default:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Exp:Unknown\' node");
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Exp:{ any }\' node");
                     break;
             }
             break;
@@ -509,19 +509,20 @@ bool Semantics::addToSymTable(const Node *node, const bool global)
                 case Stmt::Kind::If:
                 case Stmt::Kind::Return:
                 case Stmt::Kind::While:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Stmt:Unknown\'");
+                case Stmt::Kind::Range:
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Stmt:{ any }\'");
                     break;
                 default:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Stmt:Unknown\' node");
+                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Stmt:{ any }\' node");
                     break;
             }
             break;
         }
         case Node::Kind::None:
-            throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'None:Unknown\' node");
+            throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'None:{ any }\' node");
             break;
         default:
-            throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Unknown:Unknown\' node");
+            throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'{ any }:{ any }\' node");
             break;
     }
 
@@ -643,7 +644,7 @@ bool Semantics::isValidMainFunc(const Func *func) const
 {
     if (!isFuncNode(func))
     {
-        throw std::runtime_error("Semantics: is error: cannot determine if node is valid main: node is \'Unknown:NonFunc\' node or nullptr");
+        throw std::runtime_error("Semantics: is error: cannot determine if node is valid main: node is \'{ any }:NonFunc\' node or nullptr");
     }
 
     // Function name is not main
@@ -690,7 +691,7 @@ bool Semantics::isDeclaredId(const Id *id) const
 {
     if (!isIdNode(id))
     {
-        throw std::runtime_error("Semantics: is error: cannot determine if node is valid main: node is \'Unknown:NonId\' node or nullptr");
+        throw std::runtime_error("Semantics: is error: cannot determine if node is valid main: node is \'{ any }:NonId\' node or nullptr");
     }
 
     // If the id name is not in the symbol table, it is not declared
@@ -701,42 +702,68 @@ bool Semantics::isDeclaredId(const Id *id) const
     return true;
 }
 
-bool Semantics::haveSameType(const Exp *lhsExp, const Exp *rhsExp) const
+Data * Semantics::setAndGetExpData(const Exp *exp) const
 {
-    if (!isExpNode(lhsExp) || !isExpNode(rhsExp))
+    if (!isExpNode(exp))
     {
-        throw std::runtime_error("Semantics: helper error: cannot determine if nodes have the same type: nodes are \'NonExp:Unknown\' node or nullptr");
+        throw std::runtime_error("Semantics: helper error: cannot get \'Data\' for node: node is \'NonExp:{ any }\' node or nullptr");
     }
 
-    
-    return true;
-}
+    std::vector<Node *> expChildren = exp->getChildren();
 
-Data::Type Semantics::getDataType(const Exp *exp) const
-{
-    Data::Type type;
+    std::string name;
     switch (exp->getExpKind())
     {
         case Exp::Kind::Asgn:
+        {
+            Asgn *asgn = (Asgn *)exp;
+            Exp *lhsExp = (Exp *)expChildren[0];
+            asgn->setData(setAndGetExpData(lhsExp));
             break;
+        }
         case Exp::Kind::Binary:
+        {
+            Binary *binary = (Binary *)exp;
+            if (binary->getType() == Binary::Type::Index)
+            {
+                Id *arrayId = (Id *)(binary->getChildren()[0]);
+                binary->setData(new Data(setAndGetExpData(arrayId)->getType(), false, false));
+            }
             break;
+        }
         case Exp::Kind::Call:
+        {
+            Call *call = (Call *)exp;
+            Decl *prevDecl = getFromSymTable(call->getName());
+            if (prevDecl != nullptr)
+            {
+                call->setData(prevDecl->getData());
+            }
             break;
-        case Exp::Kind::Const:
-            break;
+        }
         case Exp::Kind::Id:
-
+        {
+            Id *id = (Id *)exp;
+            Decl *prevDecl = getFromSymTable(id->getName());
+            if (prevDecl != nullptr)
+            {
+                id->setData(prevDecl->getData());
+            }
             break;
-        case Exp::Kind::Range:
-            break;
-        case Exp::Kind::Unary:
-            break;
-        case Exp::Kind::UnaryAsgn:
-            break;
-        default:
-            throw std::runtime_error("Semantics: helper error: cannot \'Data::Type\' for node: node is \'Exp:Unknown\' node");
-            break;
+        }
     }
-    return type;
+    return exp->getData();
 }
+
+Decl * Semantics::getFromSymTable(const std::string name) const
+{ 
+    if (name.length() == 0)
+    {
+        throw std::runtime_error("Semantics: helper error: cannot get \'Decl\' from sym table for name: name is the empty string");
+    }
+    
+    Decl *prevDecl = (Decl *)(m_symTable->lookup(name));
+    return prevDecl;
+}
+
+

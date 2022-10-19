@@ -53,6 +53,9 @@ std::string Data::stringify() const
         case Data::Type::Void:
             stringy = "void";
             break;
+        case Data::Type::None:
+            throw std::runtime_error("Data: stringify error: cannot stringify \'Data::Type::None\'");
+            break;
         default:
             throw std::runtime_error("Data: stringify error: cannot stringify unknown \'Data::Type\'");
             break;
