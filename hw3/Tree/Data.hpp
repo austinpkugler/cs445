@@ -6,7 +6,7 @@ class Data
 {
     public:
         // Enums
-        enum class Type { None, Int, Bool, Char, String, Void };
+        enum class Type { None, Int, Bool, Char, String };
 
         /**
          * @param type Primitive datatype of the data.

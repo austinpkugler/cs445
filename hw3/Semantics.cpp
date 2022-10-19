@@ -278,7 +278,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
         throw std::runtime_error("Semantics::analyzeAsgn() - Invalid Asgn");
     }
 
-    // If the lhs is an id, it must have been declared
+    // If the LHS is an id, it must have been declared
     std::vector<Node *> children = asgn->getChildren();
     if (isId(children[0]))
     {
@@ -303,7 +303,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
             prevDeclArrayVar->makeInitialized();
         }
     }
-    // If the rhs is an id, it must have been declared
+    // If the RHS is an id, it must have been declared
     if (isId(children[1]))
     {
         Id *rhsId = (Id *)(children[1]);
@@ -422,10 +422,10 @@ void Semantics::analyzeId(const Id *id) const
     {
         Var *prevDeclVar = (Var *)prevDecl;
         prevDeclVar->makeUsed();
-        if (!prevDeclVar->getIsInitialized() && prevDeclVar->getShowWarns())
+        if (!prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
-            prevDeclVar->setShowWarns(false);
+            prevDeclVar->setShowErrors(false);
         }
     }
     else if (isParm(prevDecl))

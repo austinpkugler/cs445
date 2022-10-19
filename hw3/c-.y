@@ -135,11 +135,11 @@ varDeclInit             : varDeclId
 
 varDeclId               : ID
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, true, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
                         }
                         ;
 
@@ -165,7 +165,7 @@ funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
                         }
                         | ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
+                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
                             $$->addChild($3);
                             $$->addChild($5);
                         }
@@ -220,11 +220,11 @@ parmIdList              : parmIdList COMMA parmId
 
 parmId                  : ID
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
                         }
                         | ID LBRACK RBRACK
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, true, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
                         }
                         ;
 

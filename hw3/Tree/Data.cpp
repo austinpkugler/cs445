@@ -6,7 +6,7 @@ Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m
     if (isArray)
     {
         m_next = new Data(type, false, false);
-        m_type = Data::Type::Void;
+        m_type = Data::Type::None;
     }
     else
     {
@@ -50,11 +50,8 @@ std::string Data::stringify() const
         case Data::Type::String:
             stringy = "string";
             break;
-        case Data::Type::Void:
-            stringy = "void";
-            break;
         case Data::Type::None:
-            throw std::runtime_error("Data: stringify error: cannot stringify \'Data::Type::None\'");
+            stringy = "void";
             break;
         default:
             throw std::runtime_error("Data: stringify error: cannot stringify unknown \'Data::Type\'");
