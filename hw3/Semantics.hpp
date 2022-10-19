@@ -72,7 +72,7 @@ class Semantics
 
         // Symbol table
         void leaveScope();
-        bool addToSymTable(const Node *node, const bool global=false);
+        bool addToSymTable(const Decl *decl, const bool global=false);
         Decl * getFromSymTable(const std::string name) const;
 
         // Helpers
