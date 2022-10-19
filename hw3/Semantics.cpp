@@ -957,6 +957,27 @@ void Semantics::checkOperandsAreCorrectType(Exp *exp) const
             }
         }
     }
+
+    if (rhsData->getType() != Data::Type::Int)
+    {
+        if (isBinary(exp))
+        {
+            Binary *binary = (Binary *)exp;
+            Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
+        }
+        else if (isAsgn(exp))
+        {
+            Asgn *asgn = (Asgn *)exp;
+            if (asgn->getType() != Asgn::Type::Asgn)
+            {
+                Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
+            }
+            else
+            {
+                throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is not a valid Asgn type");
+            }
+        }
+    }
 }
 
 void Semantics::leaveScope()
