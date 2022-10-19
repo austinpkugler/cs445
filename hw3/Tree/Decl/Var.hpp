@@ -16,15 +16,18 @@ class Var : public Decl
         std::string stringify() const;
 
         // Getters
+        bool getShowWarns() const { return m_showWarns; }
         bool getIsInitialized() const { return m_isInitialized; }
         bool getIsUsed() const { return m_isUsed; }
 
         // Setters
+        void setShowWarns(bool showWarns);
         void makeInitialized();
         void makeUsed();
         void makeStatic();
 
     private:
+        bool m_showWarns = true;
         bool m_isInitialized = false;
         bool m_isUsed = false;
 };

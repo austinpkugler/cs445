@@ -285,11 +285,9 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
         Id *lhsId = (Id *)(children[0]);
         if (!isDeclaredId(lhsId))
         {
-            Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + 
-    lhsId->getName() + "\' is not declared.");
+            Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + lhsId->getName() + "\' is not declared.");
         }
-        Var *prevDeclLhsVar = (Var *)(m_symTable->lookup
-    (lhsId->getName()));
+        Var *prevDeclLhsVar = (Var *)(m_symTable->lookup(lhsId->getName()));
         if (isVar(prevDeclLhsVar))
         {
             prevDeclLhsVar->makeInitialized();
@@ -314,7 +312,8 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
             Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + rhsId->getName() + "\' is not declared.");
         }
     }
-    // Need to check LHS and RHS are the same type
+
+    // LHS and RHS must be the same type
     if (asgn->getType() == Asgn::Type::Asgn)
     {
         checkOperandsAreSameType(asgn);
@@ -423,9 +422,10 @@ void Semantics::analyzeId(const Id *id) const
     {
         Var *prevDeclVar = (Var *)prevDecl;
         prevDeclVar->makeUsed();
-        if (!prevDeclVar->getIsInitialized())
+        if (!prevDeclVar->getIsInitialized() && prevDeclVar->getShowWarns())
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
+            prevDeclVar->setShowWarns(false);
         }
     }
     else if (isParm(prevDecl))

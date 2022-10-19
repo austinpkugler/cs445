@@ -27,6 +27,11 @@ std::string Var::stringify() const
     return "Var: " + m_name + " of type " + m_data->stringify();
 }
 
+void Var::setShowWarns(bool showWarns)
+{
+    m_showWarns = showWarns;
+}
+
 void Var::makeInitialized()
 {
     m_isInitialized = true;
