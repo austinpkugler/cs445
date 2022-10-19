@@ -18,7 +18,7 @@ class Asgn : public Exp
         std::string stringify() const;
 
         // Getters
-        Asgn::Type getType() { return m_type; }
+        Asgn::Type getType() const { return m_type; }
 
     private:
         const Asgn::Type m_type;

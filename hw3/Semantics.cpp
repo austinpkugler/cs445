@@ -299,8 +299,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
     {
         Binary *lhsBinary = (Binary *)(children[0]);
         Id *arrayId = (Id *)(lhsBinary->getChildren()[0]);
-        Var *prevDeclArrayVar = (Var *)(m_symTable->lookup
-    (arrayId->getName()));
+        Var *prevDeclArrayVar = (Var *)(m_symTable->lookup(arrayId->getName()));
         if (prevDeclArrayVar != nullptr)
         {
             prevDeclArrayVar->makeInitialized();
@@ -312,11 +311,11 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
         Id *rhsId = (Id *)(children[1]);
         if (!isDeclaredId(rhsId))
         {
-            Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + 
-    rhsId->getName() + "\' is not declared.");
+            Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + rhsId->getName() + "\' is not declared.");
         }
     }
     // Need to check LHS and RHS are the same type
+    checkOperands(asgn);
 }
 
 void Semantics::analyzeBinary(const Binary *binary) const
@@ -326,7 +325,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         throw std::runtime_error("Semantics::analyzeBinary() - Invalid Binary");
     }
 
-    checkOperandTypes(binary);
+    checkOperands(binary);
 }
 
 void Semantics::analyzeCall(const Call *call) const
@@ -769,27 +768,26 @@ bool Semantics::isDeclaredId(const Id *id) const
     return true;
 }
 
-void Semantics::checkOperandTypes(const Exp *exp) const
+void Semantics::checkOperands(const Exp *exp) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::checkOperandTypes() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkOperands() - Invalid Exp");
     }
 
     std::vector<Node *> expChildren = exp->getChildren();
-
     if (isBinary(exp))
     {
         Binary *binary = (Binary *)exp;
 
         if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
         {
-            throw std::runtime_error("Semantics::checkOperandTypes() - LHS and RHS must exist");
+            throw std::runtime_error("Semantics::checkOperands() - LHS and RHS must exist");
         }
 
         if (!isExp(expChildren[0]) || !isExp(expChildren[1]))
         {
-            throw std::runtime_error("Semantics::checkOperandTypes() - LHS and RHS must be Exp");
+            throw std::runtime_error("Semantics::checkOperands() - LHS and RHS must be Exp");
         }
 
         switch (binary->getType())
@@ -804,7 +802,7 @@ void Semantics::checkOperandTypes(const Exp *exp) const
             {
                 if (!isId(expChildren[0]))
                 {
-                    throw std::runtime_error("Semantics::checkOperandTypes() - First child is not an Id");
+                    throw std::runtime_error("Semantics::checkOperands() - First child is not an Id");
                 }
                 Id *arrayId = (Id *)(expChildren[0]);
                 if (!arrayId->getIsArray())
@@ -843,8 +841,21 @@ void Semantics::checkOperandTypes(const Exp *exp) const
                 break;
             }
             default:
-                throw std::runtime_error("Semantics::checkOperandTypes() - Unknown Binary");
+                throw std::runtime_error("Semantics::checkOperands() - Unknown Binary");
                 break;
+        }
+    }
+    else if (isAsgn(exp))
+    {
+        Asgn *asgn = (Asgn *)exp;
+        if (asgn->getType() == Asgn::Type::Asgn)
+        {
+            Exp *lhsExp = (Exp *)(expChildren[0]), *rhsExp = (Exp *)(expChildren[1]);
+            Data *lhsData = setAndGetExpData(lhsExp), *rhsData = setAndGetExpData(rhsExp);
+            if (lhsData->getType() != Data::Type::None && lhsData->getType() != rhsData->getType())
+            {
+                Emit::Error::generic(lhsExp->getLineNum(), "'=' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
+            }
         }
     }
 }

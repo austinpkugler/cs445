@@ -68,7 +68,7 @@ class Semantics
         // Error and warn checking
         bool isValidMainFunc(const Func *func) const;
         bool isDeclaredId(const Id *id) const;
-        void checkOperandTypes(const Exp *exp) const;
+        void checkOperands(const Exp *exp) const;
 
         // Symbol table
         void leaveScope();
