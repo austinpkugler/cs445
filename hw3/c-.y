@@ -362,6 +362,7 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         {
                             $$ = new For($1->lineNum);
                             Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
+                            node->makeInitialized();
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -378,6 +379,7 @@ iterStmtMatched         : WHILE simpleExp DO stmtMatched
                         {
                             $$ = new For($1->lineNum);
                             Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
+                            node->makeInitialized();
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
