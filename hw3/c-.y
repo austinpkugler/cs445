@@ -128,7 +128,9 @@ varDeclInit             : varDeclId
                         }
                         | varDeclId COLON simpleExp
                         {
-                            $$ = $1;
+                            Var *var = (Var *)($1);
+                            var->makeInitialized();
+                            $$ = var;
                             $$->addChild($3);
                         }
                         ;
