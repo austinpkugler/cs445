@@ -322,6 +322,10 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
     {
         checkOperandsAreSameType(asgn);
     }
+    else
+    {
+        checkOperandsAreCorrectType((Exp *)asgn);
+    }
 }
 
 void Semantics::analyzeBinary(const Binary *binary) const
@@ -350,7 +354,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::Mod:
         case Binary::Type::Add:
         case Binary::Type::Sub:
-            checkOperandsAreType(binary);
+            checkOperandsAreCorrectType((Exp *)binary);
             break;
         case Binary::Type::Index:
             checkArray((Id *)(children[0]), children[1]);
@@ -897,19 +901,29 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
     }
 }
 
-void Semantics::checkOperandsAreType(const Exp *exp) const
+void Semantics::checkOperandsAreCorrectType(Exp *exp) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::checkOperandsAreType() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Invalid Exp");
     }
 
-    if (!isBinary(exp))
+    if (!isBinary(exp) && !isAsgn(exp))
     {
-        throw std::runtime_error("Semantics::checkOperandsAreType() - Exp is not Binary");
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is neither Binary nor Asgn");
     }
 
     std::vector<Node *> children = exp->getChildren();
+
+    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS must exist");
+    }
+
+    if (!isExp(children[0]) || !isExp(children[1]))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS must be Exp");
+    }
 
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
@@ -917,14 +931,14 @@ void Semantics::checkOperandsAreType(const Exp *exp) const
     Data *lhsData = setAndGetExpData(lhsExp);
     Data *rhsData = setAndGetExpData(rhsExp);
 
-    if (isBinary(exp))
+    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
     {
-        Binary *binary = (Binary *)exp;
-        std::vector<Node *> children = binary->getChildren();
-        if (lhsData->getType() != Data::Type::None && rhsData->getType() != Data::Type::None && lhsData->getType() != Data::Type::Int)
-        {
-            Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
-        }
+        return;
+    }
+
+    if (lhsData->getType() != Data::Type::Int)
+    {
+        Emit::Error::generic(exp->getLineNum(), "'" + exp->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
     }
 }
 

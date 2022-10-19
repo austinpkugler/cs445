@@ -16,6 +16,7 @@ class Asgn : public Exp
 
         // Overridden
         std::string stringify() const;
+        std::string getSym() const;
 
         // Getters
         Asgn::Type getType() const { return m_type; }

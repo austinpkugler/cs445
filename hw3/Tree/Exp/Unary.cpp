@@ -20,20 +20,25 @@ Unary::Unary(const unsigned lineNum, const Unary::Type type) : Exp::Exp(lineNum,
 
 std::string Unary::stringify() const
 {
-    std::string stringy = "Op: ";
+    return "Op: " + getSym();
+}
+
+std::string Unary::getSym() const
+{
+    std::string stringy;
     switch (m_type)
     {
         case Unary::Type::Chsign:
-            stringy += "chsign";
+            stringy = "chsign";
             break;
         case Unary::Type::Sizeof:
-            stringy += "sizeof";
+            stringy = "sizeof";
             break;
         case Unary::Type::Question:
-            stringy += "?";
+            stringy = "?";
             break;
         case Unary::Type::Not:
-            stringy += "not";
+            stringy = "not";
             break;
         default:
             throw std::runtime_error("Unary: stringify error: cannot stringify unknown \'Unary::Type\'");

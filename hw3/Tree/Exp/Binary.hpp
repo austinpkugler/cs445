@@ -16,10 +16,10 @@ class Binary : public Exp
 
         // Overridden
         std::string stringify() const;
+        std::string getSym() const;
 
         // Getters
         Binary::Type getType() const { return m_type; }
-        std::string getSym() const;
 
     private:
         const Binary::Type m_type;

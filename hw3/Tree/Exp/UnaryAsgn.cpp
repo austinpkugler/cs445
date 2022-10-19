@@ -7,14 +7,19 @@ UnaryAsgn::UnaryAsgn(const unsigned lineNum, const UnaryAsgn::Type type) : Exp::
 
 std::string UnaryAsgn::stringify() const
 {
-    std::string stringy = "Assign: ";
+    return "Assign: " + getSym();
+}
+
+std::string UnaryAsgn::getSym() const
+{
+    std::string stringy;
     switch (m_type)
     {
         case Type::Inc:
-            stringy += "++";
+            stringy = "++";
             break;
         case Type::Dec:
-            stringy += "--";
+            stringy = "--";
             break;
         default:
             throw std::runtime_error("UnaryAsgn: stringify error: cannot stringify unknown \'UnaryAsgn::Type\'");

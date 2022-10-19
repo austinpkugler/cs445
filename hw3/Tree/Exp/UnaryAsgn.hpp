@@ -16,6 +16,7 @@ class UnaryAsgn : public Exp
 
         // Overridden
         std::string stringify() const;
+        std::string getSym() const;
 
         // Getters
         UnaryAsgn::Type getType() const { return m_type; }

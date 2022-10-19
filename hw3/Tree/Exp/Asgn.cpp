@@ -20,23 +20,28 @@ Asgn::Asgn(const unsigned lineNum, const Asgn::Type type) : Exp::Exp(lineNum, Ex
 
 std::string Asgn::stringify() const
 {
-    std::string stringy = "Assign: ";
+    return "Assign: " + getSym();
+}
+
+std::string Asgn::getSym() const
+{
+    std::string stringy;
     switch (m_type)
     {
         case Asgn::Type::Asgn:
-            stringy += "=";
+            stringy = "=";
             break;
         case Asgn::Type::AddAsgn:
-            stringy += "+=";
+            stringy = "+=";
             break;
         case Asgn::Type::SubAsgn:
-            stringy += "-=";
+            stringy = "-=";
             break;
         case Asgn::Type::DivAsgn:
-            stringy += "/=";
+            stringy = "/=";
             break;
         case Asgn::Type::MulAsgn:
-            stringy += "*=";
+            stringy = "*=";
             break;
         default:
             throw std::runtime_error("Asgn: stringify error: cannot stringify unknown \'Asgn::Type\'");
