@@ -423,7 +423,20 @@ void Semantics::analyzeId(const Id *id) const
     {
         Var *prevDeclVar = (Var *)prevDecl;
         prevDeclVar->makeUsed();
-        if (!prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
+
+        // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
+        bool isIndex = false;
+        Node *parentNode = id->getParent();
+        if (!id->getIsArray() && isBinary(parentNode))
+        {
+            Binary *parent = (Binary *)parentNode;
+            if (parent->getType() == Binary::Type::Index)
+            {
+                isIndex = true;
+            }
+        }
+
+        if (!isIndex && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
             prevDeclVar->setShowErrors(false);

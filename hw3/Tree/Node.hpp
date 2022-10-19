@@ -32,10 +32,10 @@ class Node
         void printTree() const;
         void printNode() const;
 
-    protected:
         // Virtual
         virtual std::string stringify() const;
 
+    protected:
         Node *m_sibling;    // Used by decl
 
     private:
