@@ -31,50 +31,55 @@ Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineN
 
 std::string Binary::stringify() const
 {
-    std::string stringy = "Op: ";
+    return "Op: " + getSym();
+}
+
+std::string Binary::getSym() const
+{
+    std::string stringy;
     switch (m_type)
     {
         case Binary::Type::Mul:
-            stringy += "*";
+            stringy = "*";
             break;
         case Binary::Type::Div:
-            stringy += "/";
+            stringy = "/";
             break;
         case Binary::Type::Mod:
-            stringy += "%";
+            stringy = "%";
             break;
         case Binary::Type::Add:
-            stringy += "+";
+            stringy = "+";
             break;
         case Binary::Type::Sub:
-            stringy += "-";
+            stringy = "-";
             break;
         case Binary::Type::Index:
-            stringy += "[";
+            stringy = "[";
             break;
         case Binary::Type::And:
-            stringy += "and";
+            stringy = "and";
             break;
         case Binary::Type::Or:
-            stringy += "or";
+            stringy = "or";
             break;
         case Binary::Type::LT:
-            stringy += "<";
+            stringy = "<";
             break;
         case Binary::Type::LEQ:
-            stringy += "<=";
+            stringy = "<=";
             break;
         case Binary::Type::GT:
-            stringy += ">";
+            stringy = ">";
             break;
         case Binary::Type::GEQ:
-            stringy += ">=";
+            stringy = ">=";
             break;
         case Binary::Type::EQ:
-            stringy += "==";
+            stringy = "==";
             break;
         case Binary::Type::NEQ:
-            stringy += "!=";
+            stringy = "!=";
             break;
         default:
             throw std::runtime_error("Binary: stringify error: cannot stringify unknown \'Binary::Type\'");

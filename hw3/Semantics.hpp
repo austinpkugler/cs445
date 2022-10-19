@@ -70,6 +70,7 @@ class Semantics
         bool isDeclaredId(const Id *id) const;
         void checkArray(const Id *arrayId, const Node *indexNode) const;
         void checkOperandsAreSameType(const Exp *exp) const;
+        void checkOperandsAreType(const Exp *exp) const;
 
         // Symbol table
         void leaveScope();
