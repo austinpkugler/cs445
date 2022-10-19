@@ -1,8 +1,32 @@
 #include "Binary.hpp"
 
-Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineNum, Exp::Kind::Binary), m_type(type)
+Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineNum, Exp::Kind::Binary, new Data(Data::Type::None, false, false)), m_type(type)
 {
-
+    switch (m_type)
+    {
+        case Binary::Type::Mul:
+        case Binary::Type::Div:
+        case Binary::Type::Mod:
+        case Binary::Type::Add:
+        case Binary::Type::Sub:
+           m_data->setType(Data::Type::Int);
+           break;
+        case Binary::Type::Index:
+            break;
+        case Binary::Type::And:
+        case Binary::Type::Or:
+        case Binary::Type::LT:
+        case Binary::Type::LEQ:
+        case Binary::Type::GT:
+        case Binary::Type::GEQ:
+        case Binary::Type::EQ:
+        case Binary::Type::NEQ:
+            m_data->setType(Data::Type::Bool);
+            break;
+        default:
+            throw std::runtime_error("Binary: constructor error: cannot type unknown \'Binary::Type\'");
+            break;
+    }
 }
 
 std::string Binary::stringify() const

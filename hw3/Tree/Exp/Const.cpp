@@ -1,14 +1,16 @@
 #include "Const.hpp"
 
-Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const), m_type(type)
+Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const, new Data(Data::Type::None, false, false)), m_type(type)
 {
     switch (m_type)
     {
         case Const::Type::Int:
             m_intValue = std::stoi(constValue);
+            m_data->setType(Data::Type::Int);
             break;
         case Const::Type::Bool:
             m_boolValue = (constValue == "true");
+            m_data->setType(Data::Type::Bool);
             break;
         case Const::Type::Char:
         {
@@ -18,10 +20,15 @@ Const::Const(const unsigned lineNum, const Const::Type type, const std::string c
             {
                 m_charLengthWarning = true;
             }
+            m_data->setType(Data::Type::Char);
             break;
         }
         case Const::Type::String:
             m_stringValue = parseChars(removeFirstAndLastChar(constValue));
+            m_data->setType(Data::Type::String);
+            break;
+        default:
+            throw std::runtime_error("Const: constructor error: cannot handle unknown \'Const::Type\'");
             break;
     }
 }

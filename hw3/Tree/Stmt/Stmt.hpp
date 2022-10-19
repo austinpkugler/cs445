@@ -6,7 +6,7 @@ class Stmt : public Node
 {
     public:
         // Enums
-        enum class Kind { Break, Compound, For, If, Return, While };
+        enum class Kind { Break, Compound, For, If, Return, While, Range };
 
         /**
          * @param lineNum Line number of occurrence.

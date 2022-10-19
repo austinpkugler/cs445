@@ -5,7 +5,7 @@ Semantics::Semantics(SymTable *symTable) : m_symTable(symTable)
 
 }
 
-void Semantics::analyze(Node *node)
+void Semantics::analyze(const Node *node)
 {
     analyzeTree(node);
 
@@ -16,7 +16,7 @@ void Semantics::analyze(Node *node)
     }
 }
 
-void Semantics::analyzeTree(Node *node)
+void Semantics::analyzeTree(const Node *node)
 {
     if (node == nullptr)
     {
@@ -26,19 +26,28 @@ void Semantics::analyzeTree(Node *node)
     switch (node->getNodeKind())
     {
         case Node::Kind::Decl:
-            analyzeDecl(node);
+        {
+            Decl *decl = (Decl *)node;
+            analyzeDecl(decl);
             break;
-        case Node::Kind::Stmt:
-            analyzeStmt(node);
-            break;
+        }
         case Node::Kind::Exp:
-            analyzeExp(node);
+        {
+            Exp *exp = (Exp *)node;
+            analyzeExp(exp);
             break;
+        }
+        case Node::Kind::Stmt:
+        {
+            Stmt *stmt = (Stmt *)node;
+            analyzeStmt(stmt);
+            break;
+        }
         case Node::Kind::None:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'None:Unknown\' node");
+            throw std::runtime_error("Semantics::analyzeTree() - None Node");
             break;
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Unknown:Unknown\' node");
+            throw std::runtime_error("Semantics::analyzeTree() - Unknown Node");
             break;
     }
 
@@ -50,19 +59,19 @@ void Semantics::analyzeTree(Node *node)
     }
 
     // Leave the scope for every scope that was previously entered
-    if (isFuncNode(node))
+    if (isFunc(node))
     {
         leaveScope();
     }
-    else if (isForNode(node))
+    else if (isFor(node))
     {
         leaveScope();
     }
-    else if(isCompoundNode(node))
+    else if (isCompound(node))
     {
         // Don't leave the scope if the parent is a func or for
-        Stmt *stmtNode = (Stmt *)node;
-        if (!isFuncNode(stmtNode->getParent()) && !isForNode(stmtNode->getParent()))
+        Stmt *stmt = (Stmt *)node;
+        if (!isFunc(stmt->getParent()) && !isFor(stmt->getParent()))
         {
             leaveScope();
         }
@@ -72,320 +81,784 @@ void Semantics::analyzeTree(Node *node)
     analyzeTree(node->getSibling());
 }
 
-void Semantics::analyzeDecl(Node *node)
+void Semantics::analyzeDecl(const Decl *decl)
 {
-    if (node == nullptr)
+    if (!isDecl(decl))
     {
-        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Decl:Unknown\' node: node is nullptr");
+        throw std::runtime_error("Semantics::analyzeDecl() - Invalid Decl");
     }
 
-    Decl *expNode = (Decl *)node;
-    switch (expNode->getDeclKind())
+    switch (decl->getDeclKind())
     {
         case Decl::Kind::Func:
         {
-            Func *funcNode = (Func* )expNode;
-            addToSymTable(funcNode);
-
-            if (isValidMainFunc(funcNode))
-            {
-                m_validMainExists = true;
-            }
-
-            m_symTable->enter("Function: " + funcNode->getName());
+            Func *func = (Func* )decl;
+            analyzeFunc(func);
             break;
         }
         case Decl::Kind::Parm:
         {
-            Parm *parmNode = (Parm *)expNode;
-            addToSymTable(parmNode);
+            Parm *parm = (Parm *)decl;
+            analyzeParm(parm);
             break;
         }
         case Decl::Kind::Var:
         {
-            Var *varNode = (Var* )expNode;
-
-            // Global vars are always initialized
-            if (m_symTable->depth() == 1)
-            {
-                varNode->makeInitialized();
-            }
-
-            // If the variable is static, use global scope
-            if (varNode->getData()->getIsStatic())
-            {
-                addToSymTable(varNode, true);
-            }
-            else
-            {
-                addToSymTable(varNode);
-            }
+            Var *var = (Var* )decl;
+            analyzeVar(var);
             break;
         }
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Decl:Unknown\' node");
+            throw std::runtime_error("Semantics::analyzeDecl() - Unknown Decl");
             break;
     }
 }
 
-void Semantics::analyzeStmt(Node *node) const
+void Semantics::analyzeFunc(const Func *func)
 {
-    if (node == nullptr)
+    if (!isFunc(func))
     {
-        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Stmt:Unknown\' node: node is nullptr");
+        throw std::runtime_error("Semantics::analyzeFunc() - Invalid Func");
     }
 
-    Stmt *stmtNode = (Stmt *)node;
-    std::vector<Node *> stmtChildren = stmtNode->getChildren();
-    switch (stmtNode->getStmtKind())
+    addToSymTable(func);
+
+    if (isValidMainFunc(func))
     {
-        // Not analyzed
-        case Stmt::Kind::Break:
-        {
-            break;
-        }
-        case Stmt::Kind::Compound:
-        {
-            // Ignore compounds following func or for
-            if (!isFuncNode(stmtNode->getParent()) && !isForNode(stmtNode->getParent()))
-            {
-                m_symTable->enter("Compound Statement");
-            }
-            break;
-        }
-        case Stmt::Kind::For:
-        {
-            m_symTable->enter("For Loop");
-            break;
-        }
-        // Not analyzed
-        case Stmt::Kind::If:
-        {
-            break;
-        }
-        case Stmt::Kind::Return:
-        {
-            Return *returnNode = (Return *)stmtNode;
-            if (stmtChildren.size() > 0)
-            {
-                Exp *returnNodeChild = (Exp *)(stmtChildren[0]);
-                if (isIdNode(returnNodeChild))
-                {
-                    Id *idNode = (Id *)returnNodeChild;
-                    if (idNode->getIsArray())
-                    {
-                        Emit::Error::generic(returnNode->getLineNum(), "Cannot return an array.");
-                    }
-                }
-            }
-            break;
-        }
-        // Not analyzed
-        case Stmt::Kind::While:
-        {
-            break;
-        }
-        default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Stmt:Unknown\' node");
-            break;
+        m_validMainExists = true;
     }
+
+    m_symTable->enter("Function: " + func->getName());
 }
 
-void Semantics::analyzeExp(Node *node) const
+void Semantics::analyzeParm(const Parm *parm)
 {
-    if (node == nullptr)
+    if (!isParm(parm))
     {
-        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Unknown\' node: node is nullptr");
+        throw std::runtime_error("Semantics::analyzeParm() - Invalid Parm");
     }
 
-    Exp *expNode = (Exp *)node;
-    std::vector<Node *> expChildren = expNode->getChildren();
-    switch (expNode->getExpKind())
+    addToSymTable(parm);
+}
+
+void Semantics::analyzeVar(Var *var)
+{
+    if (!isVar(var))
+    {
+        throw std::runtime_error("Semantics::analyzeVar() - Invalid Var");
+    }
+
+    // Global vars are always initialized
+    if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
+    {
+        var->makeInitialized();
+    }
+
+    // If the variable is static, use global scope
+    // if (var->getData()->getIsStatic())
+    // {
+    //     addToSymTable(var, true);
+    // }
+    // else
+    // {
+    //     addToSymTable(var);
+    // }
+    addToSymTable(var);
+}
+
+bool Semantics::isDecl(const Node *node) const
+{
+    if (node == nullptr || node->getNodeKind() != Node::Kind::Decl)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isFunc(const Node *node) const
+{
+    if (!isDecl(node))
+    {
+        return false;
+    }
+    Decl *decl = (Decl *)node;
+    if (decl->getDeclKind() != Decl::Kind::Func)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isParm(const Node *node) const
+{
+    if (!isDecl(node))
+    {
+        return false;
+    }
+    Decl *decl = (Decl *)node;
+    if (decl->getDeclKind() != Decl::Kind::Parm)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isVar(const Node *node) const
+{
+    if (!isDecl(node))
+    {
+        return false;
+    }
+    Decl *decl = (Decl *)node;
+    if (decl->getDeclKind() != Decl::Kind::Var)
+    {
+        return false;
+    }
+    return true;
+}
+
+void Semantics::analyzeExp(Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::analyzeExp() - Invalid Exp");
+    }
+
+    switch (exp->getExpKind())
     {
         case Exp::Kind::Asgn:
         {
-            // If the lhs is an id, it must have been declared
-            if (isIdNode(expChildren[0]))
-            {
-                Id *lhsIdNode = (Id *)(expChildren[0]);
-                if (!isDeclaredId(lhsIdNode))
-                {
-                    Emit::Error::generic(lhsIdNode->getLineNum(), "Symbol \'" + lhsIdNode->getName() + "\' is not declared.");
-                }
-                Var *prevDeclLhsNode = (Var *)(m_symTable->lookup(lhsIdNode->getName()));
-                prevDeclLhsNode->makeInitialized();
-            }
-            else
-            {
-                Binary *lhsBinaryNode = (Binary *)(expChildren[0]);
-                Id *arrayIdNode = (Id *)(lhsBinaryNode->getChildren()[0]);
-                Var *prevDeclArrayVarNode = (Var *)(m_symTable->lookup(arrayIdNode->getName()));
-                if (prevDeclArrayVarNode != nullptr)
-                {
-                    prevDeclArrayVarNode->makeInitialized();
-                }
-            }
-
-            // If the rhs is an id, it must have been declared
-            if (isIdNode(expChildren[1]))
-            {
-                Id *rhsIdNode = (Id *)(expChildren[1]);
-                if (!isDeclaredId(rhsIdNode))
-                {
-                    Emit::Error::generic(rhsIdNode->getLineNum(), "Symbol \'" + rhsIdNode->getName() + "\' is not declared.");
-                }
-            }
-            // Need to check LHS and RHS are the same type
+            Asgn *asgn = (Asgn *)exp;
+            analyzeAsgn(asgn);
             break;
         }
         case Exp::Kind::Binary:
         {
-            Binary *binaryNode = (Binary *)expNode;
-            switch (binaryNode->getType())
-            {
-                case Binary::Type::Mul:
-                case Binary::Type::Div:
-                case Binary::Type::Mod:
-                case Binary::Type::Add:
-                case Binary::Type::Sub:
-                {
-                    // Get LHS children[0] and get RHS children[1]
-                    // checkAreSameType(children[0], children[1])
-                    // check that the datatypes are right on both sides
-                    // check that both sides have the same datatype
-                    break;
-                }
-                case Binary::Type::Index:
-                {
-                    if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
-                    {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: no children found");
-                    }
-
-                    if (!isIdNode(expChildren[0]))
-                    {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: first child is not \'Exp:Id\' node");
-                    }
-
-                    Id *arrayIdNode = (Id *)(expChildren[0]);
-                    if (!arrayIdNode->getIsArray())
-                    {
-                        Emit::Error::generic(arrayIdNode->getLineNum(), "Cannot index nonarray '" + arrayIdNode->getName() + "'.");
-                        return;
-                    }
-
-                    Node *arrayIndexNode = expChildren[1];
-                    if (isIdNode(arrayIndexNode))
-                    {
-                        Id *arrayIndexIdNode = (Id *)arrayIndexNode;
-                        Decl *prevDeclNode = (Decl *)(m_symTable->lookup(arrayIndexIdNode->getName()));
-                        if (prevDeclNode->getData()->getType() != Data::Type::Int)
-                        {
-                            Emit::Error::generic(arrayIndexNode->getLineNum(), "Array '" + arrayIdNode->getName() + "' should be indexed by type int but got type " + prevDeclNode->getData()->stringify() + ".");
-                        }
-                    }
-                    break;
-                }
-                case Binary::Type::And:
-                case Binary::Type::Or:
-                    break;
-                case Binary::Type::LT:
-                case Binary::Type::LEQ:
-                case Binary::Type::GT:
-                case Binary::Type::GEQ:
-                case Binary::Type::EQ:
-                case Binary::Type::NEQ:
-                    break;
-                default:
-                    throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Binary\' node: unknown \'Binary::Type\'");
-                    break;
-            }
+            Binary *binary = (Binary *)exp;
+            analyzeBinary(binary);
             break;
         }
         case Exp::Kind::Call:
         {
-            Call *callNode = (Call *)expNode;
-            Decl *prevDeclNode = (Decl *)(m_symTable->lookup(callNode->getName()));
-
-            // If the function name is not in the symbol table
-            if (prevDeclNode == nullptr)
-            {
-                Emit::Error::generic(expNode->getLineNum(), "Symbol '" + callNode->getName() + "' is not declared.");
-                return;
-            }
-
-            // If the function name is not associated with a function
-            if (!isFuncNode(prevDeclNode))
-            {
-                Emit::Error::generic(expNode->getLineNum(), "'" + callNode->getName() + "' is a simple variable and cannot be called.");
-                if (isVarNode(prevDeclNode))
-                {
-                    Var *varNode = (Var *)prevDeclNode;
-                    varNode->makeUsed();
-                }
-                else if (isParmNode(prevDeclNode))
-                {
-                    Parm *parmNode = (Parm *)prevDeclNode;
-                    parmNode->makeUsed();
-                }
-                return;
-            }
+            Call *call = (Call *)exp;
+            analyzeCall(call);
             break;
         }
-        // Not analyzed
         case Exp::Kind::Const:
-        {
+            // Not analyzed
             break;
-        }
         case Exp::Kind::Id:
         {
-            Id *idNode = (Id *)expNode;
-            Decl *prevDeclNode = (Decl *)(m_symTable->lookup(idNode->getName()));
-            if (prevDeclNode == nullptr)
-            {
-                Emit::Error::generic(idNode->getLineNum(), "Symbol '" + idNode->getName() + "' is not declared.");
-                return;
-            }
-
-            if (isFuncNode(prevDeclNode))
-            {
-                Emit::Error::generic(idNode->getLineNum(), "Cannot use function '" + idNode->getName() + "' as a variable.");
-            }
-            else if (isVarNode(prevDeclNode))
-            {
-                Var *prevDeclVarNode = (Var *)prevDeclNode;
-                prevDeclVarNode->makeUsed();
-                if (!prevDeclVarNode->getIsInitialized())
-                {
-                    Emit::Warn::generic(idNode->getLineNum(), "Variable '" + idNode->getName() + "' may be uninitialized when used here.");
-                }
-            }
-            else if (isParmNode(prevDeclNode))
-            {
-                Parm *prevDeclParmNode = (Parm *)prevDeclNode;
-                prevDeclParmNode->makeUsed();
-            }
-
-            break;
-        }
-        // Not analyzed
-        case Exp::Kind::Range:
-        {
+            Id *id = (Id *)exp;
+            analyzeId(id);
             break;
         }
         case Exp::Kind::Unary:
         {
-            Unary *unaryNode = (Unary *)expNode;
+            Unary *unary = (Unary *)exp;
+            analyzeUnary(unary);
             break;
         }
         case Exp::Kind::UnaryAsgn:
         {
-            UnaryAsgn *unaryAsgnNode = (UnaryAsgn *)expNode;
+            UnaryAsgn *unaryAsgn = (UnaryAsgn *)exp;
+            analyzeUnaryAsgn(unaryAsgn);
             break;
         }
         default:
-            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Unknown\' node");
+            throw std::runtime_error("Semantics::analyzeExp() - Unknown Exp");
             break;
+    }
+}
+
+void Semantics::analyzeAsgn(const Asgn *asgn) const
+{
+    if (!isAsgn(asgn))
+    {
+        throw std::runtime_error("Semantics::analyzeAsgn() - Invalid Asgn");
+    }
+
+    // If the LHS is an id, it must have been declared
+    std::vector<Node *> children = asgn->getChildren();
+    if (isId(children[0]))
+    {
+        Id *lhsId = (Id *)(children[0]);
+        // if (!isDeclaredId(lhsId))
+        // {
+        //     Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + lhsId->getName() + "\' is not declared.");
+        // }
+        Var *prevDeclLhsVar = (Var *)(m_symTable->lookup(lhsId->getName()));
+        if (isVar(prevDeclLhsVar))
+        {
+            prevDeclLhsVar->makeInitialized();
+        }
+    }
+    else
+    {
+        Binary *lhsBinary = (Binary *)(children[0]);
+        Id *arrayId = (Id *)(lhsBinary->getChildren()[0]);
+        Var *prevDeclArrayVar = (Var *)(m_symTable->lookup(arrayId->getName()));
+        if (prevDeclArrayVar != nullptr)
+        {
+            prevDeclArrayVar->makeInitialized();
+        }
+    }
+    // If the RHS is an id, it must have been declared
+    // if (isId(children[1]))
+    // {
+    //     Id *rhsId = (Id *)(children[1]);
+    //     if (!isDeclaredId(rhsId))
+    //     {
+    //         Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + rhsId->getName() + "\' is not declared.");
+    //     }
+    // }
+
+    // LHS and RHS must be the same type
+    if (asgn->getType() == Asgn::Type::Asgn)
+    {
+        checkOperandsAreSameType(asgn);
+    }
+}
+
+void Semantics::analyzeBinary(const Binary *binary) const
+{
+    if (!isBinary(binary))
+    {
+        throw std::runtime_error("Semantics::analyzeBinary() - Invalid Binary");
+    }
+
+    std::vector<Node *> children = binary->getChildren();
+
+    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
+    {
+        throw std::runtime_error("Semantics::checkOperands() - LHS and RHS must exist");
+    }
+
+    if (!isExp(children[0]) || !isExp(children[1]))
+    {
+        throw std::runtime_error("Semantics::checkOperands() - LHS and RHS must be Exp");
+    }
+
+    switch (binary->getType())
+    {
+        case Binary::Type::Mul:
+        case Binary::Type::Div:
+        case Binary::Type::Mod:
+        case Binary::Type::Add:
+        case Binary::Type::Sub:
+            break;
+        case Binary::Type::Index:
+            checkArray((Id *)(children[0]), children[1]);
+            break;
+        case Binary::Type::And:
+        case Binary::Type::Or:
+            break;
+        case Binary::Type::LT:
+        case Binary::Type::LEQ:
+        case Binary::Type::GT:
+        case Binary::Type::GEQ:
+        case Binary::Type::EQ:
+        case Binary::Type::NEQ:
+            checkOperandsAreSameType(binary);
+            break;
+        default:
+            throw std::runtime_error("Semantics::checkOperands() - Unknown Binary");
+            break;
+    }
+}
+
+void Semantics::analyzeCall(const Call *call) const
+{
+    if (!isCall(call))
+    {
+        throw std::runtime_error("Semantics::analyzeCall() - Invalid Call");
+    }
+
+    Decl *prevDecl = (Decl *)(m_symTable->lookup(call->getName()));
+
+    // If the function name is not in the symbol table
+    if (prevDecl == nullptr)
+    {
+        Emit::Error::generic(call->getLineNum(), "Symbol '" + call->getName() + "' is not declared.");
+        return;
+    }
+
+    // If the function name is not associated with a function
+    if (!isFunc(prevDecl))
+    {
+        Emit::Error::generic(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
+        if (isVar(prevDecl))
+        {
+            Var *var = (Var *)prevDecl;
+            var->makeUsed();
+        }
+        else if (isParm(prevDecl))
+        {
+            Parm *parm = (Parm *)prevDecl;
+            parm->makeUsed();
+        }
+        return;
+    }
+}
+
+void Semantics::analyzeId(const Id *id) const
+{
+    if (!isId(id))
+    {
+        throw std::runtime_error("Semantics::analyzeId() - Invalid Id");
+    }
+
+    Decl *prevDecl = (Decl *)(m_symTable->lookup(id->getName()));
+    if (prevDecl == nullptr)
+    {
+        Emit::Error::generic(id->getLineNum(), "Symbol '" + id->getName() + "' is not declared.");
+        return;
+    }
+    if (isFunc(prevDecl))
+    {
+        Emit::Error::generic(id->getLineNum(), "Cannot use function '" + id->getName() + "' as a variable.");
+    }
+    else if (isVar(prevDecl))
+    {
+        Var *prevDeclVar = (Var *)prevDecl;
+        prevDeclVar->makeUsed();
+        if (!prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
+        {
+            Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
+            prevDeclVar->setShowErrors(false);
+        }
+    }
+    else if (isParm(prevDecl))
+    {
+        Parm *prevDeclParm = (Parm *)prevDecl;
+        prevDeclParm->makeUsed();
+    }
+}
+
+void Semantics::analyzeUnary(const Unary *unary) const
+{
+    if (!isUnary(unary))
+    {
+        throw std::runtime_error("Semantics::analyzeUnary() - Invalid Unary");
+    }
+}
+
+void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
+{
+    if (!isUnaryAsgn(unaryAsgn))
+    {
+        throw std::runtime_error("Semantics::analyzeUnaryAsgn() - Invalid UnaryAsgn");
+    }
+}
+
+bool Semantics::isExp(const Node *node) const
+{
+    if (node == nullptr || node->getNodeKind() != Node::Kind::Exp)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isAsgn(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::Asgn)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isBinary(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::Binary)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isCall(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::Call)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isConst(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::Const)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isId(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::Id)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isUnary(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::Unary)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isUnaryAsgn(const Node *node) const
+{
+    if (!isExp(node))
+    {
+        return false;
+    }
+    Exp *exp = (Exp *)node;
+    if (exp->getExpKind() != Exp::Kind::UnaryAsgn)
+    {
+        return false;
+    }
+    return true;
+}
+
+void Semantics::analyzeStmt(const Stmt *stmt) const
+{
+    if (!isStmt(stmt))
+    {
+        throw std::runtime_error("Semantics::analyzeStmt() - Invalid Stmt");
+    }
+
+    switch (stmt->getStmtKind())
+    {
+        case Stmt::Kind::Break:
+            // Not analyzed
+            break;
+        case Stmt::Kind::Compound:
+        {
+            Compound *compound = (Compound *)stmt;
+            analyzeCompound(compound);
+            break;
+        }
+        case Stmt::Kind::For:
+            analyzeFor();
+            break;
+        case Stmt::Kind::If:
+            // Not analyzed
+            break;
+        case Stmt::Kind::Return:
+        {
+            Return *returnN = (Return *)stmt;
+            analyzeReturn(returnN);
+            break;
+        }
+        case Stmt::Kind::While:
+        case Stmt::Kind::Range:
+            // Not analyzed
+            break;
+        default:
+            throw std::runtime_error("Semantics::analyzeStmt() - Unknown Stmt");
+            break;
+    }
+}
+
+void Semantics::analyzeCompound(const Compound *compound) const
+{
+    if (!isCompound(compound))
+    {
+        throw std::runtime_error("Semantics::analyzeCompound() - Invalid Compound");
+    }
+
+    // Ignore compounds following func or for
+    if (!isFunc(compound->getParent()) && !isFor(compound->getParent()))
+    {
+        m_symTable->enter("Compound Statement");
+    }
+}
+
+void Semantics::analyzeFor() const
+{
+    m_symTable->enter("For Loop");
+}
+
+void Semantics::analyzeReturn(const Return *returnN) const
+{
+    if (!isReturn(returnN))
+    {
+        throw std::runtime_error("Semantics::analyzeReturn() - Invalid Return");
+    }
+
+    std::vector<Node *> children = returnN->getChildren();
+    if (children.size() > 0)
+    {
+        Exp *returnChild = (Exp *)(children[0]);
+        if (isId(returnChild))
+        {
+            Id *id = (Id *)returnChild;
+            if (id->getIsArray())
+            {
+                Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
+            }
+        }
+    }
+}
+
+bool Semantics::isStmt(const Node *node) const
+{
+    if (node == nullptr || node->getNodeKind() != Node::Kind::Stmt)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isBreak(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::Break)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isCompound(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::Compound)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isFor(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::For)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isIf(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::If)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isRange(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::Range)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isReturn(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::Return)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isWhile(const Node *node) const
+{
+    if (!isStmt(node))
+    {
+        return false;
+    }
+    Stmt *stmt = (Stmt *)node;
+    if (stmt->getStmtKind() != Stmt::Kind::While)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isValidMainFunc(const Func *func) const
+{
+    if (!isFunc(func))
+    {
+        throw std::runtime_error("Semantics::isValidMainFunc() - Invalid Func");
+    }
+
+    // Function name must be main and in global scope
+    if (func->getName() != "main" || m_symTable->depth() != 1)
+    {
+        return false;
+    }
+
+    // Get the function children
+    std::vector<Node *> funcChildren = func->getChildren();
+
+    // There can't be any parms (children)
+    if (funcChildren[0] != nullptr)
+    {
+        return false;
+    }
+
+    // Get the function contents
+    Compound *compound = (Compound *)funcChildren[1];
+    std::vector<Node *> compoundChildren = compound->getChildren();
+
+    // If the function is empty (main can't be empty in c-)
+    if (compoundChildren[0] == nullptr || compoundChildren[1] == nullptr)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Semantics::isDeclaredId(const Id *id) const
+{
+    if (!isId(id))
+    {
+        throw std::runtime_error("Semantics::isDeclaredId() - Invalid Id");
+    }
+
+    // If the id name is not in the symbol table, it is not declared
+    if (m_symTable->lookup(id->getName()) == nullptr)
+    {
+        return false;
+    }
+    return true;
+}
+
+void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
+{
+    if (!isId(arrayId))
+    {
+        throw std::runtime_error("Semantics::checkArrayIndex() - Invalid Id");
+    }
+
+    if (!arrayId->getIsArray())
+    {
+        Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
+        return;
+    }
+
+    if (isId(indexNode))
+    {
+        Id *arrayIndexId = (Id *)indexNode;
+        Decl *prevDecl = (Decl *)(m_symTable->lookup(arrayIndexId->getName()));
+        if (prevDecl->getData()->getType() != Data::Type::Int)
+        {
+            Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + prevDecl->getData()->stringify() + ".");
+        }
+    }
+}
+
+void Semantics::checkOperandsAreSameType(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreSameType() - Invalid Exp");
+    }
+
+    if (!isBinary(exp) && !isAsgn(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreSameType() - Exp is neither Binary nor Asgn");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
+
+    Data *lhsData = setAndGetExpData(lhsExp);
+    Data *rhsData = setAndGetExpData(rhsExp);
+
+    if (lhsData->getType() != Data::Type::None && lhsData->getType() != rhsData->getType())
+    {
+        if (isBinary(exp))
+        {
+            Binary *binary = (Binary *)exp;
+            Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->stringify() + "' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
+        }
+        else if (isAsgn(exp))
+        {
+            Asgn *asgn = (Asgn *)exp;
+            if (asgn->getType() == Asgn::Type::Asgn)
+            {
+                Emit::Error::generic(lhsExp->getLineNum(), "'=' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
+            }
+            else
+            {
+                throw std::runtime_error("Semantics::checkOperandsAreSameType() - Exp is not a valid Asgn type");
+            }
+        }
     }
 }
 
@@ -395,26 +868,26 @@ void Semantics::leaveScope()
     for (auto const& [name, voidNode] : syms)
     {
         Node *node = (Node *)voidNode;
-        if (!isDeclNode(node))
+        if (!isDecl(node))
         {
-            throw std::runtime_error("Semantics: symbol table error: \'NonDecl\' node found in symbol table: node is \'NonDecl:Unknown\' or nullptr");
+            throw std::runtime_error("Semantics: symbol table error: \'NonDecl\' node found in symbol table: node is \'NonDecl:{ any }\' or nullptr");
         }
 
-        Decl *declNode = (Decl *)node;
-        if (isVarNode(declNode))
+        Decl *decl = (Decl *)node;
+        if (isVar(decl))
         {
-            Var *varNode = (Var *)declNode;
-            if (varNode->getIsUsed() == false)
+            Var *var = (Var *)decl;
+            if (var->getIsUsed() == false)
             {
-                Emit::Warn::generic(varNode->getLineNum(), "The variable '" + varNode->getName() + "' seems not to be used.");
+                Emit::Warn::generic(var->getLineNum(), "The variable '" + var->getName() + "' seems not to be used.");
             }
         }
-        else if (isParmNode(declNode))
+        else if (isParm(decl))
         {
-            Parm *parmNode = (Parm *)declNode;
-            if (parmNode->getIsUsed() == false)
+            Parm *parm = (Parm *)decl;
+            if (parm->getIsUsed() == false)
             {
-                Emit::Warn::generic(parmNode->getLineNum(), "The variable '" + parmNode->getName() + "' seems not to be used.");
+                Emit::Warn::generic(parm->getLineNum(), "The variable '" + parm->getName() + "' seems not to be used.");
             }
         }
     }
@@ -422,265 +895,96 @@ void Semantics::leaveScope()
     m_symTable->leave();
 }
 
-bool Semantics::addToSymTable(const Node *node, const bool global)
+bool Semantics::addToSymTable(const Decl *decl, const bool global)
 {
-    bool inserted = false;
-    if (node == nullptr)
+    if (!isDecl(decl))
     {
-        return inserted;
+        throw std::runtime_error("Semantics::addToSymTable() - Invalid Decl");
     }
 
-    switch (node->getNodeKind())
+    bool inserted = false;
+    if (global)
     {
-        case Node::Kind::Decl:
+        inserted = m_symTable->insertGlobal(decl->getName(), (void *)decl);
+    }
+    else
+    {
+        inserted = m_symTable->insert(decl->getName(), (void *)decl);
+    }
+
+    if (!inserted)
+    {
+        Decl *prevDecl = (Decl *)(m_symTable->lookup(decl->getName()));
+        if (prevDecl == nullptr)
         {
-            Decl *declNode = (Decl *)node;
-            switch (declNode->getDeclKind())
-            {
-                case Decl::Kind::Func:
-                case Decl::Kind::Parm:
-                case Decl::Kind::Var:
-                {
-                    inserted = m_symTable->insert(declNode->getName(), declNode);
-                    if (!inserted)
-                    {
-                        Decl *prevDeclNode = (Decl *)(m_symTable->lookup(declNode->getName()));
-                        if (prevDeclNode == nullptr)
-                        {
-                            throw std::runtime_error("Semantics: symbol table error: failed to insert \'Decl\' node and it was not already in the symbol table");
-                        }
-                        std::stringstream msg;
-                        msg << "Symbol '" << declNode->getName() << "' is already declared at line " << prevDeclNode->getLineNum() << ".";
-                        Emit::Error::generic(declNode->getLineNum(), msg.str());
-                    }
-                    break;
-                }
-                default:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Decl:Unknown\' node");
-                    break;
-            }
-            break;
+            throw std::runtime_error("Semantics::addToSymTable() - Failed to insert Decl");
         }
-        case Node::Kind::Exp:
-        {
-            Exp *expNode = (Exp *)node;
-            switch (expNode->getExpKind())
-            {
-                case Exp::Kind::Asgn:
-                case Exp::Kind::Binary:
-                case Exp::Kind::Call:
-                case Exp::Kind::Const:
-                case Exp::Kind::Id:
-                case Exp::Kind::Range:
-                case Exp::Kind::Unary:
-                case Exp::Kind::UnaryAsgn:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Exp:Unknown\'");
-                    break;
-                default:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Exp:Unknown\' node");
-                    break;
-            }
-            break;
-        }
-        case Node::Kind::Stmt:
-        {
-            Stmt *stmtNode = (Stmt *)node;
-            switch (stmtNode->getStmtKind())
-            {
-                case Stmt::Kind::Break:
-                case Stmt::Kind::Compound:
-                case Stmt::Kind::For:
-                case Stmt::Kind::If:
-                case Stmt::Kind::Return:
-                case Stmt::Kind::While:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Stmt:Unknown\'");
-                    break;
-                default:
-                    throw std::runtime_error("Semantics: symbol table error: cannot insert \'Stmt:Unknown\' node");
-                    break;
-            }
-            break;
-        }
-        case Node::Kind::None:
-            throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'None:Unknown\' node");
-            break;
-        default:
-            throw std::runtime_error("Semantics: symbol table error: cannot insert \'NonDecl\' node: node is \'Unknown:Unknown\' node");
-            break;
+        std::stringstream msg;
+        msg << "Symbol '" << decl->getName() << "' is already declared at line " << prevDecl->getLineNum() << ".";
+        Emit::Error::generic(decl->getLineNum(), msg.str());
     }
 
     return inserted;
 }
 
-bool Semantics::isDeclNode(const Node *node) const
+Decl * Semantics::getFromSymTable(const std::string name) const
 {
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Decl)
+    if (name.length() == 0)
     {
-        return false;
+        throw std::runtime_error("Semantics::getFromSymTable() - Invalid name");
     }
-    return true;
+
+    Decl *prevDecl = (Decl *)(m_symTable->lookup(name));
+    return prevDecl;
 }
 
-bool Semantics::isFuncNode(const Node *node) const
+Data * Semantics::setAndGetExpData(const Exp *exp) const
 {
-    if (!isDeclNode(node))
+    if (!isExp(exp))
     {
-        return false;
-    }
-    Decl *declNode = (Decl *)node;
-    if (declNode->getDeclKind() != Decl::Kind::Func)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isParmNode(const Node *node) const
-{
-    if (!isDeclNode(node))
-    {
-        return false;
-    }
-    Decl *declNode = (Decl *)node;
-    if (declNode->getDeclKind() != Decl::Kind::Parm)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isVarNode(const Node *node) const
-{
-    if (!isDeclNode(node))
-    {
-        return false;
-    }
-    Decl *declNode = (Decl *)node;
-    if (declNode->getDeclKind() != Decl::Kind::Var)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isExpNode(const Node *node) const
-{
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Exp)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isIdNode(const Node *node) const
-{
-    if (!isExpNode(node))
-    {
-        return false;
-    }
-    Exp *expNode = (Exp *)node;
-    if (expNode->getExpKind() != Exp::Kind::Id)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isStmtNode(const Node *node) const
-{
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Stmt)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isCompoundNode(const Node *node) const
-{
-    if (!isStmtNode(node))
-    {
-        return false;
-    }
-    Stmt *stmtNode = (Stmt *)node;
-    if (stmtNode->getStmtKind() != Stmt::Kind::Compound)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isForNode(const Node *node) const
-{
-    if (!isStmtNode(node))
-    {
-        return false;
-    }
-    Stmt *stmtNode = (Stmt *)node;
-    if (stmtNode->getStmtKind() != Stmt::Kind::For)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isValidMainFunc(const Func *funcNode) const
-{
-    if (!isFuncNode(funcNode))
-    {
-        throw std::runtime_error("Semantics: is error: cannot determine if \'NonFunc\' node is valid main: node is \'Unknown:NonFunc\' node or nullptr");
+        throw std::runtime_error("Semantics::setAndGetExpData() - Invalid Exp");
     }
 
-    // Function name is not main
-    if (funcNode->getName() != "main")
+    std::string name;
+    switch (exp->getExpKind())
     {
-        return false;
+        case Exp::Kind::Asgn:
+        {
+            Asgn *asgn = (Asgn *)exp;
+            Exp *lhsExp = (Exp *)(exp->getChildren()[0]);
+            asgn->setData(setAndGetExpData(lhsExp));
+            break;
+        }
+        case Exp::Kind::Binary:
+        {
+            Binary *binary = (Binary *)exp;
+            if (binary->getType() == Binary::Type::Index)
+            {
+                Id *arrayId = (Id *)(binary->getChildren()[0]);
+                binary->setData(new Data(setAndGetExpData(arrayId)->getType(), false, false));
+            }
+            break;
+        }
+        case Exp::Kind::Call:
+        {
+            Call *call = (Call *)exp;
+            Decl *prevDecl = getFromSymTable(call->getName());
+            if (prevDecl != nullptr)
+            {
+                call->setData(prevDecl->getData());
+            }
+            break;
+        }
+        case Exp::Kind::Id:
+        {
+            Id *id = (Id *)exp;
+            Decl *prevDecl = getFromSymTable(id->getName());
+            if (prevDecl != nullptr)
+            {
+                id->setData(prevDecl->getData());
+            }
+            break;
+        }
     }
-
-    // Is not at the top of the scope stack
-    if (m_symTable->depth() != 1)
-    {
-        return false;
-    }
-
-    // Return type is not void
-    if (funcNode->getData()->getType() != Data::Type::Void)
-    {
-        return false;
-    }
-
-    // Get the function children
-    std::vector<Node *> funcChildren = funcNode->getChildren();
-
-    // There are parms (children)
-    if (funcChildren[0] != nullptr)
-    {
-        return false;
-    }
-
-    // Get the function contents
-    Compound *funcCompound = (Compound *)funcChildren[1];
-    std::vector<Node *> funcCompoundChildren = funcCompound->getChildren();
-
-    // If the function is empty (main can't be empty in c-)
-    if (funcCompoundChildren[0] == nullptr || funcCompoundChildren[1] == nullptr)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool Semantics::isDeclaredId(const Id *idNode) const
-{
-    if (!isIdNode(idNode))
-    {
-        throw std::runtime_error("Semantics: is error: cannot determine if \'NonId\' node is valid main: node is \'Unknown:NonId\' node or nullptr");
-    }
-
-    // If the id name is not in the symbol table, it is not declared
-    if (m_symTable->lookup(idNode->getName()) == nullptr)
-    {
-        return false;
-    }
-    return true;
+    return exp->getData();
 }

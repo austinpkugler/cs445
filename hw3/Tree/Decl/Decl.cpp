@@ -14,3 +14,8 @@ void Decl::setType(const Data::Type type)
         node->setType(type);
     }
 }
+
+void Decl::setShowErrors(bool showErrors)
+{
+    m_showErrors = showErrors;
+}

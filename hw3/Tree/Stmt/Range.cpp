@@ -1,6 +1,6 @@
 #include "Range.hpp"
 
-Range::Range(const unsigned lineNum) : Exp::Exp(lineNum, Exp::Kind::Range)
+Range::Range(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Range)
 {
 
 }

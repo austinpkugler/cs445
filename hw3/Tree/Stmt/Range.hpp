@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Exp.hpp"
+#include "Stmt.hpp"
 
-class Range : public Exp
+class Range : public Stmt
 {
     public:
         /**

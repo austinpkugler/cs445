@@ -128,18 +128,20 @@ varDeclInit             : varDeclId
                         }
                         | varDeclId COLON simpleExp
                         {
-                            $$ = $1;
+                            Var *var = (Var *)($1);
+                            var->makeInitialized();
+                            $$ = var;
                             $$->addChild($3);
                         }
                         ;
 
 varDeclId               : ID
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, true, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
                         }
                         ;
 
@@ -165,7 +167,7 @@ funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
                         }
                         | ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
+                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
                             $$->addChild($3);
                             $$->addChild($5);
                         }
@@ -220,11 +222,11 @@ parmIdList              : parmIdList COMMA parmId
 
 parmId                  : ID
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
                         }
                         | ID LBRACK RBRACK
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, true, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
                         }
                         ;
 
@@ -362,6 +364,7 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         {
                             $$ = new For($1->lineNum);
                             Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
+                            node->makeInitialized();
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
@@ -378,6 +381,7 @@ iterStmtMatched         : WHILE simpleExp DO stmtMatched
                         {
                             $$ = new For($1->lineNum);
                             Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
+                            node->makeInitialized();
                             $$->addChild(node);
                             $$->addChild($4);
                             $$->addChild($6);
