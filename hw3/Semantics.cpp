@@ -902,7 +902,7 @@ void Semantics::checkOperandsAreType(const Exp *exp) const
     {
         Binary *binary = (Binary *)exp;
         std::vector<Node *> children = binary->getChildren();
-        if (lhsData->getType() != Data::Type::Int)
+        if (lhsData->getType() != Data::Type::None && rhsData->getType() != Data::Type::None && lhsData->getType() != Data::Type::Int)
         {
             Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
         }
