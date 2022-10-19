@@ -258,70 +258,7 @@ void Semantics::analyzeExp(Node *node) const
                 throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Op\' node: lhs and rhs must be \'Exp:{ any }\'");
             }
 
-            Binary *binary = (Binary *)exp;
-            switch (binary->getType())
-            {
-                case Binary::Type::Mul:
-                case Binary::Type::Div:
-                case Binary::Type::Mod:
-                case Binary::Type::Add:
-                case Binary::Type::Sub:
-                {
-                    break;
-                }
-                case Binary::Type::Index:
-                {
-                    if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
-                    {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: insufficient children");
-                    }
-
-                    if (!isIdNode(expChildren[0]))
-                    {
-                        throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: first child is not \'Exp:Id\' node");
-                    }
-
-                    Id *arrayId = (Id *)(expChildren[0]);
-                    if (!arrayId->getIsArray())
-                    {
-                        Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
-                        return;
-                    }
-
-                    Node *arrayIndexNode = expChildren[1];
-                    if (isIdNode(arrayIndexNode))
-                    {
-                        Id *arrayIndexId = (Id *)arrayIndexNode;
-                        Decl *prevDecl = (Decl *)(m_symTable->lookup(arrayIndexId->getName()));
-                        if (prevDecl->getData()->getType() != Data::Type::Int)
-                        {
-                            Emit::Error::generic(arrayIndexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + prevDecl->getData()->stringify() + ".");
-                        }
-                    }
-                    break;
-                }
-                case Binary::Type::And:
-                case Binary::Type::Or:
-                    break;
-                case Binary::Type::LT:
-                case Binary::Type::LEQ:
-                case Binary::Type::GT:
-                case Binary::Type::GEQ:
-                case Binary::Type::EQ:
-                case Binary::Type::NEQ:
-                {
-                    Exp *lhsExp = (Exp *)(expChildren[0]), *rhsExp = (Exp *)(expChildren[1]);
-                    Data *lhsData = setAndGetExpData(lhsExp), *rhsData = setAndGetExpData(rhsExp);
-                    if (lhsData->getType() != Data::Type::None && lhsData->getType() != rhsData->getType())
-                    {
-                        Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->stringify() + "' requires operands of the same type but lhs is " + lhsData->stringify() + " and rhs is " + rhsData->stringify() + ".");
-                    }
-                    break;
-                }
-                default:
-                    throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Binary\' node: unknown \'Binary::Type\'");
-                    break;
-            }
+            checkOperandTypes(exp);
             break;
         }
         case Exp::Kind::Call:
@@ -402,6 +339,72 @@ void Semantics::analyzeExp(Node *node) const
         }
         default:
             throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:{ any }\' node");
+            break;
+    }
+}
+
+void Semantics::checkOperandTypes(Exp *exp) const
+{
+    Binary *binary = (Binary *)exp;
+    std::vector<Node *> expChildren = exp->getChildren();
+    switch (binary->getType())
+    {
+        case Binary::Type::Mul:
+        case Binary::Type::Div:
+        case Binary::Type::Mod:
+        case Binary::Type::Add:
+        case Binary::Type::Sub:
+        {
+            break;
+        }
+        case Binary::Type::Index:
+        {
+            if (expChildren.size() < 2 || expChildren[0] == nullptr || expChildren[1] == nullptr)
+            {
+                throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: insufficient children");
+            }
+            if (!isIdNode(expChildren[0]))
+            {
+                throw std::runtime_error("Semantics: analyze error: cannot analyze \'Binary:Index\' node: first child is not \'Exp:Id\' node");
+            }
+            Id *arrayId = (Id *)(expChildren[0]);
+            if (!arrayId->getIsArray())
+            {
+                Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
+                return;
+            }
+            Node *arrayIndexNode = expChildren[1];
+            if (isIdNode(arrayIndexNode))
+            {
+                Id *arrayIndexId = (Id *)arrayIndexNode;
+                Decl *prevDecl = (Decl *)(m_symTable->lookup(arrayIndexId->getName()));
+                if (prevDecl->getData()->getType() != Data::Type::Int)
+                {
+                    Emit::Error::generic(arrayIndexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + prevDecl->getData()->stringify() + ".");
+                }
+            }
+            break;
+        }
+        case Binary::Type::And:
+        case Binary::Type::Or:
+            break;
+        case Binary::Type::LT:
+        case Binary::Type::LEQ:
+        case Binary::Type::GT:
+        case Binary::Type::GEQ:
+        case Binary::Type::EQ:
+        case Binary::Type::NEQ:
+        {
+            Exp *lhsExp = (Exp *)(expChildren[0]), *rhsExp = (Exp *)(expChildren[1]);
+            Data *lhsData = setAndGetExpData(lhsExp), *rhsData = setAndGetExpData(rhsExp);
+            if (lhsData->getType() != Data::Type::None && lhsData->getType() != rhsData->getType())
+            {
+                Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->stringify() + "' requires operands of the same type but lhs is " + lhsData->stringify() + " and rhs is " + rhsData->stringify() + ".");
+            }
+            break;
+        }
+        default:
+            throw std::runtime_error("Semantics: analyze error: cannot analyze \'Exp:Binary\' node: unknown \'Binary::Type\'");
             break;
     }
 }

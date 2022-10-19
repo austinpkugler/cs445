@@ -23,6 +23,7 @@ class Semantics
         void analyzeDecl(Node *node);
         void analyzeStmt(Node *node) const;
         void analyzeExp(Node *node) const;
+        void checkOperandTypes(Exp *exp) const;
 
         // Symbol table
         void leaveScope();
