@@ -422,21 +422,37 @@ void Semantics::analyzeId(const Id *id) const
     else if (isVar(prevDecl))
     {
         Var *prevDeclVar = (Var *)prevDecl;
-        prevDeclVar->makeUsed();
 
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
-        bool isIndex = false;
+        bool isIndexFlag = false;
         Node *parentNode = id->getParent();
         if (!id->getIsArray() && isBinary(parentNode))
         {
             Binary *parent = (Binary *)parentNode;
             if (parent->getType() == Binary::Type::Index)
             {
-                isIndex = true;
+                isIndexFlag = true;
             }
         }
 
-        if (!isIndex && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
+        // Don't warn if in range (see hw3/test/forb.c-)
+        bool isRangeFlag;
+        if (isStmt(parentNode))
+        {
+            Stmt *parent = (Stmt *)parentNode;
+            if (isRange(parent))
+            {
+                isRangeFlag = true;
+            }
+        }
+
+        // Don't make used if in range (see hw3/test/forb.c-)
+        if (!isRangeFlag)
+        {
+            prevDeclVar->makeUsed();
+        }
+
+        if (!isIndexFlag && !isRangeFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
             prevDeclVar->setShowErrors(false);
