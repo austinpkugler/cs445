@@ -40,6 +40,10 @@ void Semantics::analyzeTree(const Node *node)
         case Node::Kind::Stmt:
         {
             Stmt *stmt = (Stmt *)node;
+            if (stmt->getStmtKind() == Stmt::Kind::Range)
+            {
+                return;
+            }
             analyzeStmt(stmt);
             break;
         }
@@ -422,6 +426,7 @@ void Semantics::analyzeId(const Id *id) const
     else if (isVar(prevDecl))
     {
         Var *prevDeclVar = (Var *)prevDecl;
+        prevDeclVar->makeUsed();
 
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         bool isIndexFlag = false;
@@ -435,24 +440,7 @@ void Semantics::analyzeId(const Id *id) const
             }
         }
 
-        // Don't warn if in range (see hw3/test/forb.c-)
-        bool isRangeFlag;
-        if (isStmt(parentNode))
-        {
-            Stmt *parent = (Stmt *)parentNode;
-            if (isRange(parent))
-            {
-                isRangeFlag = true;
-            }
-        }
-
-        // Don't make used if in range (see hw3/test/forb.c-)
-        if (!isRangeFlag)
-        {
-            prevDeclVar->makeUsed();
-        }
-
-        if (!isIndexFlag && !isRangeFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
+        if (!isIndexFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
             prevDeclVar->setShowErrors(false);
@@ -634,8 +622,10 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             break;
         }
         case Stmt::Kind::While:
+            break;
         case Stmt::Kind::Range:
             // Not analyzed
+            throw std::runtime_error("Semantics::analyzeStmt() - Range Stmt");
             break;
         default:
             throw std::runtime_error("Semantics::analyzeStmt() - Unknown Stmt");
