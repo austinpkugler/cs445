@@ -880,7 +880,7 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
         if (isBinary(exp))
         {
             Binary *binary = (Binary *)exp;
-            Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->stringify() + "' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
+            Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->getSym() + "' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
         }
         else if (isAsgn(exp))
         {
