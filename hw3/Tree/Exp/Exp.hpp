@@ -22,9 +22,6 @@ class Exp : public Node
         // Setters
         void setData(Data *data);
 
-        // Virtual
-        virtual std::string getSym() { return ""; };
-
     protected:
         Data *m_data;
 
