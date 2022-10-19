@@ -753,20 +753,8 @@ bool Semantics::isValidMainFunc(const Func *func) const
         throw std::runtime_error("Semantics::isValidMainFunc() - Invalid Func");
     }
 
-    // Function name is not main
-    if (func->getName() != "main")
-    {
-        return false;
-    }
-
-    // Is not at the top of the scope stack
-    if (m_symTable->depth() != 1)
-    {
-        return false;
-    }
-
-    // Return type is not void
-    if (func->getData()->getType() != Data::Type::Void)
+    // Function name must be main and in global scope
+    if (func->getName() != "main" || m_symTable->depth() != 1)
     {
         return false;
     }
@@ -774,7 +762,7 @@ bool Semantics::isValidMainFunc(const Func *func) const
     // Get the function children
     std::vector<Node *> funcChildren = func->getChildren();
 
-    // There are parms (children)
+    // There can't be any parms (children)
     if (funcChildren[0] != nullptr)
     {
         return false;
