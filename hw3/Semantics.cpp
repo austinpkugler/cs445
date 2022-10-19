@@ -331,12 +331,12 @@ void Semantics::analyzeBinary(const Binary *binary) const
 
     if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
     {
-        throw std::runtime_error("Semantics::checkOperands() - LHS and RHS must exist");
+        throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS must exist");
     }
 
     if (!isExp(children[0]) || !isExp(children[1]))
     {
-        throw std::runtime_error("Semantics::checkOperands() - LHS and RHS must be Exp");
+        throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS must be Exp");
     }
 
     switch (binary->getType())
@@ -346,6 +346,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::Mod:
         case Binary::Type::Add:
         case Binary::Type::Sub:
+            checkOperandsAreType(binary);
             break;
         case Binary::Type::Index:
             checkArray((Id *)(children[0]), children[1]);
@@ -362,7 +363,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
             checkOperandsAreSameType(binary);
             break;
         default:
-            throw std::runtime_error("Semantics::checkOperands() - Unknown Binary");
+            throw std::runtime_error("Semantics::analyzeBinary() - Unknown Binary");
             break;
     }
 }
@@ -440,6 +441,21 @@ void Semantics::analyzeUnary(const Unary *unary) const
     if (!isUnary(unary))
     {
         throw std::runtime_error("Semantics::analyzeUnary() - Invalid Unary");
+    }
+
+    switch (unary->getType())
+    {
+        case Unary::Type::Chsign:
+            break;
+        case Unary::Type::Sizeof:
+            break;
+        case Unary::Type::Question:
+            break;
+        case Unary::Type::Not:
+            break;
+        default:
+            throw std::runtime_error("Semantics::analyzeUnary() - Unknown Unary");
+            break;
     }
 }
 
@@ -769,14 +785,14 @@ bool Semantics::isValidMainFunc(const Func *func) const
     }
 
     // Get the function contents
-    Compound *compound = (Compound *)funcChildren[1];
-    std::vector<Node *> compoundChildren = compound->getChildren();
+    // Compound *compound = (Compound *)funcChildren[1];
+    // std::vector<Node *> compoundChildren = compound->getChildren();
 
     // If the function is empty (main can't be empty in c-)
-    if (compoundChildren[0] == nullptr || compoundChildren[1] == nullptr)
-    {
-        return false;
-    }
+    // if (compoundChildren[0] == nullptr || compoundChildren[1] == nullptr)
+    // {
+    //     return false;
+    // }
 
     return true;
 }
@@ -858,6 +874,37 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
             {
                 throw std::runtime_error("Semantics::checkOperandsAreSameType() - Exp is not a valid Asgn type");
             }
+        }
+    }
+}
+
+void Semantics::checkOperandsAreType(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreType() - Invalid Exp");
+    }
+
+    if (!isBinary(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreType() - Exp is not Binary");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
+
+    Data *lhsData = setAndGetExpData(lhsExp);
+    Data *rhsData = setAndGetExpData(rhsExp);
+
+    if (isBinary(exp))
+    {
+        Binary *binary = (Binary *)exp;
+        std::vector<Node *> children = binary->getChildren();
+        if (lhsData->getType() != Data::Type::Int)
+        {
+            Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
         }
     }
 }
