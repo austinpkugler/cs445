@@ -283,10 +283,10 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
     if (isId(children[0]))
     {
         Id *lhsId = (Id *)(children[0]);
-        if (!isDeclaredId(lhsId))
-        {
-            Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + lhsId->getName() + "\' is not declared.");
-        }
+        // if (!isDeclaredId(lhsId))
+        // {
+        //     Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + lhsId->getName() + "\' is not declared.");
+        // }
         Var *prevDeclLhsVar = (Var *)(m_symTable->lookup(lhsId->getName()));
         if (isVar(prevDeclLhsVar))
         {
@@ -304,14 +304,14 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
         }
     }
     // If the RHS is an id, it must have been declared
-    if (isId(children[1]))
-    {
-        Id *rhsId = (Id *)(children[1]);
-        if (!isDeclaredId(rhsId))
-        {
-            Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + rhsId->getName() + "\' is not declared.");
-        }
-    }
+    // if (isId(children[1]))
+    // {
+    //     Id *rhsId = (Id *)(children[1]);
+    //     if (!isDeclaredId(rhsId))
+    //     {
+    //         Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + rhsId->getName() + "\' is not declared.");
+    //     }
+    // }
 
     // LHS and RHS must be the same type
     if (asgn->getType() == Asgn::Type::Asgn)
