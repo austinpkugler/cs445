@@ -335,16 +335,9 @@ void Semantics::analyzeBinary(const Binary *binary) const
         throw std::runtime_error("Semantics::analyzeBinary() - Invalid Binary");
     }
 
-    std::vector<Node *> children = binary->getChildren();
-
-    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
+    if (!expOperandsExist((Exp *)binary))
     {
-        throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS must exist");
-    }
-
-    if (!isExp(children[0]) || !isExp(children[1]))
-    {
-        throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS must be Exp");
+        throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS Exp operands must exist");
     }
 
     switch (binary->getType())
@@ -357,8 +350,11 @@ void Semantics::analyzeBinary(const Binary *binary) const
             checkOperandsAreCorrectType((Exp *)binary);
             break;
         case Binary::Type::Index:
+        {
+            std::vector<Node *> children = binary->getChildren();
             checkArray((Id *)(children[0]), children[1]);
             break;
+        }
         case Binary::Type::And:
         case Binary::Type::Or:
             break;
@@ -913,17 +909,12 @@ void Semantics::checkOperandsAreCorrectType(Exp *exp) const
         throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is neither Binary nor Asgn");
     }
 
+    if (!expOperandsExist(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS Exp operands must exist");
+    }
+
     std::vector<Node *> children = exp->getChildren();
-
-    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS must exist");
-    }
-
-    if (!isExp(children[0]) || !isExp(children[1]))
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS must be Exp");
-    }
 
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
@@ -1067,4 +1058,24 @@ Data * Semantics::setAndGetExpData(const Exp *exp) const
         }
     }
     return exp->getData();
+}
+
+bool Semantics::expOperandsExist(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::expOperandsExist() - Invalid Exp");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
+    {
+        return false;
+    }
+
+    if (!isExp(children[0]) || !isExp(children[1]))
+    {
+        return false;
+    }
+    return true;
 }
