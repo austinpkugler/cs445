@@ -60,6 +60,11 @@ void Data::setType(Data::Type type)
     }
 }
 
+void Data::setCopyName(std::string copyName)
+{
+    m_copyName = copyName;
+}
+
 std::string Data::stringify() const
 {
     std::string stringy;

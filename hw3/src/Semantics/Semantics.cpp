@@ -516,9 +516,24 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     {
         Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
     }
-    if (!lhsData->getIsArray() && rhsData->getIsArray())
+    else if (!lhsData->getIsArray() && rhsData->getIsArray())
     {
         Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
+    }
+
+    if (isId(lhsExp) && isId(rhsExp))
+    {
+        Id *lhsId = (Id *)lhsExp;
+        Id *rhsId = (Id *)rhsExp;
+        if (lhsId->getName() != rhsId->getName())
+        {
+            Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+            if (prevDecl != nullptr && isVar(prevDecl))
+            {
+                Var *prevDeclVar = (Var *)prevDecl;
+                prevDeclVar->getData()->setCopyName(lhsId->getName());
+            }
+        }
     }
 }
 
@@ -689,19 +704,10 @@ void Semantics::checkIndex(const Binary *binary) const
     Id *arrayId = (Id *)(children[0]);
     Node *indexNode = children[1];
 
-    Decl *prevDecl = (Decl *)(getFromSymTable(arrayId->getName()));
-    if (prevDecl == nullptr || !prevDecl->getData()->getIsArray() || !arrayId->getIsArray())
+    Decl *prevArrayDecl = (Decl *)(getFromSymTable(arrayId->getName()));
+    if (prevArrayDecl == nullptr || !prevArrayDecl->getData()->getIsArray() || !arrayId->getIsArray())
     {
         Emit::Error::generic(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
-    }
-
-    if (prevDecl != nullptr && prevDecl->getData()->getIsArray() && isId(indexNode) )
-    {
-        Id *indexId = (Id *)indexNode;
-        if (arrayId->getName().compare(indexId->getName()) == 0)
-        {
-            Emit::Error::generic(indexNode->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
-        }
     }
 
     Exp *indexExp = (Exp *)indexNode;
@@ -709,6 +715,26 @@ void Semantics::checkIndex(const Binary *binary) const
     if (indexData->getType() != Data::Type::Int)
     {
         Emit::Error::generic(binary->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
+    }
+
+    if (prevArrayDecl != nullptr && prevArrayDecl->getData()->getIsArray() && isId(indexNode))
+    {
+        Id *indexId = (Id *)indexNode;
+        if (indexId->getName() == arrayId->getName())
+        {
+            Emit::Error::generic(binary->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
+            return;
+        }
+    }
+
+    if (prevArrayDecl != nullptr && isVar(prevArrayDecl) && isId(indexNode))
+    {
+        Var *prevArrayVar = (Var *)prevArrayDecl;
+        Id *indexId = (Id *)indexNode;
+        if (indexId->getName() == prevArrayVar->getData()->getCopyName())
+        {
+            Emit::Error::generic(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
+        }
     }
 }
 
