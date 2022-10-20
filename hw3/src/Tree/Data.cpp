@@ -60,9 +60,9 @@ void Data::setType(Data::Type type)
     }
 }
 
-void Data::setCopyName(std::string copyName)
+void Data::setCopyOf(std::string copyOf)
 {
-    m_copyName = copyName;
+    m_copyOf = copyOf;
 }
 
 std::string Data::stringify() const

@@ -22,13 +22,13 @@ class Data
         bool getIsArray() const { return m_isArray; }
         bool getIsStatic() const { return m_isStatic; }
         Type getType() const { return m_type; }
-        std::string getCopyName() const { return m_copyName; }
+        std::string getCopyOf() const { return m_copyOf; }
 
         // Setters
         void setIsArray(bool isArray);
         void setIsStatic(bool isStatic);
         void setType(Data::Type type);
-        void setCopyName(std::string copyName);
+        void setCopyOf(std::string copyOf);
 
         // Print
         std::string stringify() const;
@@ -37,6 +37,6 @@ class Data
         bool m_isArray = false;
         bool m_isStatic = false;
         Data::Type m_type;
-        std::string m_copyName;
+        std::string m_copyOf;
         Data *m_next;
 };

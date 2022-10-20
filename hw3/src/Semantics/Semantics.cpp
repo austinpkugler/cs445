@@ -520,21 +520,41 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     {
         Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
     }
+    /*
+        a = a;
+        a = aa;     // a.getCopyOf() = aa
+        aa = a;     
+        aa = aa;
 
-    if (isId(lhsExp) && isId(rhsExp))
-    {
-        Id *lhsId = (Id *)lhsExp;
-        Id *rhsId = (Id *)rhsExp;
-        if (lhsId->getName() != rhsId->getName())
+        -a;
+        -aa;
+        - -aa;
+
+        a[a];
+    22  a[aa];      // if (indexId->getName() == lhsVar->getData()->getCopyOf())
+        aa[a];
+        aa[aa];
+    */
+    // else if (lhsData->getIsArray() && rhsData->getIsArray())
+    // {
+        if (isId(lhsExp) && isId(rhsExp))
         {
-            Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
-            if (prevDecl != nullptr && isVar(prevDecl))
+            Id *lhsId = (Id *)lhsExp;
+            Id *rhsId = (Id *)rhsExp;
+            if (lhsId->getName() != rhsId->getName())
             {
-                Var *prevDeclVar = (Var *)prevDecl;
-                prevDeclVar->getData()->setCopyName(lhsId->getName());
+                Decl *prevLhsDecl = (Decl *)(getFromSymTable(lhsId->getName()));
+                Decl *prevRhsDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+                if ((prevLhsDecl != nullptr && isVar(prevLhsDecl)) && (prevRhsDecl != nullptr && isVar(prevRhsDecl)))
+                {
+                    if (rhsData->getCopyOf() != lhsId->getName())
+                    {
+                        lhsData->setCopyOf(rhsId->getName());
+                    }
+                }
             }
         }
-    }
+    // }
 }
 
 void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
@@ -723,15 +743,13 @@ void Semantics::checkIndex(const Binary *binary) const
         if (indexId->getName() == arrayId->getName())
         {
             Emit::Error::generic(binary->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
-            return;
         }
     }
-
-    if (prevArrayDecl != nullptr && isVar(prevArrayDecl) && isId(indexNode))
+    else if (prevArrayDecl != nullptr && isId(indexNode))
     {
         Var *prevArrayVar = (Var *)prevArrayDecl;
         Id *indexId = (Id *)indexNode;
-        if (indexId->getName() == prevArrayVar->getData()->getCopyName())
+        if (indexId->getName() == prevArrayVar->getData()->getCopyOf())
         {
             Emit::Error::generic(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
         }
