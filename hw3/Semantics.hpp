@@ -74,6 +74,7 @@ class Semantics
         void checkBinaryOperandsAreNotArray(const Binary *binary) const;
         void checkAsgnOperands(const Asgn *asgn) const;
         void checkUnaryOperands(const Unary *unary) const;
+        void checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const;
 
         // Symbol table
         void leaveScope();

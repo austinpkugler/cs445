@@ -480,6 +480,8 @@ void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
     {
         throw std::runtime_error("Semantics::analyzeUnaryAsgn() - Invalid UnaryAsgn");
     }
+
+    checkUnaryAsgnOperands(unaryAsgn);
 }
 
 bool Semantics::isExp(const Node *node) const
@@ -1052,6 +1054,38 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
             break;
         default:
             throw std::runtime_error("Semantics::checkUnaryOperands() - Unknown Unary");
+            break;
+    }
+}
+
+void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
+{
+    if (!isUnaryAsgn(unaryAsgn))
+    {
+        throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - Invalid UnaryAsgn");
+    }
+
+    std::vector<Node *> children = unaryAsgn->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+
+    if (children.size() == 0 || lhsExp == nullptr)
+    {
+        throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - LHS operand must exist");
+    }
+
+    Data *lhsData = setAndGetExpData(lhsExp);
+
+    switch (unaryAsgn->getType())
+    {
+        case UnaryAsgn::Type::Inc:
+        case UnaryAsgn::Type::Dec:
+            if (lhsData->getType() != Data::Type::Int)
+            {
+                Emit::Error::generic(unaryAsgn->getLineNum(), "Unary '" + unaryAsgn->getSym() + "' requires an operand of type int but was given type " + lhsData->stringify() + ".");
+            }
+            break;
+        default:
+            throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - Unknown UnaryAsgn");
             break;
     }
 }
