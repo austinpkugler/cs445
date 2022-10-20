@@ -22,7 +22,7 @@ std::string UnaryAsgn::getSym() const
             stringy = "--";
             break;
         default:
-            throw std::runtime_error("UnaryAsgn: stringify error: cannot stringify unknown \'UnaryAsgn::Type\'");
+            throw std::runtime_error("UnaryAsgn:getSym() - Unknown type");
             break;
     }
     return stringy;

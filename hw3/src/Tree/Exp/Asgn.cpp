@@ -13,7 +13,7 @@ Asgn::Asgn(const unsigned lineNum, const Asgn::Type type) : Exp::Exp(lineNum, Ex
             m_data->setType(Data::Type::Int);
             break;
         default:
-            throw std::runtime_error("Asgn: constructor error: cannot type unknown \'Asgn::Type\'");
+            throw std::runtime_error("Asgn::Asgn() - Unknown type");
             break;
     }
 }
@@ -44,7 +44,7 @@ std::string Asgn::getSym() const
             stringy = "*=";
             break;
         default:
-            throw std::runtime_error("Asgn: stringify error: cannot stringify unknown \'Asgn::Type\'");
+            throw std::runtime_error("Asgn::getSym() - Unknown type");
             break;
     }
     return stringy;

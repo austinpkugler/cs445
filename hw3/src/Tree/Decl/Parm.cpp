@@ -9,7 +9,7 @@ std::string Parm::stringify() const
 {
     if (m_data == nullptr)
     {
-        throw std::runtime_error("Parm: stringify error: cannot stringify \'Data\' instance: instance is nullptr");
+        throw std::runtime_error("Parm::stringify() - Data does not exist");
     }
 
     if (m_data->getIsArray())

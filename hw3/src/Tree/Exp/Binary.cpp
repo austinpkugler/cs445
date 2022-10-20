@@ -24,7 +24,7 @@ Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineN
             m_data->setType(Data::Type::Bool);
             break;
         default:
-            throw std::runtime_error("Binary: constructor error: cannot type unknown \'Binary::Type\'");
+            throw std::runtime_error("Binary::Binary() - Unknown type");
             break;
     }
 }
@@ -82,7 +82,7 @@ std::string Binary::getSym() const
             stringy = "!=";
             break;
         default:
-            throw std::runtime_error("Binary: stringify error: cannot stringify unknown \'Binary::Type\'");
+            throw std::runtime_error("Binary:getSym() - Unknown type");
             break;
     }
     return stringy;

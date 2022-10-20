@@ -29,7 +29,7 @@ Const::Const(const unsigned lineNum, const Const::Type type, const std::string c
             m_data->setIsArray(true);
             break;
         default:
-            throw std::runtime_error("Const: constructor error: cannot handle unknown \'Const::Type\'");
+            throw std::runtime_error("Const::Const() - Unknown type");
             break;
     }
 }

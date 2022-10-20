@@ -704,7 +704,7 @@ int main(int argc, char *argv[])
     std::string filename = flags.getFile();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        throw std::runtime_error("Parser: file io error: cannot open file \'" + filename + "\'");
+        throw std::runtime_error("main() - Cannot open file \'" + filename + "\'");
     }
 
     yyparse();
@@ -713,7 +713,7 @@ int main(int argc, char *argv[])
     {
         if (root == nullptr)
         {
-            throw std::runtime_error("Parser: root error: cannot print tree: root is nullptr");
+            throw std::runtime_error("main() - Cannot print tree");
         }
         root->printTree();
     }
@@ -728,7 +728,7 @@ int main(int argc, char *argv[])
     {
         if (root == nullptr)
         {
-            throw std::runtime_error("Parser: root error: cannot print tree: root is nullptr");
+            throw std::runtime_error("main() - Cannot print tree");
         }
         root->printTree();
     }

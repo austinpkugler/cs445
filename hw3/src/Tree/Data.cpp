@@ -35,7 +35,7 @@ std::string Data::stringifyType(Data::Type type)
             stringy = "void";
             break;
         default:
-            throw std::runtime_error("Data: stringify error: cannot stringify unknown \'Data::Type\'");
+            throw std::runtime_error("Data::stringifyType() - Unknown type");
             break;
     }
     return stringy;
@@ -81,7 +81,7 @@ std::string Data::stringify() const
             stringy = "void";
             break;
         default:
-            throw std::runtime_error("Data: stringify error: cannot stringify unknown \'Data::Type\'");
+            throw std::runtime_error("Data::stringify() - Unknown type");
             break;
     }
     return stringy;

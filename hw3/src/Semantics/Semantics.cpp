@@ -50,10 +50,10 @@ void Semantics::analyzeTree(Node *node)
             break;
         }
         case Node::Kind::None:
-            throw std::runtime_error("Semantics::analyzeTree() - None Node");
+            throw std::runtime_error("Semantics::analyzeTree() - None kind");
             break;
         default:
-            throw std::runtime_error("Semantics::analyzeTree() - Unknown Node");
+            throw std::runtime_error("Semantics::analyzeTree() - Unknown kind");
             break;
     }
 
@@ -115,7 +115,7 @@ void Semantics::analyzeDecl(const Decl *decl)
             break;
         }
         default:
-            throw std::runtime_error("Semantics::analyzeDecl() - Unknown Decl");
+            throw std::runtime_error("Semantics::analyzeDecl() - Unknown kind");
             break;
     }
 }
@@ -203,7 +203,7 @@ void Semantics::analyzeExp(Exp *exp)
             analyzeUnaryAsgn((UnaryAsgn *)exp);
             break;
         default:
-            throw std::runtime_error("Semantics::analyzeExp() - Unknown Exp");
+            throw std::runtime_error("Semantics::analyzeExp() - Unknown kind");
             break;
     }
 }
@@ -254,7 +254,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
             checkOperandsOfType((Exp *)asgn, Data::Type::Int);
             break;
         default:
-            throw std::runtime_error("Semantics::analyzeAsgn() - Unknown Asgn");
+            throw std::runtime_error("Semantics::analyzeAsgn() - Unknown type");
             break;
     }
 }
@@ -295,7 +295,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
             checkOperandsOfSameType((Exp *)binary);
             break;
         default:
-            throw std::runtime_error("Semantics::analyzeBinary() - Unknown Binary");
+            throw std::runtime_error("Semantics::analyzeBinary() - Unknown type");
             break;
     }
 }
@@ -435,10 +435,10 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             break;
         case Stmt::Kind::Range:
             // Not analyzed
-            throw std::runtime_error("Semantics::analyzeStmt() - Range Stmt");
+            throw std::runtime_error("Semantics::analyzeStmt() - Range kind");
             break;
         default:
-            throw std::runtime_error("Semantics::analyzeStmt() - Unknown Stmt");
+            throw std::runtime_error("Semantics::analyzeStmt() - Unknown kind");
             break;
     }
 }
@@ -628,7 +628,7 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
             }
             break;
         default:
-            throw std::runtime_error("Semantics::checkUnaryOperands() - Unknown Unary");
+            throw std::runtime_error("Semantics::checkUnaryOperands() - Unknown type");
             break;
     }
 }
@@ -662,7 +662,7 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
             }
             break;
         default:
-            throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - Unknown UnaryAsgn");
+            throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - Unknown type");
             break;
     }
 }
@@ -700,7 +700,7 @@ void Semantics::leaveScope()
         Node *node = (Node *)voisIdode;
         if (!isDecl(node))
         {
-            throw std::runtime_error("Semantics: symbol table error: \'NonDecl\' node found in symbol table: node is \'NonDecl:{ any }\' or nullptr");
+            throw std::runtime_error("Semantics::leaveScope() - Illegal node found in symbol table");
         }
 
         Decl *decl = (Decl *)node;

@@ -13,7 +13,7 @@ Unary::Unary(const unsigned lineNum, const Unary::Type type) : Exp::Exp(lineNum,
             m_data->setType(Data::Type::Bool);
             break;
         default:
-            throw std::runtime_error("Unary: constructor error: cannot type unknown \'Unary::Type\'");
+            throw std::runtime_error("Unary::Unary() - Unknown type");
             break;
     }
 }
@@ -41,7 +41,7 @@ std::string Unary::getSym() const
             stringy = "not";
             break;
         default:
-            throw std::runtime_error("Unary: stringify error: cannot stringify unknown \'Unary::Type\'");
+            throw std::runtime_error("Unary::getSym() - Unknown type");
             break;
     }
     return stringy;
