@@ -502,7 +502,7 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     Data *rhsData = setAndGetExpData(rhsExp);
 
     // Ignore cases where the LHS has no type
-    if (lhsData->getType() == Data::Type::None)
+    if (lhsData->getType() == Data::Type::Undefined)
     {
         return;
     }
@@ -563,7 +563,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
     Data *rhsData = setAndGetExpData(rhsExp);
 
     // Ignore cases where the LHS or RHS has no type
-    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
+    if (lhsData->getType() == Data::Type::Undefined || rhsData->getType() == Data::Type::Undefined)
     {
         return;
     }
@@ -620,7 +620,7 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
     Exp *lhsExp = (Exp *)(children[0]);
     Data *lhsData = setAndGetExpData(lhsExp);
 
-    if (lhsData->getType() == Data::Type::None)
+    if (lhsData->getType() == Data::Type::Undefined)
     {
         return;
     }
@@ -674,7 +674,7 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
     std::vector<Node *> children = unaryAsgn->getChildren();
     Exp *lhsExp = (Exp *)(children[0]);
     Data *lhsData = setAndGetExpData(lhsExp);
-    if (lhsData->getType() == Data::Type::None)
+    if (lhsData->getType() == Data::Type::Undefined)
     {
         return;
     }

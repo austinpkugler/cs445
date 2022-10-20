@@ -138,11 +138,11 @@ varDeclInit             : varDeclId
 
 varDeclId               : ID
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, false, false));
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
                         }
                         ;
 
@@ -223,11 +223,11 @@ parmIdList              : parmIdList COMMA parmId
 
 parmId                  : ID
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, false, false));
                         }
                         | ID LBRACK RBRACK
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
                         }
                         ;
 

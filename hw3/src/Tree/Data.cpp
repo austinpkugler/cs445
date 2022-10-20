@@ -6,7 +6,7 @@ Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m
     if (isArray)
     {
         m_next = new Data(type, false, false);
-        m_type = Data::Type::None;
+        m_type = Data::Type::Undefined;
     }
     else
     {
@@ -31,7 +31,7 @@ std::string Data::typeToString(Data::Type type)
         case Data::Type::String:
             stringy = "string";
             break;
-        case Data::Type::None:
+        case Data::Type::Undefined:
             stringy = "undefined";
             break;
         case Data::Type::Void:
@@ -79,32 +79,7 @@ void Data::setCopyOf(std::string copyOf)
 
 std::string Data::stringify() const
 {
-    std::string stringy;
-    switch (m_type)
-    {
-        case Data::Type::Int:
-            stringy = "int";
-            break;
-        case Data::Type::Bool:
-            stringy = "bool";
-            break;
-        case Data::Type::Char:
-            stringy = "char";
-            break;
-        case Data::Type::String:
-            stringy = "string";
-            break;
-        case Data::Type::None:
-            stringy = "void";
-            break;
-        case Data::Type::Void:
-            stringy = "void";
-            break;
-        default:
-            throw std::runtime_error("Data::stringify() - Unknown type");
-            break;
-    }
-    return stringy;
+    return typeToString(m_type);
 }
 
 std::string Data::stringifyWithType() const

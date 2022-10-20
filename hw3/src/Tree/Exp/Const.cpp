@@ -1,6 +1,6 @@
 #include "Const.hpp"
 
-Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const, new Data(Data::Type::None, false, false)), m_type(type)
+Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const, new Data(Data::Type::Undefined, false, false)), m_type(type)
 {
     switch (m_type)
     {
