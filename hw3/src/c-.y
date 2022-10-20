@@ -730,7 +730,7 @@ int main(int argc, char *argv[])
         {
             throw std::runtime_error("main() - Cannot print tree");
         }
-        root->printTree();
+        root->printTree(true);
     }
 
     Emit::Warn::count();

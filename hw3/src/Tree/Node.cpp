@@ -79,10 +79,11 @@ void Node::addSibling(Node *node)
     }
 }
 
-void Node::printTree() const
+void Node::printTree(const bool showTypes) const
 {
     static unsigned siblingCount = 0, tabCount = 0;
-    printNode();
+
+    printNode(showTypes);
     std::cout << " [line: " << m_lineNum << "]" << std::endl;
 
     tabCount++;
@@ -98,7 +99,7 @@ void Node::printTree() const
 
             int tmp = siblingCount;
             siblingCount = 0;
-            child->printTree();
+            child->printTree(showTypes);
             siblingCount = tmp;
         }
     }
@@ -111,15 +112,22 @@ void Node::printTree() const
     {
         printTabs(tabCount);
         std::cout << "Sibling: " + std::to_string(siblingCount) << "  ";
-        m_sibling->printTree();
+        m_sibling->printTree(showTypes);
     }
 
     siblingCount--;
 }
 
-void Node::printNode() const
+void Node::printNode(const bool showTypes) const
 {
-    std::cout << stringify();
+    if (showTypes)
+    {
+        std::cout << stringifyWithType();
+    }
+    else
+    {
+        std::cout << stringify();
+    }
 }
 
 std::string Node::stringify() const
