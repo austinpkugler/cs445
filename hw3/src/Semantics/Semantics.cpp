@@ -613,6 +613,10 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
+            if (lhsData->getIsArray())
+            {
+                Emit::Error::generic(unary->getLineNum(), "The operation 'chsign' does not work with arrays.");
+            }
         case Unary::Type::Question:
             if (lhsData->getType() != Data::Type::Int)
             {
@@ -620,11 +624,19 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
             }
             break;
         case Unary::Type::Sizeof:
+            if (!lhsData->getIsArray())
+            {
+                Emit::Error::generic(unary->getLineNum(), "The operation 'sizeof' only works with arrays.");
+            }
             break;
         case Unary::Type::Not:
             if (lhsData->getType() != Data::Type::Bool)
             {
                 Emit::Error::generic(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type bool but was given type " + lhsData->stringify() + ".");
+            }
+            if (lhsData->getIsArray())
+            {
+                Emit::Error::generic(unary->getLineNum(), "The operation 'not' does not work with arrays.");
             }
             break;
         default:
