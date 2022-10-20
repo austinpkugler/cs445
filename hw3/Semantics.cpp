@@ -1003,19 +1003,32 @@ void Semantics::checkOperandsAreNotArray(const Exp *exp) const
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
 
-    // std::cout << "checkOperandsAreNotArray: checking if id\n";
     if (isId(lhsExp))
     {
-        // std::cout << "checkOperandsAreNotArray: it is an id\n";
         Id *lhsId = (Id *)lhsExp;
-        if (lhsId->getIsArray())
+        Decl *prevDecl = (Decl *)(getFromSymTable(lhsId->getName()));
+        if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || lhsId->getIsArray())
         {
-            // std::cout << "checkOperandsAreNotArray: it is an id arr\n";
             if (isBinary(exp))
             {
-                // std::cout << "checkOperandsAreNotArray: exp is bin\n";
                 Binary *binary = (Binary *)exp;
                 Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+                return;
+            }
+        }
+    }
+
+    if (isId(rhsExp))
+    {
+        Id *rhsId = (Id *)rhsExp;
+        Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+        if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || rhsId->getIsArray())
+        {
+            if (isBinary(exp))
+            {
+                Binary *binary = (Binary *)exp;
+                Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+                return;
             }
         }
     }
