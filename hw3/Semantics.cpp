@@ -324,7 +324,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
     }
     else
     {
-        checkOperandsAreCorrectType((Exp *)asgn);
+        checkAsgnOperands(asgn);
     }
 }
 
@@ -347,8 +347,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::Mod:
         case Binary::Type::Add:
         case Binary::Type::Sub:
-            checkOperandsAreCorrectType((Exp *)binary);
-            checkOperandsAreNotArray((Exp *)binary);
+            checkBinaryOperands(binary);
             break;
         case Binary::Type::Index:
         {
@@ -909,28 +908,21 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
     }
 }
 
-void Semantics::checkOperandsAreCorrectType(const Exp *exp) const
+void Semantics::checkBinaryOperands(const Binary *binary) const
 {
-    if (!isExp(exp))
+    if (!isBinary(binary))
     {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkBinaryOperands() - Invalid Binary");
     }
 
-    if (!isBinary(exp) && !isAsgn(exp))
+    if (!expOperandsExist(binary))
     {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is neither Binary nor Asgn");
+        throw std::runtime_error("Semantics::checkBinaryOperands() - LHS and RHS Exp operands must exist");
     }
 
-    if (!expOperandsExist(exp))
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = exp->getChildren();
-
+    std::vector<Node *> children = binary->getChildren();
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
-
     Data *lhsData = setAndGetExpData(lhsExp);
     Data *rhsData = setAndGetExpData(rhsExp);
 
@@ -941,65 +933,30 @@ void Semantics::checkOperandsAreCorrectType(const Exp *exp) const
 
     if (lhsData->getType() != Data::Type::Int)
     {
-        if (isBinary(exp))
-        {
-            Binary *binary = (Binary *)exp;
-            Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
-        }
-        else if (isAsgn(exp))
-        {
-            Asgn *asgn = (Asgn *)exp;
-            if (asgn->getType() != Asgn::Type::Asgn)
-            {
-                Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
-            }
-            else
-            {
-                throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is not a valid Asgn type");
-            }
-        }
+        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
     }
 
     if (rhsData->getType() != Data::Type::Int)
     {
-        if (isBinary(exp))
-        {
-            Binary *binary = (Binary *)exp;
-            Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
-        }
-        else if (isAsgn(exp))
-        {
-            Asgn *asgn = (Asgn *)exp;
-            if (asgn->getType() != Asgn::Type::Asgn)
-            {
-                Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
-            }
-            else
-            {
-                throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is not a valid Asgn type");
-            }
-        }
+        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + lhsData->stringify() + ".");
     }
+
+    checkBinaryOperandsAreNotArray(binary);
 }
 
-void Semantics::checkOperandsAreNotArray(const Exp *exp) const
+void Semantics::checkBinaryOperandsAreNotArray(const Binary *binary) const
 {
-    if (!isExp(exp))
+    if (!isBinary(binary))
     {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkBinaryOperandsAreNotArray() - Invalid Binary");
     }
 
-    if (!isBinary(exp))
+    if (!expOperandsExist(binary))
     {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is not Binary");
+        throw std::runtime_error("Semantics::checkBinaryOperandsAreNotArray() - LHS and RHS Exp operands must exist");
     }
 
-    if (!expOperandsExist(exp))
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = exp->getChildren();
+    std::vector<Node *> children = binary->getChildren();
 
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
@@ -1010,12 +967,8 @@ void Semantics::checkOperandsAreNotArray(const Exp *exp) const
         Decl *prevDecl = (Decl *)(getFromSymTable(lhsId->getName()));
         if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || lhsId->getIsArray())
         {
-            if (isBinary(exp))
-            {
-                Binary *binary = (Binary *)exp;
-                Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
-                return;
-            }
+            Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+            return;
         }
     }
 
@@ -1025,14 +978,54 @@ void Semantics::checkOperandsAreNotArray(const Exp *exp) const
         Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
         if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || rhsId->getIsArray())
         {
-            if (isBinary(exp))
-            {
-                Binary *binary = (Binary *)exp;
-                Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
-                return;
-            }
+            Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+            return;
         }
     }
+}
+
+void Semantics::checkAsgnOperands(const Asgn *asgn) const
+{
+    if (!isAsgn(asgn) || asgn->getType() == Asgn::Type::Asgn)
+    {
+        throw std::runtime_error("Semantics::checkAsgnOperands() - Invalid Asgn");
+    }
+
+    if (!expOperandsExist(asgn))
+    {
+        throw std::runtime_error("Semantics::checkAsgnOperands() - LHS and RHS Exp operands must exist");
+    }
+
+    std::vector<Node *> children = asgn->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
+    Data *lhsData = setAndGetExpData(lhsExp);
+    Data *rhsData = setAndGetExpData(rhsExp);
+
+    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
+    {
+        return;
+    }
+
+    if (lhsData->getType() != Data::Type::Int)
+    {
+        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + rhsData->stringify() + ".");
+    }
+
+    if (rhsData->getType() != Data::Type::Int)
+    {
+        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
+    }
+}
+
+void Semantics::checkUnaryOperands(const Unary *unary) const
+{
+    if (!isUnary(unary))
+    {
+        throw std::runtime_error("Semantics::checkUnaryOperands() - Invalid Unary");
+    }
+
+    std::vector<Node *> children = unary->getChildren();
 }
 
 void Semantics::leaveScope()
