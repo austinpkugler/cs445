@@ -52,7 +52,8 @@ class Semantics
         // Helpers
         bool isMainFunc(const Func *func) const;
         bool isDeclared(const Id *id) const;
-        bool isIndex(const Exp *exp) const;
+        bool hasIndexAncestor(const Exp *exp) const;
+        bool hasAsgnAncestor(const Exp *exp) const;
         bool expOperandsExist(const Exp *exp) const;
         bool lhsExists(const Exp *exp) const;
         std::string getExpSym(const Exp *exp) const;

@@ -359,10 +359,13 @@ void Semantics::analyzeId(const Id *id) const
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         if (!prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
         {
-            if (!isIndex((Exp *)id) || id->getIsArray())
+            if (!hasIndexAncestor((Exp *)id) || id->getIsArray())
             {
-                Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
-                prevDeclVar->setShowErrors(false);
+                if (!hasAsgnAncestor((Exp *)id))
+                {
+                    Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
+                    prevDeclVar->setShowErrors(false);
+                }
             }
         }
     }
@@ -832,11 +835,11 @@ bool Semantics::isDeclared(const Id *id) const
     return true;
 }
 
-bool Semantics::isIndex(const Exp *exp) const
+bool Semantics::hasIndexAncestor(const Exp *exp) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::isIndex() - Invalid Exp");
+        throw std::runtime_error("Semantics::hasIndexAncestor() - Invalid Exp");
     }
 
     Node *lastParent = (Node *)exp;
@@ -850,6 +853,35 @@ bool Semantics::isIndex(const Exp *exp) const
             {
                 // On the right side
                 if (binary->getChildren()[1] == lastParent)
+                {
+                    return true;
+                }
+            }
+        }
+        lastParent = parent;
+        parent = parent->getParent();
+    }
+    return false;
+}
+
+bool Semantics::hasAsgnAncestor(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::hasAsgnAncestor() - Invalid Exp");
+    }
+
+    Node *lastParent = (Node *)exp;
+    Node *parent = exp->getParent();
+    while (parent != nullptr)
+    {
+        if (isAsgn(parent))
+        {
+            Asgn *asgn = (Asgn *)parent;
+            if (asgn->getType() == Asgn::Type::Asgn)
+            {
+                // On the left side
+                if (asgn->getChildren()[0] == lastParent)
                 {
                     return true;
                 }
