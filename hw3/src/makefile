@@ -1,26 +1,21 @@
-BIN = c-
 CC = g++ -std=c++17 -g
-
+BIN = c-
 SRCS = $(BIN).y $(BIN).l
-CC_SRCS = */*.cpp */*/*.cpp
-CC_HDRS = */*.hpp */*/*.hpp
+CPPS = */*.cpp */*/*.cpp
+HPPS = */*.hpp */*/*.hpp
 OBJS = lex.yy.o $(BIN).tab.o
 
 $(BIN) : $(OBJS)
-	$(CC) $(OBJS) $(CC_SRCS) -o $(BIN) $(CC_ARGS)
+	$(CC) $(OBJS) $(CPPS) -o $(BIN)
 
-lex.yy.c : $(BIN).l $(BIN).tab.h $(HDR)
-	flex $(BIN).l
-
-$(BIN).tab.h $(BIN).tab.c : $(BIN).y
+$(BIN).tab.c : $(BIN).y
 	bison -v -t -d $(BIN).y
 
-clean :
-	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out
+lex.yy.c : $(BIN).l $(BIN).tab.c $(BIN).tab.h
+	flex $(BIN).l
 
-deepclean :
-	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out $(BIN).tar
-	rm -rf tmp/
+clean:
+	rm lex.yy.* $(BIN) $(BIN).tar $(BIN).tab.* $(BIN).output
 
-tar : $(HDR) $(SRCS) makefile
-	tar -cvf $(BIN).tar $(CC_HDRS) $(SRCS) makefile
+tar:
+	tar -cvf $(BIN).tar $(CPPS) $(HPPS) makefile $(BIN).y $(BIN).l
