@@ -291,7 +291,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
         // {
         //     Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + lhsId->getName() + "\' is not declared.");
         // }
-        Var *prevDeclLhsVar = (Var *)(m_symTable->lookup(lhsId->getName()));
+        Var *prevDeclLhsVar = (Var *)(getFromSymTable(lhsId->getName()));
         if (isVar(prevDeclLhsVar))
         {
             prevDeclLhsVar->makeInitialized();
@@ -301,7 +301,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
     {
         Binary *lhsBinary = (Binary *)(children[0]);
         Id *arrayId = (Id *)(lhsBinary->getChildren()[0]);
-        Var *prevDeclArrayVar = (Var *)(m_symTable->lookup(arrayId->getName()));
+        Var *prevDeclArrayVar = (Var *)(getFromSymTable(arrayId->getName()));
         if (prevDeclArrayVar != nullptr)
         {
             prevDeclArrayVar->makeInitialized();
@@ -348,6 +348,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::Add:
         case Binary::Type::Sub:
             checkOperandsAreCorrectType((Exp *)binary);
+            checkOperandsAreNotArray((Exp *)binary);
             break;
         case Binary::Type::Index:
         {
@@ -379,7 +380,7 @@ void Semantics::analyzeCall(const Call *call) const
         throw std::runtime_error("Semantics::analyzeCall() - Invalid Call");
     }
 
-    Decl *prevDecl = (Decl *)(m_symTable->lookup(call->getName()));
+    Decl *prevDecl = (Decl *)(getFromSymTable(call->getName()));
 
     // If the function name is not in the symbol table
     if (prevDecl == nullptr)
@@ -413,7 +414,7 @@ void Semantics::analyzeId(const Id *id) const
         throw std::runtime_error("Semantics::analyzeId() - Invalid Id");
     }
 
-    Decl *prevDecl = (Decl *)(m_symTable->lookup(id->getName()));
+    Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
     if (prevDecl == nullptr)
     {
         Emit::Error::generic(id->getLineNum(), "Symbol '" + id->getName() + "' is not declared.");
@@ -824,7 +825,7 @@ bool Semantics::isDeclaredId(const Id *id) const
     }
 
     // If the id name is not in the symbol table, it is not declared
-    if (m_symTable->lookup(id->getName()) == nullptr)
+    if (getFromSymTable(id->getName()) == nullptr)
     {
         return false;
     }
@@ -847,7 +848,7 @@ void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
     if (isId(indexNode))
     {
         Id *arrayIndexId = (Id *)indexNode;
-        Decl *prevDecl = (Decl *)(m_symTable->lookup(arrayIndexId->getName()));
+        Decl *prevDecl = (Decl *)(getFromSymTable(arrayIndexId->getName()));
         if (prevDecl->getData()->getType() != Data::Type::Int)
         {
             Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + prevDecl->getData()->stringify() + ".");
@@ -980,6 +981,46 @@ void Semantics::checkOperandsAreCorrectType(const Exp *exp) const
     }
 }
 
+void Semantics::checkOperandsAreNotArray(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Invalid Exp");
+    }
+
+    if (!isBinary(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - Exp is not Binary");
+    }
+
+    if (!expOperandsExist(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsAreCorrectType() - LHS and RHS Exp operands must exist");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
+
+    // std::cout << "checkOperandsAreNotArray: checking if id\n";
+    if (isId(lhsExp))
+    {
+        // std::cout << "checkOperandsAreNotArray: it is an id\n";
+        Id *lhsId = (Id *)lhsExp;
+        if (lhsId->getIsArray())
+        {
+            // std::cout << "checkOperandsAreNotArray: it is an id arr\n";
+            if (isBinary(exp))
+            {
+                // std::cout << "checkOperandsAreNotArray: exp is bin\n";
+                Binary *binary = (Binary *)exp;
+                Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+            }
+        }
+    }
+}
+
 void Semantics::leaveScope()
 {
     std::map<std::string, void *> syms = m_symTable->getSyms();
@@ -1032,7 +1073,7 @@ bool Semantics::addToSymTable(const Decl *decl, const bool global)
 
     if (!inserted)
     {
-        Decl *prevDecl = (Decl *)(m_symTable->lookup(decl->getName()));
+        Decl *prevDecl = (Decl *)(getFromSymTable(decl->getName()));
         if (prevDecl == nullptr)
         {
             throw std::runtime_error("Semantics::addToSymTable() - Failed to insert Decl");

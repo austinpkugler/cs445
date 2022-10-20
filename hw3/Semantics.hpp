@@ -71,6 +71,7 @@ class Semantics
         void checkArray(const Id *arrayId, const Node *indexNode) const;
         void checkOperandsAreSameType(const Exp *exp) const;
         void checkOperandsAreCorrectType(const Exp *exp) const;
+        void checkOperandsAreNotArray(const Exp *exp) const;
 
         // Symbol table
         void leaveScope();
