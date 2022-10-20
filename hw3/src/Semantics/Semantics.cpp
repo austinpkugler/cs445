@@ -613,14 +613,10 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
-            if (lhsData->getIsArray())
-            {
-                Emit::Error::generic(unary->getLineNum(), "The operation 'chsign' does not work with arrays.");
-            }
         case Unary::Type::Question:
             if (lhsData->getIsArray())
             {
-                Emit::Error::generic(unary->getLineNum(), "The operation '?' does not work with arrays.");
+                Emit::Error::generic(unary->getLineNum(), "The operation '" + unary->getSym() + "' does not work with arrays.");
             }
             if (lhsData->getType() != Data::Type::Int)
             {
