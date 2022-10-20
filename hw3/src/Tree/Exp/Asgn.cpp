@@ -49,8 +49,3 @@ std::string Asgn::getSym() const
     }
     return stringy;
 }
-
-std::string Asgn::stringifyWithType() const
-{
-    return stringify() + " " + m_data->stringify();
-}

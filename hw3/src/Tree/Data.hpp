@@ -16,7 +16,7 @@ class Data
         Data(Data::Type type, bool isArray, bool isStatic);
 
         // Static
-        static std::string stringifyType(Data::Type type);
+        static std::string typeToString(Data::Type type);
 
         // Getters
         bool getIsArray() const { return m_isArray; }
@@ -33,6 +33,7 @@ class Data
 
         // Print
         std::string stringify() const;
+        std::string stringifyWithType() const;
 
     private:
         bool m_isArray = false;

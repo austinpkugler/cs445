@@ -12,5 +12,13 @@ void Exp::setData(Data *data)
 
 std::string Exp::stringifyWithType() const
 {
-    return stringify() + " " + m_data->stringify();
+    std::string typeString = m_data->stringifyWithType();
+    if (typeString != "undefined")
+    {
+        return stringify() + " of type " + typeString;
+    }
+    else
+    {
+        return stringify() + " of undefined type";
+    }
 }

@@ -27,8 +27,3 @@ std::string UnaryAsgn::getSym() const
     }
     return stringy;
 }
-
-std::string UnaryAsgn::stringifyWithType() const
-{
-    return stringify() + " " + m_data->stringify();
-}

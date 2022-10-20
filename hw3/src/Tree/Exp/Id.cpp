@@ -12,5 +12,13 @@ std::string Id::stringify() const
 
 std::string Id::stringifyWithType() const
 {
-    return stringify() + " " + Data::stringifyType(m_data->getNextType());
+    std::string typeString = Data::typeToString(m_data->getNextType());
+    if (typeString != "undefined")
+    {
+        return stringify() + " of type " + typeString;
+    }
+    else
+    {
+        return stringify() + " of undefined type";
+    }
 }

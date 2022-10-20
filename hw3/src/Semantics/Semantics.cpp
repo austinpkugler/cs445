@@ -222,6 +222,8 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
 
     analyzeTree(rhsNode);
 
+    setAndGetExpData(asgn);
+
     if (isId(lhsNode))
     {
         Id *lhsId = (Id *)(lhsNode);
@@ -552,7 +554,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
     }
 
     std::string sym = getExpSym(exp);
-    std::string typeString = Data::stringifyType(type);
+    std::string typeString = Data::typeToString(type);
 
     std::vector<Node *> children = exp->getChildren();
     Exp *lhsExp = (Exp *)(children[0]);

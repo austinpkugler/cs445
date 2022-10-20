@@ -14,7 +14,7 @@ Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m
     }
 }
 
-std::string Data::stringifyType(Data::Type type)
+std::string Data::typeToString(Data::Type type)
 {
     std::string stringy;
     switch (type)
@@ -32,10 +32,10 @@ std::string Data::stringifyType(Data::Type type)
             stringy = "string";
             break;
         case Data::Type::None:
-            stringy = "void";
+            stringy = "undefined";
             break;
         default:
-            throw std::runtime_error("Data::stringifyType() - Unknown type");
+            throw std::runtime_error("Data::typeToString() - Unknown type");
             break;
     }
     return stringy;
@@ -96,6 +96,36 @@ std::string Data::stringify() const
             break;
         case Data::Type::Void:
             stringy = "void";
+            break;
+        default:
+            throw std::runtime_error("Data::stringify() - Unknown type");
+            break;
+    }
+    return stringy;
+}
+
+std::string Data::stringifyWithType() const
+{
+    std::string stringy;
+    switch (m_type)
+    {
+        case Data::Type::Int:
+            stringy = "int";
+            break;
+        case Data::Type::Bool:
+            stringy = "bool";
+            break;
+        case Data::Type::Char:
+            stringy = "char";
+            break;
+        case Data::Type::String:
+            stringy = "string";
+            break;
+        case Data::Type::None:
+            stringy = "undefined";
+            break;
+        case Data::Type::Void:
+            stringy = "undefined";
             break;
         default:
             throw std::runtime_error("Data::stringify() - Unknown type");
