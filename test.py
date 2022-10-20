@@ -249,4 +249,4 @@ if __name__ == '__main__':
 
     with open('test.history', 'a') as history:
         cmd = ' '.join(sys.argv)
-        history.write(f'{time.time()},"{cmd}",{passed},{len(tests)}\n')
+        history.write(f'{time.time()},"python3 {cmd}",{passed},{len(tests)}\n')

@@ -3,7 +3,7 @@ CC = g++ -std=c++17 -g
 
 SRCS = $(BIN).y $(BIN).l
 CC_SRCS = */*.cpp */*/*.cpp
-HDRS = */*.hpp */*/*.hpp
+CC_HDRS = */*.hpp */*/*.hpp
 OBJS = lex.yy.o $(BIN).tab.o
 
 $(BIN) : $(OBJS)
@@ -19,8 +19,8 @@ clean :
 	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out
 
 deepclean :
-	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out
+	rm -f *~ $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).output test.out $(BIN).tar
 	rm -rf tmp/
 
 tar : $(HDR) $(SRCS) makefile
-	tar -cvf $(BIN).tar $(HDRS) $(SRCS) makefile
+	tar -cvf $(BIN).tar $(CC_HDRS) $(SRCS) makefile
