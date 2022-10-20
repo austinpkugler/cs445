@@ -15,7 +15,10 @@ lex.yy.c : $(BIN).l $(BIN).tab.c $(BIN).tab.h
 	flex $(BIN).l
 
 clean:
-	rm lex.yy.* $(BIN) $(BIN).tar $(BIN).tab.* $(BIN).output
+	rm lex.yy.* $(BIN) $(BIN).tab.* $(BIN).output
+
+deepclean:
+	rm lex.yy.* $(BIN) $(BIN).tab.* $(BIN).output $(BIN).tar
 
 tar:
 	tar -cvf $(BIN).tar $(CPPS) $(HPPS) makefile $(BIN).y $(BIN).l
