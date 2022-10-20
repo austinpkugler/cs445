@@ -20,6 +20,12 @@ void Emit::Error::linker(const std::string msg)
     s_errorCount++;
 }
 
+void Emit::Error::arglist(const std::string msg)
+{
+    std::cout << "ERROR(ARGLIST): " << msg << std::endl;
+    s_errorCount++;
+}
+
 void Emit::Error::undefinedMain()
 {
     linker("A function named 'main()' must be defined.");

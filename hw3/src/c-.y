@@ -704,7 +704,10 @@ int main(int argc, char *argv[])
     std::string filename = flags.getFile();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        throw std::runtime_error("main() - Cannot open file \'" + filename + "\'");
+        Emit::Error::arglist("source file \"" + filename + "\" could not be opened.");
+        Emit::Warn::count();
+        Emit::Error::count();
+        return EXIT_FAILURE;
     }
 
     yyparse();
@@ -739,5 +742,5 @@ int main(int argc, char *argv[])
     delete root;
     fclose(yyin);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
