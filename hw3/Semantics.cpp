@@ -5,7 +5,7 @@ Semantics::Semantics(SymTable *symTable) : m_symTable(symTable)
 
 }
 
-void Semantics::analyze(const Node *node)
+void Semantics::analyze(Node *node)
 {
     analyzeTree(node);
 
@@ -16,12 +16,14 @@ void Semantics::analyze(const Node *node)
     }
 }
 
-void Semantics::analyzeTree(const Node *node)
+void Semantics::analyzeTree(Node *node)
 {
-    if (node == nullptr)
+    if (node == nullptr || node->getIsAnalyzed())
     {
         return;
     }
+
+    node->makeAnalyzed();
 
     switch (node->getNodeKind())
     {
@@ -221,7 +223,7 @@ bool Semantics::isVar(const Node *node) const
     return true;
 }
 
-void Semantics::analyzeExp(Exp *exp) const
+void Semantics::analyzeExp(Exp *exp)
 {
     if (!isExp(exp))
     {
@@ -275,7 +277,7 @@ void Semantics::analyzeExp(Exp *exp) const
     }
 }
 
-void Semantics::analyzeAsgn(const Asgn *asgn) const
+void Semantics::analyzeAsgn(const Asgn *asgn)
 {
     if (!isAsgn(asgn))
     {
@@ -284,6 +286,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn) const
 
     // If the LHS is an id, it must have been declared
     std::vector<Node *> children = asgn->getChildren();
+    analyzeTree(children[1]);
     if (isId(children[0]))
     {
         Id *lhsId = (Id *)(children[0]);

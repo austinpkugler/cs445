@@ -15,11 +15,11 @@ class Semantics
          */
         Semantics(SymTable *symTable);
 
-        void analyze(const Node *node);
+        void analyze(Node *node);
 
     private:
         // All nodes
-        void analyzeTree(const Node *node);
+        void analyzeTree(Node *node);
 
         // Decl nodes
         void analyzeDecl(const Decl *decl);
@@ -33,8 +33,8 @@ class Semantics
         bool isVar(const Node *node) const;
 
         // Exp nodes
-        void analyzeExp(Exp *exp) const;
-        void analyzeAsgn(const Asgn *asgn) const;
+        void analyzeExp(Exp *exp);
+        void analyzeAsgn(const Asgn *asgn);
         void analyzeBinary(const Binary *binary) const;
         void analyzeCall(const Call *call) const;
         void analyzeId(const Id *id) const;

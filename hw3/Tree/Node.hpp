@@ -23,10 +23,12 @@ class Node
         std::vector<Node *> getChildren() const { return m_children; }
         Node * getSibling() const { return m_sibling; }
         Node * getParent() const { return m_parent; }
+        bool getIsAnalyzed() { return m_isAnalyzed; }
 
         // Setters
         void addChild(Node *node);
         void addSibling(Node *node);
+        void makeAnalyzed() { m_isAnalyzed = true; }
 
         // Print
         void printTree() const;
@@ -45,4 +47,5 @@ class Node
         const Node::Kind m_nodeKind;
         std::vector<Node *> m_children;
         Node *m_parent;
+        bool m_isAnalyzed = false;
 };
