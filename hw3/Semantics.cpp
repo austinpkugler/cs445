@@ -1068,6 +1068,10 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
     }
 
     Data *lhsData = setAndGetExpData(lhsExp);
+    if (lhsData->getType() == Data::Type::None)
+    {
+        return;
+    }
 
     switch (unary->getType())
     {
@@ -1108,6 +1112,10 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
     }
 
     Data *lhsData = setAndGetExpData(lhsExp);
+    if (lhsData->getType() == Data::Type::None)
+    {
+        return;
+    }
 
     switch (unaryAsgn->getType())
     {
