@@ -309,6 +309,8 @@ void Semantics::analyzeCall(const Call *call) const
         throw std::runtime_error("Semantics::analyzeCall() - Invalid Call");
     }
 
+    setAndGetExpData(call);
+
     Decl *prevDecl = (Decl *)(getFromSymTable(call->getName()));
 
     // If the function name is not in the symbol table
@@ -342,6 +344,8 @@ void Semantics::analyzeId(const Id *id) const
     {
         throw std::runtime_error("Semantics::analyzeId() - Invalid Id");
     }
+
+    setAndGetExpData(id);
 
     Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
     if (prevDecl == nullptr)
@@ -385,6 +389,7 @@ void Semantics::analyzeUnary(const Unary *unary) const
         throw std::runtime_error("Semantics::analyzeUnary() - Invalid Unary");
     }
 
+    setAndGetExpData(unary);
     checkUnaryOperands(unary);
 }
 
@@ -395,6 +400,7 @@ void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
         throw std::runtime_error("Semantics::analyzeUnaryAsgn() - Invalid UnaryAsgn");
     }
 
+    setAndGetExpData(unaryAsgn);
     checkUnaryAsgnOperands(unaryAsgn);
 }
 
@@ -546,11 +552,11 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::checkOperandsOfSameType() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkOperandsOfType() - Invalid Exp");
     }
     if (!expOperandsExist(exp))
     {
-        throw std::runtime_error("Semantics::checkOperandsOfSameType() - LHS and RHS Exp operands must exist");
+        throw std::runtime_error("Semantics::checkOperandsOfType() - LHS and RHS Exp operands must exist");
     }
 
     std::string sym = getExpSym(exp);
@@ -565,6 +571,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
     // Ignore cases where the LHS or RHS has no type
     if (lhsData->getType() == Data::Type::Undefined || rhsData->getType() == Data::Type::Undefined)
     {
+        exp->getData()->setType(Data::Type::Undefined);
         return;
     }
 
@@ -622,6 +629,7 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
 
     if (lhsData->getType() == Data::Type::Undefined)
     {
+        unary->getData()->setType(Data::Type::Undefined);
         return;
     }
 
@@ -676,6 +684,7 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
     Data *lhsData = setAndGetExpData(lhsExp);
     if (lhsData->getType() == Data::Type::Undefined)
     {
+        unaryAsgn->getData()->setType(Data::Type::Undefined);
         return;
     }
 
