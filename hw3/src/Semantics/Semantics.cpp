@@ -272,6 +272,8 @@ void Semantics::analyzeBinary(const Binary *binary) const
         throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS Exp operands must exist");
     }
 
+    setAndGetExpData(binary);
+
     switch (binary->getType())
     {
         case Binary::Type::Mul:
@@ -510,6 +512,7 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     // Ignore cases where the LHS has no type
     if (lhsData->getType() == Data::Type::Undefined)
     {
+        exp->getData()->setType(Data::Type::Undefined);
         return;
     }
 
@@ -716,7 +719,18 @@ void Semantics::checkIndex(const Binary *binary) const
 
     std::vector<Node *> children = binary->getChildren();
     Id *arrayId = (Id *)(children[0]);
-    Node *indexNode = children[1];
+    Exp *indexExp = (Exp *)(children[1]);
+
+    if (!isExp(indexExp))
+    {
+        throw std::runtime_error("Semantics::checkIndex() - Invalid Binary");
+    }
+
+    Data *arrayIdData = setAndGetExpData(arrayId);
+    if (arrayIdData->getType() == Data::Type::Undefined)
+    {
+        binary->getData()->setType(Data::Type::Undefined);
+    }
 
     Decl *prevArrayDecl = (Decl *)(getFromSymTable(arrayId->getName()));
     if (prevArrayDecl == nullptr || !prevArrayDecl->getData()->getIsArray() || !arrayId->getIsArray())
@@ -724,25 +738,24 @@ void Semantics::checkIndex(const Binary *binary) const
         Emit::Error::generic(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
     }
 
-    Exp *indexExp = (Exp *)indexNode;
     Data *indexData = setAndGetExpData(indexExp);
     if (indexData->getType() != Data::Type::Int)
     {
         Emit::Error::generic(binary->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
     }
 
-    if (prevArrayDecl != nullptr && prevArrayDecl->getData()->getIsArray() && isId(indexNode))
+    if (prevArrayDecl != nullptr && prevArrayDecl->getData()->getIsArray() && isId(indexExp))
     {
-        Id *indexId = (Id *)indexNode;
+        Id *indexId = (Id *)indexExp;
         if (indexId->getName() == arrayId->getName())
         {
             Emit::Error::generic(binary->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
         }
     }
-    else if (prevArrayDecl != nullptr && isId(indexNode))
+    else if (prevArrayDecl != nullptr && isId(indexExp))
     {
         Var *prevArrayVar = (Var *)prevArrayDecl;
-        Id *indexId = (Id *)indexNode;
+        Id *indexId = (Id *)indexExp;
         if (indexId->getName() == prevArrayVar->getData()->getCopyOf())
         {
             Emit::Error::generic(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
