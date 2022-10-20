@@ -23,6 +23,7 @@ class Data
         bool getIsStatic() const { return m_isStatic; }
         Type getType() const { return m_type; }
         std::string getCopyOf() const { return m_copyOf; }
+        Data::Type getNextType() const;
 
         // Setters
         void setIsArray(bool isArray);

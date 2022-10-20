@@ -9,3 +9,8 @@ void Exp::setData(Data *data)
 {
     m_data = data;
 }
+
+std::string Exp::stringifyWithType() const
+{
+    return stringify() + " " + m_data->stringify();
+}

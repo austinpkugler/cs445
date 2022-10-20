@@ -16,6 +16,7 @@ class Asgn : public Exp
 
         // Overridden
         std::string stringify() const override;
+        std::string stringifyWithType() const override;
 
         // Getters
         Asgn::Type getType() const { return m_type; }

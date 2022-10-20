@@ -9,3 +9,8 @@ std::string Id::stringify() const
 {
     return "Id: " + m_name;
 }
+
+std::string Id::stringifyWithType() const
+{
+    return stringify() + " " + Data::stringifyType(m_data->getNextType());
+}

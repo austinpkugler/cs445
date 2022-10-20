@@ -14,6 +14,7 @@ class Id : public Exp
 
         // Overridden
         std::string stringify() const override;
+        std::string stringifyWithType() const override;
 
         // Getters
         std::string getName() const { return m_name; }

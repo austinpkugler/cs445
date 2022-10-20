@@ -41,6 +41,15 @@ std::string Data::stringifyType(Data::Type type)
     return stringy;
 }
 
+Data::Type Data::getNextType() const
+{
+    if (m_next == nullptr)
+    {
+        return m_type;
+    }
+    return m_next->getNextType();
+}
+
 void Data::setIsArray(bool isArray)
 {
     m_isArray = isArray;

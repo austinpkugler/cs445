@@ -62,6 +62,11 @@ std::string Const::stringify() const
     return stringy;
 }
 
+std::string Const::stringifyWithType() const
+{
+    return stringify() + " " + Data::stringifyType(m_data->getNextType());
+}
+
 char Const::parseFirstChar(const std::string &str) const
 {
     if (str.length() == 1)

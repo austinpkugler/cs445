@@ -17,6 +17,7 @@ class Const : public Exp
 
         // Overridden
         std::string stringify() const override;
+        std::string stringifyWithType() const override;
 
         // Getters
         bool getCharLengthWarning() const { return m_charLengthWarning; }

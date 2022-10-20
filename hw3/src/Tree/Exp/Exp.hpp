@@ -23,7 +23,7 @@ class Exp : public Node
         void setData(Data *data);
 
         // Virtual
-        virtual std::string stringifyWithType() const { return stringify() + " " + m_data->stringify(); }
+        virtual std::string stringifyWithType() const;
 
     protected:
         Data *m_data;
