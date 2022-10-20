@@ -24,6 +24,8 @@ class Node
         Node * getSibling() const { return m_sibling; }
         Node * getParent() const { return m_parent; }
         bool getIsAnalyzed() { return m_isAnalyzed; }
+        Node * getAncestor(const Node::Kind nodeKind) const;
+        bool ancestorHasKind(const Node::Kind nodeKind) const;
 
         // Setters
         void addChild(Node *node);

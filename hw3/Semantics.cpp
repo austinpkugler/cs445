@@ -445,7 +445,7 @@ void Semantics::analyzeId(const Id *id) const
             }
         }
 
-        if (!isIndexFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
+        if (!isIndexFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors() && !expIsIndex((Exp *)id))
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
             prevDeclVar->setShowErrors(false);
@@ -863,6 +863,16 @@ void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
     {
         Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
     }
+
+    // if (isVar(prevDecl))
+    // {
+    //     Var *prevDeclVar = (Var *)prevDecl;
+    //     if (prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
+    //     {
+    //         Emit::Error::generic(indexNode->getLineNum(), "Variable '" + prevDeclVar->getName() + "' may be uninitialized when used here.");
+    //         prevDeclVar->setShowErrors(false);
+    //     }
+    // }
 }
 
 void Semantics::checkOperandsAreSameType(const Exp *exp) const
@@ -914,6 +924,16 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
                 throw std::runtime_error("Semantics::checkOperandsAreSameType() - Exp is not a valid Asgn type");
             }
         }
+    }
+
+    if (lhsData->getIsArray() && !rhsData->getIsArray())
+    {
+        Emit::Error::generic(lhsExp->getLineNum(), "'=' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
+    }
+
+    if (!lhsData->getIsArray() && rhsData->getIsArray())
+    {
+        Emit::Error::generic(lhsExp->getLineNum(), "'=' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
     }
 }
 
@@ -1284,4 +1304,33 @@ bool Semantics::expOperandsExist(const Exp *exp) const
         return false;
     }
     return true;
+}
+
+bool Semantics::expIsIndex(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::expIsIndex() - Invalid Exp");
+    }
+
+    Node *lastParent = (Node *)exp;
+    Node *parent = exp->getParent();
+    while (parent != nullptr)
+    {
+        if (isBinary(parent))
+        {
+            Binary *binary = (Binary *)parent;
+            if (binary->getType() == Binary::Type::Index)
+            {
+                // On the right side
+                if (binary->getChildren()[1] == lastParent)
+                {
+                    return true;
+                }
+            }
+        }
+        lastParent = parent;
+        parent = parent->getParent();
+    }
+    return false;
 }

@@ -85,6 +85,7 @@ class Semantics
         // Helpers
         Data * setAndGetExpData(const Exp *exp) const;
         bool expOperandsExist(const Exp *exp) const;
+        bool expIsIndex(const Exp *exp) const;
 
         SymTable *m_symTable;
         Node *m_root;

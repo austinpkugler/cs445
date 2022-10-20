@@ -23,6 +23,36 @@ Node::~Node()
     }
 }
 
+Node * Node::getAncestor(const Node::Kind nodeKind) const
+{
+    if (m_parent == nullptr)
+    {
+        return nullptr;
+    }
+
+    if (m_parent->getNodeKind() == nodeKind)
+    {
+        return m_parent;
+    }
+
+    return m_parent->getAncestor(nodeKind);
+}
+
+bool Node::ancestorHasKind(const Node::Kind nodeKind) const
+{
+    if (m_parent == nullptr)
+    {
+        return false;
+    }
+
+    if (m_parent->getNodeKind() == nodeKind)
+    {
+        return true;
+    }
+
+    return m_parent->ancestorHasKind(nodeKind);
+}
+
 void Node::addChild(Node *node)
 {
     m_children.push_back(node);
