@@ -519,11 +519,11 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     // Both sides must be arrays or both must not be arrays
     if (lhsData->getIsArray() && !rhsData->getIsArray())
     {
-        Emit::Error::generic(exp->getLineNum(), "'" + sym +"' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
+        Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
     }
     if (!lhsData->getIsArray() && rhsData->getIsArray())
     {
-        Emit::Error::generic(exp->getLineNum(), "'=' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
+        Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
     }
 }
 
@@ -618,6 +618,10 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
                 Emit::Error::generic(unary->getLineNum(), "The operation 'chsign' does not work with arrays.");
             }
         case Unary::Type::Question:
+            if (lhsData->getIsArray())
+            {
+                Emit::Error::generic(unary->getLineNum(), "The operation '?' does not work with arrays.");
+            }
             if (lhsData->getType() != Data::Type::Int)
             {
                 Emit::Error::generic(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type int but was given type " + lhsData->stringify() + ".");
@@ -668,6 +672,10 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
     {
         case UnaryAsgn::Type::Inc:
         case UnaryAsgn::Type::Dec:
+            if (lhsData->getIsArray())
+            {
+                Emit::Error::generic(unaryAsgn->getLineNum(), "The operation '" + unaryAsgn->getSym() + "' does not work with arrays.");
+            }
             if (lhsData->getType() != Data::Type::Int)
             {
                 Emit::Error::generic(unaryAsgn->getLineNum(), "Unary '" + unaryAsgn->getSym() + "' requires an operand of type int but was given type " + lhsData->stringify() + ".");
