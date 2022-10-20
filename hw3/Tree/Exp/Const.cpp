@@ -25,7 +25,8 @@ Const::Const(const unsigned lineNum, const Const::Type type, const std::string c
         }
         case Const::Type::String:
             m_stringValue = parseChars(removeFirstAndLastChar(constValue));
-            m_data->setType(Data::Type::String);
+            m_data->setType(Data::Type::Char);
+            m_data->setIsArray(true);
             break;
         default:
             throw std::runtime_error("Const: constructor error: cannot handle unknown \'Const::Type\'");
