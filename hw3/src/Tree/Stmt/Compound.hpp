@@ -11,5 +11,5 @@ class Compound : public Stmt
         Compound(const unsigned lineNum);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 };

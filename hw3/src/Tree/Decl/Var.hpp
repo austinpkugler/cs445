@@ -13,7 +13,7 @@ class Var : public Decl
         Var(const unsigned lineNum, const std::string isVarame, Data *data);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 
         // Getters
         bool getIsInitialized() const { return m_isInitialized; }

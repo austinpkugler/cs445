@@ -11,5 +11,5 @@ class Return : public Stmt
         Return(const unsigned lineNum);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 };

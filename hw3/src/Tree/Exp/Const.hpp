@@ -16,7 +16,7 @@ class Const : public Exp
         Const(const unsigned lineNum, const Const::Type type, const std::string value);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 
         // Getters
         bool getCharLengthWarning() const { return m_charLengthWarning; }

@@ -11,5 +11,5 @@ class Break : public Stmt
         Break(const unsigned lineNum);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 };
