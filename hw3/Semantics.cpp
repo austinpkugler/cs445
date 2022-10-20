@@ -667,7 +667,8 @@ void Semantics::analyzeReturn(const Return *returnN) const
         if (isId(returnChild))
         {
             Id *id = (Id *)returnChild;
-            if (id->getIsArray())
+            Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
+            if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || id->getIsArray())
             {
                 Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
             }
