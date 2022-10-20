@@ -819,6 +819,13 @@ bool Semantics::isValidMainFunc(const Func *func) const
     //     return false;
     // }
 
+    // If main is previously defined as a variable
+    Decl *prevDecl = getFromSymTable(func->getName());
+    if (isVar(prevDecl))
+    {
+        return false;
+    }
+
     return true;
 }
 
