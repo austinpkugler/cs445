@@ -2,7 +2,7 @@
 
 #include "Tree/Tree.hpp"
 #include "SymTable.hpp"
-#include "Emit.hpp"
+#include "Emit/Emit.hpp"
 #include "Is.hpp"
 
 #include <string>

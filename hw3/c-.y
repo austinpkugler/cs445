@@ -1,10 +1,10 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
-#include "Flags.hpp"
 #include "TokenData.hpp"
 #include "Semantics.hpp"
 #include "SymTable.hpp"
-#include "Emit.hpp"
+#include "Emit/Emit.hpp"
+#include "Flags/Flags.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
