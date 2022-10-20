@@ -14,6 +14,33 @@ Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m
     }
 }
 
+std::string Data::stringifyType(Data::Type type)
+{
+    std::string stringy;
+    switch (type)
+    {
+        case Data::Type::Int:
+            stringy = "int";
+            break;
+        case Data::Type::Bool:
+            stringy = "bool";
+            break;
+        case Data::Type::Char:
+            stringy = "char";
+            break;
+        case Data::Type::String:
+            stringy = "string";
+            break;
+        case Data::Type::None:
+            stringy = "void";
+            break;
+        default:
+            throw std::runtime_error("Data: stringify error: cannot stringify unknown \'Data::Type\'");
+            break;
+    }
+    return stringy;
+}
+
 void Data::setIsArray(bool isArray)
 {
     m_isArray = isArray;

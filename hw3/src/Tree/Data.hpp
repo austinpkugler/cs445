@@ -15,6 +15,9 @@ class Data
          */
         Data(Data::Type type, bool isArray, bool isStatic);
 
+        // Static
+        static std::string stringifyType(Data::Type type);
+
         // Getters
         bool getIsArray() const { return m_isArray; }
         bool getIsStatic() const { return m_isStatic; }

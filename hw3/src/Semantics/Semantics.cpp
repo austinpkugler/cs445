@@ -129,7 +129,7 @@ void Semantics::analyzeFunc(const Func *func)
 
     addToSymTable(func);
 
-    if (isValidMainFunc(func))
+    if (isMainFunc(func))
     {
         m_validMainExists = true;
     }
@@ -217,7 +217,6 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
 
     // If the LHS is an id, it must have been declared
     std::vector<Node *> children = asgn->getChildren();
-
     Node *lhsNode = (Node *)(children[0]);
     Node *rhsNode = (Node *)(children[1]);
 
@@ -246,14 +245,13 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
     switch (asgn->getType())
     {
         case Asgn::Type::Asgn:
-            checkSameTypeOperands((Exp *)asgn);
+            checkOperandsOfSameType((Exp *)asgn);
             break;
         case Asgn::Type::AddAsgn:
         case Asgn::Type::SubAsgn:
         case Asgn::Type::DivAsgn:
         case Asgn::Type::MulAsgn:
-            checkAsgnOperands(asgn);
-            checkAsgnIntOperands(asgn);
+            checkOperandsOfType((Exp *)asgn, Data::Type::Int);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeAsgn() - Unknown Asgn");
@@ -267,7 +265,6 @@ void Semantics::analyzeBinary(const Binary *binary) const
     {
         throw std::runtime_error("Semantics::analyzeBinary() - Invalid Binary");
     }
-
     if (!expOperandsExist((Exp *)binary))
     {
         throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS Exp operands must exist");
@@ -280,18 +277,14 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::Mod:
         case Binary::Type::Add:
         case Binary::Type::Sub:
-            checkBinaryIntOperands(binary);
-            checkBinaryOperandsAreNotArray(binary);
+            checkOperandsOfType((Exp *)binary, Data::Type::Int);
             break;
         case Binary::Type::Index:
-        {
-            std::vector<Node *> children = binary->getChildren();
-            checkArray((Id *)(children[0]), children[1]);
+            checkIndex(binary);
             break;
-        }
         case Binary::Type::And:
         case Binary::Type::Or:
-            checkBinaryBoolOperands(binary);
+            checkOperandsOfType((Exp *)binary, Data::Type::Bool);
             break;
         case Binary::Type::LT:
         case Binary::Type::LEQ:
@@ -299,7 +292,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::GEQ:
         case Binary::Type::EQ:
         case Binary::Type::NEQ:
-            checkSameTypeOperands((Exp *)binary);
+            checkOperandsOfSameType((Exp *)binary);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeBinary() - Unknown Binary");
@@ -375,7 +368,7 @@ void Semantics::analyzeId(const Id *id) const
             }
         }
 
-        if (!isIndexFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors() && !expIsIndex((Exp *)id))
+        if (!isIndexFlag && !prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors() && !isIndex((Exp *)id))
         {
             Emit::Warn::generic(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
             prevDeclVar->setShowErrors(false);
@@ -395,18 +388,7 @@ void Semantics::analyzeUnary(const Unary *unary) const
         throw std::runtime_error("Semantics::analyzeUnary() - Invalid Unary");
     }
 
-    switch (unary->getType())
-    {
-        case Unary::Type::Chsign:
-        case Unary::Type::Sizeof:
-        case Unary::Type::Question:
-        case Unary::Type::Not:
-            checkUnaryOperands(unary);
-            break;
-        default:
-            throw std::runtime_error("Semantics::analyzeUnary() - Unknown Unary");
-            break;
-    }
+    checkUnaryOperands(unary);
 }
 
 void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
@@ -503,100 +485,22 @@ void Semantics::analyzeReturn(const Return *returnN) const
     }
 }
 
-bool Semantics::isValidMainFunc(const Func *func) const
-{
-    if (!isFunc(func))
-    {
-        throw std::runtime_error("Semantics::isValidMainFunc() - Invalid Func");
-    }
-
-    // Function name must be main and in global scope
-    if (func->getName() != "main" || m_symTable->depth() != 1)
-    {
-        return false;
-    }
-
-    // Get the function children
-    std::vector<Node *> funcChildren = func->getChildren();
-
-    // There can't be any parms (children)
-    if (funcChildren[0] != nullptr)
-    {
-        return false;
-    }
-
-    // Get the function contents
-    // Compound *compound = (Compound *)funcChildren[1];
-    // std::vector<Node *> compoundChildren = compound->getChildren();
-
-    // If the function is empty (main can't be empty in c-)
-    // if (compoundChildren[0] == nullptr || compoundChildren[1] == nullptr)
-    // {
-    //     return false;
-    // }
-
-    // If main is previously defined as a variable
-    Decl *prevDecl = getFromSymTable(func->getName());
-    if (isVar(prevDecl))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool Semantics::isDeclaredId(const Id *id) const
-{
-    if (!isId(id))
-    {
-        throw std::runtime_error("Semantics::isDeclaredId() - Invalid Id");
-    }
-
-    // If the id name is not in the symbol table, it is not declared
-    if (getFromSymTable(id->getName()) == nullptr)
-    {
-        return false;
-    }
-    return true;
-}
-
-void Semantics::checkSameTypeOperands(Exp *exp) const
+void Semantics::checkOperandsOfSameType(Exp *exp) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::checkSameTypeOperands() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkOperandsOfSameType() - Invalid Exp");
     }
-
     if (!expOperandsExist(exp))
     {
-        throw std::runtime_error("Semantics::checkSameTypeOperands() - LHS and RHS Exp operands must exist");
+        throw std::runtime_error("Semantics::checkOperandsOfSameType() - LHS and RHS Exp operands must exist");
     }
 
-    std::string sym;
-    if (isAsgn(exp))
-    {
-        Asgn *asgn = (Asgn *)exp;
-        if (asgn->getType() != Asgn::Type::Asgn)
-        {
-            throw std::runtime_error("Semantics::checkSameTypeOperands() - Exp is not an operation");
-        }
-        sym = asgn->getSym();
-    }
-    else if (isBinary(exp))
-    {
-        Binary *binary = (Binary *)exp;
-        sym = binary->getSym();
-    }
-    else
-    {
-        throw std::runtime_error("Semantics::checkSameTypeOperands() - Exp is not an operation");
-    }
+    std::string sym = getExpSym(exp);
 
     std::vector<Node *> children = exp->getChildren();
-
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
-
     Data *lhsData = setAndGetExpData(lhsExp);
     Data *rhsData = setAndGetExpData(rhsExp);
 
@@ -623,214 +527,66 @@ void Semantics::checkSameTypeOperands(Exp *exp) const
     }
 }
 
-void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
+void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
 {
-    if (!isId(arrayId))
+    if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::checkArrayIndex() - Invalid Id");
+        throw std::runtime_error("Semantics::checkOperandsOfSameType() - Invalid Exp");
+    }
+    if (!expOperandsExist(exp))
+    {
+        throw std::runtime_error("Semantics::checkOperandsOfSameType() - LHS and RHS Exp operands must exist");
     }
 
-    Decl *prevDecl = (Decl *)(getFromSymTable(arrayId->getName()));
-    if (prevDecl == nullptr || !prevDecl->getData()->getIsArray() || !arrayId->getIsArray())
-    {
-        Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
-    }
+    std::string sym = getExpSym(exp);
+    std::string typeString = Data::stringifyType(type);
 
-    Exp *indexExp = (Exp *)indexNode;
-    Data *indexData = setAndGetExpData(indexExp);
-    if (indexData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
-    }
-
-    // if (isVar(prevDecl))
-    // {
-    //     Var *prevDeclVar = (Var *)prevDecl;
-    //     if (prevDeclVar->getIsInitialized() && prevDeclVar->getShowErrors())
-    //     {
-    //         Emit::Error::generic(indexNode->getLineNum(), "Variable '" + prevDeclVar->getName() + "' may be uninitialized when used here.");
-    //         prevDeclVar->setShowErrors(false);
-    //     }
-    // }
-}
-
-void Semantics::checkBinaryIntOperands(const Binary *binary) const
-{
-    if (!isBinary(binary))
-    {
-        throw std::runtime_error("Semantics::checkBinaryIntOperands() - Invalid Binary");
-    }
-
-    if (!expOperandsExist(binary))
-    {
-        throw std::runtime_error("Semantics::checkBinaryIntOperands() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = binary->getChildren();
-
-    Exp *lhsExp = (Exp *)(children[0]);
-    Exp *rhsExp = (Exp *)(children[1]);
-
-    Data *lhsData = setAndGetExpData(lhsExp);
-    Data *rhsData = setAndGetExpData(rhsExp);
-
-    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
-    {
-        return;
-    }
-
-    if (lhsData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
-    }
-
-    if (rhsData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
-    }
-}
-
-void Semantics::checkBinaryBoolOperands(const Binary *binary) const
-{
-    if (!isBinary(binary))
-    {
-        throw std::runtime_error("Semantics::checkBinaryBoolOperands() - Invalid Binary");
-    }
-
-    if (!expOperandsExist(binary))
-    {
-        throw std::runtime_error("Semantics::checkBinaryBoolOperands() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = binary->getChildren();
+    std::vector<Node *> children = exp->getChildren();
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
     Data *lhsData = setAndGetExpData(lhsExp);
     Data *rhsData = setAndGetExpData(rhsExp);
 
+    // Ignore cases where the LHS or RHS has no type
     if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
     {
         return;
     }
 
-    if (lhsData->getType() != Data::Type::Bool)
+    if (lhsData->getType() != type)
     {
-        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type bool but lhs is of type " + lhsData->stringify() + ".");
+        Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but lhs is of type " + lhsData->stringify() + ".");
     }
 
-    if (rhsData->getType() != Data::Type::Bool)
+    if (rhsData->getType() != type)
     {
-        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type bool but rhs is of type " + lhsData->stringify() + ".");
-    }
-}
-
-void Semantics::checkBinaryOperandsAreNotArray(const Binary *binary) const
-{
-    if (!isBinary(binary))
-    {
-        throw std::runtime_error("Semantics::checkBinaryOperandsAreNotArray() - Invalid Binary");
+        Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but rhs is of type " + rhsData->stringify() + ".");
     }
 
-    if (!expOperandsExist(binary))
+    // If it is a binary operation, we want the operands to be only the passed type (not an array of that type)
+    if (isBinary(exp))
     {
-        throw std::runtime_error("Semantics::checkBinaryOperandsAreNotArray() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = binary->getChildren();
-
-    Exp *lhsExp = (Exp *)(children[0]);
-    Exp *rhsExp = (Exp *)(children[1]);
-
-    if (isId(lhsExp))
-    {
-        Id *lhsId = (Id *)lhsExp;
-        Decl *prevDecl = (Decl *)(getFromSymTable(lhsId->getName()));
-        if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || lhsId->getIsArray())
+        Binary *binary = (Binary *)exp;
+        if (isId(lhsExp))
         {
-            Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
-            return;
+            Id *lhsId = (Id *)lhsExp;
+            Decl *prevDecl = (Decl *)(getFromSymTable(lhsId->getName()));
+            if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || lhsId->getIsArray())
+            {
+                Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+                return;
+            }
         }
-    }
-
-    if (isId(rhsExp))
-    {
-        Id *rhsId = (Id *)rhsExp;
-        Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
-        if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || rhsId->getIsArray())
+        if (isId(rhsExp))
         {
-            Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
-            return;
+            Id *rhsId = (Id *)rhsExp;
+            Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+            if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || rhsId->getIsArray())
+            {
+                Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+                return;
+            }
         }
-    }
-}
-
-void Semantics::checkAsgnOperands(const Asgn *asgn) const
-{
-    if (!isAsgn(asgn) || asgn->getType() == Asgn::Type::Asgn)
-    {
-        throw std::runtime_error("Semantics::checkAsgnOperands() - Invalid Asgn");
-    }
-
-    if (!expOperandsExist(asgn))
-    {
-        throw std::runtime_error("Semantics::checkAsgnOperands() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = asgn->getChildren();
-    Exp *lhsExp = (Exp *)(children[0]);
-    Exp *rhsExp = (Exp *)(children[1]);
-    Data *lhsData = setAndGetExpData(lhsExp);
-    Data *rhsData = setAndGetExpData(rhsExp);
-
-    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
-    {
-        return;
-    }
-
-    if (lhsData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
-    }
-
-    if (rhsData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
-    }
-}
-
-void Semantics::checkAsgnIntOperands(const Asgn *asgn) const
-{
-    if (!isAsgn(asgn))
-    {
-        throw std::runtime_error("Semantics::checkAsgnIntOperands() - Invalid Asgn");
-    }
-
-    // if (!expOperandsExist(asgn))
-    // {
-    //     throw std::runtime_error("Semantics::checkAsgnIntOperands() - LHS and RHS Exp operands must exist");
-    // }
-
-    std::vector<Node *> children = asgn->getChildren();
-
-    Exp *lhsExp = (Exp *)(children[0]);
-    Exp *rhsExp = (Exp *)(children[1]);
-
-    Data *lhsData = setAndGetExpData(lhsExp);
-    Data *rhsData = setAndGetExpData(rhsExp);
-
-    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
-    {
-        return;
-    }
-
-    if (lhsData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
-    }
-
-    if (rhsData->getType() != Data::Type::Int)
-    {
-        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
     }
 }
 
@@ -840,16 +596,15 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
     {
         throw std::runtime_error("Semantics::checkUnaryOperands() - Invalid Unary");
     }
-
-    std::vector<Node *> children = unary->getChildren();
-    Exp *lhsExp = (Exp *)(children[0]);
-
-    if (children.size() == 0 || lhsExp == nullptr)
+    if (!lhsExists((Exp *)unary))
     {
         throw std::runtime_error("Semantics::checkUnaryOperands() - LHS operand must exist");
     }
 
+    std::vector<Node *> children = unary->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
     Data *lhsData = setAndGetExpData(lhsExp);
+
     if (lhsData->getType() == Data::Type::None)
     {
         return;
@@ -884,15 +639,13 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
     {
         throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - Invalid UnaryAsgn");
     }
-
-    std::vector<Node *> children = unaryAsgn->getChildren();
-    Exp *lhsExp = (Exp *)(children[0]);
-
-    if (children.size() == 0 || lhsExp == nullptr)
+    if (!lhsExists((Exp *)unaryAsgn))
     {
         throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - LHS operand must exist");
     }
 
+    std::vector<Node *> children = unaryAsgn->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
     Data *lhsData = setAndGetExpData(lhsExp);
     if (lhsData->getType() == Data::Type::None)
     {
@@ -911,6 +664,31 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
         default:
             throw std::runtime_error("Semantics::checkUnaryAsgnOperands() - Unknown UnaryAsgn");
             break;
+    }
+}
+
+void Semantics::checkIndex(const Binary *binary) const
+{
+    if (binary->getType() != Binary::Type::Index)
+    {
+        throw std::runtime_error("Semantics::checkIndex() - Invalid Binary");
+    }
+
+    std::vector<Node *> children = binary->getChildren();
+    Id *arrayId = (Id *)(children[0]);
+    Node *indexNode = children[1];
+
+    Decl *prevDecl = (Decl *)(getFromSymTable(arrayId->getName()));
+    if (prevDecl == nullptr || !prevDecl->getData()->getIsArray() || !arrayId->getIsArray())
+    {
+        Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
+    }
+
+    Exp *indexExp = (Exp *)indexNode;
+    Data *indexData = setAndGetExpData(indexExp);
+    if (indexData->getType() != Data::Type::Int)
+    {
+        Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
     }
 }
 
@@ -990,6 +768,140 @@ Decl * Semantics::getFromSymTable(const std::string name) const
     return prevDecl;
 }
 
+bool Semantics::isMainFunc(const Func *func) const
+{
+    if (!isFunc(func))
+    {
+        throw std::runtime_error("Semantics::isMainFunc() - Invalid Func");
+    }
+
+    // Function name must be main and in global scope
+    if (func->getName() != "main" || m_symTable->depth() != 1)
+    {
+        return false;
+    }
+
+    // Get the function children
+    std::vector<Node *> funcChildren = func->getChildren();
+
+    // There can't be any parms (children)
+    if (funcChildren[0] != nullptr)
+    {
+        return false;
+    }
+
+    // If main is previously defined as a variable
+    Decl *prevDecl = getFromSymTable(func->getName());
+    if (isVar(prevDecl))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Semantics::isDeclared(const Id *id) const
+{
+    if (!isId(id))
+    {
+        throw std::runtime_error("Semantics::isDeclared() - Invalid Id");
+    }
+
+    // If the id name is not in the symbol table, it is not declared
+    if (getFromSymTable(id->getName()) == nullptr)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::isIndex(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::isIndex() - Invalid Exp");
+    }
+
+    Node *lastParent = (Node *)exp;
+    Node *parent = exp->getParent();
+    while (parent != nullptr)
+    {
+        if (isBinary(parent))
+        {
+            Binary *binary = (Binary *)parent;
+            if (binary->getType() == Binary::Type::Index)
+            {
+                // On the right side
+                if (binary->getChildren()[1] == lastParent)
+                {
+                    return true;
+                }
+            }
+        }
+        lastParent = parent;
+        parent = parent->getParent();
+    }
+    return false;
+}
+
+bool Semantics::expOperandsExist(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::expOperandsExist() - Invalid Exp");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
+    {
+        return false;
+    }
+    if (!isExp(children[0]) || !isExp(children[1]))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool Semantics::lhsExists(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::lhsExists() - Invalid Exp");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+    if (children.size() == 0 || lhsExp == nullptr)
+    {
+        return false;
+    }
+    return true;
+}
+
+std::string Semantics::getExpSym(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::getExpSym() - Invalid Exp");
+    }
+
+    if (isAsgn(exp))
+    {
+        Asgn *asgn = (Asgn *)exp;
+        return asgn->getSym();
+    }
+    else if (isBinary(exp))
+    {
+        Binary *binary = (Binary *)exp;
+        return  binary->getSym();
+    }
+    else
+    {
+        throw std::runtime_error("Semantics::getExpSym() - Exp is not an operation");
+    }
+}
+
 Data * Semantics::setAndGetExpData(const Exp *exp) const
 {
     if (!isExp(exp))
@@ -1039,53 +951,4 @@ Data * Semantics::setAndGetExpData(const Exp *exp) const
         }
     }
     return exp->getData();
-}
-
-bool Semantics::expOperandsExist(const Exp *exp) const
-{
-    if (!isExp(exp))
-    {
-        throw std::runtime_error("Semantics::expOperandsExist() - Invalid Exp");
-    }
-
-    std::vector<Node *> children = exp->getChildren();
-    if (children.size() < 2 || children[0] == nullptr || children[1] == nullptr)
-    {
-        return false;
-    }
-
-    if (!isExp(children[0]) || !isExp(children[1]))
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::expIsIndex(const Exp *exp) const
-{
-    if (!isExp(exp))
-    {
-        throw std::runtime_error("Semantics::expIsIndex() - Invalid Exp");
-    }
-
-    Node *lastParent = (Node *)exp;
-    Node *parent = exp->getParent();
-    while (parent != nullptr)
-    {
-        if (isBinary(parent))
-        {
-            Binary *binary = (Binary *)parent;
-            if (binary->getType() == Binary::Type::Index)
-            {
-                // On the right side
-                if (binary->getChildren()[1] == lastParent)
-                {
-                    return true;
-                }
-            }
-        }
-        lastParent = parent;
-        parent = parent->getParent();
-    }
-    return false;
 }
