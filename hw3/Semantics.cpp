@@ -233,44 +233,26 @@ void Semantics::analyzeExp(Exp *exp)
     switch (exp->getExpKind())
     {
         case Exp::Kind::Asgn:
-        {
-            Asgn *asgn = (Asgn *)exp;
-            analyzeAsgn(asgn);
+            analyzeAsgn((Asgn *)exp);
             break;
-        }
         case Exp::Kind::Binary:
-        {
-            Binary *binary = (Binary *)exp;
-            analyzeBinary(binary);
+            analyzeBinary((Binary *)exp);
             break;
-        }
         case Exp::Kind::Call:
-        {
-            Call *call = (Call *)exp;
-            analyzeCall(call);
+            analyzeCall((Call *)exp);
             break;
-        }
         case Exp::Kind::Const:
             // Not analyzed
             break;
         case Exp::Kind::Id:
-        {
-            Id *id = (Id *)exp;
-            analyzeId(id);
+            analyzeId((Id *)exp);
             break;
-        }
         case Exp::Kind::Unary:
-        {
-            Unary *unary = (Unary *)exp;
-            analyzeUnary(unary);
+            analyzeUnary((Unary *)exp);
             break;
-        }
         case Exp::Kind::UnaryAsgn:
-        {
-            UnaryAsgn *unaryAsgn = (UnaryAsgn *)exp;
-            analyzeUnaryAsgn(unaryAsgn);
+            analyzeUnaryAsgn((UnaryAsgn *)exp);
             break;
-        }
         default:
             throw std::runtime_error("Semantics::analyzeExp() - Unknown Exp");
             break;
