@@ -1,6 +1,6 @@
 #include "Var.hpp"
 
-Var::Var(const unsigned lineNum, const std::string varName, Data *data) : Decl::Decl(lineNum, Decl::Kind::Var, varName, data)
+Var::Var(const unsigned lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, Decl::Kind::Var, isVarame, data)
 {
 
 }

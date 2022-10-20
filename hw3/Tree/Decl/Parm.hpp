@@ -7,10 +7,10 @@ class Parm : public Decl
     public:
         /**
          * @param lineNum Line number of occurrence.
-         * @param parmName Name of the parm
+         * @param isParmame Name of the parm
          * @param data Data associated with the decl (e.g. type, isArray, isStatic)
          */
-        Parm(const unsigned lineNum, const std::string parmName, Data *data);
+        Parm(const unsigned lineNum, const std::string isParmame, Data *data);
 
         // Overridden
         std::string stringify() const;

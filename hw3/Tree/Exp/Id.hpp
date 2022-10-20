@@ -7,10 +7,10 @@ class Id : public Exp
     public:
         /**
          * @param lineNum Line number of occurrence.
-         * @param idName Name of the id.
+         * @param isIdame Name of the id.
          * @param isArray Whether the id references an array. False by default.
          */
-        Id(const unsigned lineNum, const std::string idName, const bool isArray=false);
+        Id(const unsigned lineNum, const std::string isIdame, const bool isArray=false);
 
         // Overridden
         std::string stringify() const;

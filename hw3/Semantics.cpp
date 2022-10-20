@@ -172,57 +172,6 @@ void Semantics::analyzeVar(Var *var)
     addToSymTable(var);
 }
 
-bool Semantics::isDecl(const Node *node) const
-{
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Decl)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isFunc(const Node *node) const
-{
-    if (!isDecl(node))
-    {
-        return false;
-    }
-    Decl *decl = (Decl *)node;
-    if (decl->getDeclKind() != Decl::Kind::Func)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isParm(const Node *node) const
-{
-    if (!isDecl(node))
-    {
-        return false;
-    }
-    Decl *decl = (Decl *)node;
-    if (decl->getDeclKind() != Decl::Kind::Parm)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isVar(const Node *node) const
-{
-    if (!isDecl(node))
-    {
-        return false;
-    }
-    Decl *decl = (Decl *)node;
-    if (decl->getDeclKind() != Decl::Kind::Var)
-    {
-        return false;
-    }
-    return true;
-}
-
 void Semantics::analyzeExp(Exp *exp)
 {
     if (!isExp(exp))
@@ -268,14 +217,15 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
 
     // If the LHS is an id, it must have been declared
     std::vector<Node *> children = asgn->getChildren();
-    analyzeTree(children[1]);
-    if (isId(children[0]))
+
+    Node *lhsNode = (Node *)(children[0]);
+    Node *rhsNode = (Node *)(children[1]);
+
+    analyzeTree(rhsNode);
+
+    if (isId(lhsNode))
     {
-        Id *lhsId = (Id *)(children[0]);
-        // if (!isDeclaredId(lhsId))
-        // {
-        //     Emit::Error::generic(lhsId->getLineNum(), "Symbol \'" + lhsId->getName() + "\' is not declared.");
-        // }
+        Id *lhsId = (Id *)(lhsNode);
         Var *prevDeclLhsVar = (Var *)(getFromSymTable(lhsId->getName()));
         if (isVar(prevDeclLhsVar))
         {
@@ -292,24 +242,22 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
             prevDeclArrayVar->makeInitialized();
         }
     }
-    // If the RHS is an id, it must have been declared
-    // if (isId(children[1]))
-    // {
-    //     Id *rhsId = (Id *)(children[1]);
-    //     if (!isDeclaredId(rhsId))
-    //     {
-    //         Emit::Error::generic(rhsId->getLineNum(), "Symbol \'" + rhsId->getName() + "\' is not declared.");
-    //     }
-    // }
 
-    // LHS and RHS must be the same type
-    if (asgn->getType() == Asgn::Type::Asgn)
+    switch (asgn->getType())
     {
-        checkOperandsAreSameType((Exp *)asgn);
-    }
-    else
-    {
-        checkAsgnOperands(asgn);
+        case Asgn::Type::Asgn:
+            checkOperandsAreSameType((Exp *)asgn);
+            break;
+        case Asgn::Type::AddAsgn:
+        case Asgn::Type::SubAsgn:
+        case Asgn::Type::DivAsgn:
+        case Asgn::Type::MulAsgn:
+            checkAsgnOperands(asgn);
+            checkAsgnIntOperands(asgn);
+            break;
+        default:
+            throw std::runtime_error("Semantics::analyzeAsgn() - Unknown Asgn");
+            break;
     }
 }
 
@@ -471,113 +419,6 @@ void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
     checkUnaryAsgnOperands(unaryAsgn);
 }
 
-bool Semantics::isExp(const Node *node) const
-{
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Exp)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isAsgn(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::Asgn)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isBinary(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::Binary)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isCall(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::Call)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isConst(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::Const)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isId(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::Id)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isUnary(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::Unary)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isUnaryAsgn(const Node *node) const
-{
-    if (!isExp(node))
-    {
-        return false;
-    }
-    Exp *exp = (Exp *)node;
-    if (exp->getExpKind() != Exp::Kind::UnaryAsgn)
-    {
-        return false;
-    }
-    return true;
-}
-
 void Semantics::analyzeStmt(const Stmt *stmt) const
 {
     if (!isStmt(stmt))
@@ -604,8 +445,8 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             break;
         case Stmt::Kind::Return:
         {
-            Return *returnN = (Return *)stmt;
-            analyzeReturn(returnN);
+            Return *isReturn = (Return *)stmt;
+            analyzeReturn(isReturn);
             break;
         }
         case Stmt::Kind::While:
@@ -662,113 +503,6 @@ void Semantics::analyzeReturn(const Return *returnN) const
     }
 }
 
-bool Semantics::isStmt(const Node *node) const
-{
-    if (node == nullptr || node->getNodeKind() != Node::Kind::Stmt)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isBreak(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::Break)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isCompound(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::Compound)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isFor(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::For)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isIf(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::If)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isRange(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::Range)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isReturn(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::Return)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Semantics::isWhile(const Node *node) const
-{
-    if (!isStmt(node))
-    {
-        return false;
-    }
-    Stmt *stmt = (Stmt *)node;
-    if (stmt->getStmtKind() != Stmt::Kind::While)
-    {
-        return false;
-    }
-    return true;
-}
-
 bool Semantics::isValidMainFunc(const Func *func) const
 {
     if (!isFunc(func))
@@ -823,6 +557,24 @@ bool Semantics::isDeclaredId(const Id *id) const
     {
         return false;
     }
+    return true;
+}
+
+bool Semantics::eqExpTypes(const Exp *lhsExp, const Exp *rhsExp) const
+{
+    if (!isExp(lhsExp) || !isExp(rhsExp))
+    {
+        throw std::runtime_error("Semantics::eqExpTypes() - Invalid Exp");
+    }
+
+    Data *lhsData = setAndGetExpData(lhsExp);
+    Data *rhsData = setAndGetExpData(rhsExp);
+
+    if (lhsData->getType() != rhsData->getType())
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -932,8 +684,10 @@ void Semantics::checkBinaryIntOperands(const Binary *binary) const
     }
 
     std::vector<Node *> children = binary->getChildren();
+
     Exp *lhsExp = (Exp *)(children[0]);
     Exp *rhsExp = (Exp *)(children[1]);
+
     Data *lhsData = setAndGetExpData(lhsExp);
     Data *rhsData = setAndGetExpData(rhsExp);
 
@@ -949,7 +703,7 @@ void Semantics::checkBinaryIntOperands(const Binary *binary) const
 
     if (rhsData->getType() != Data::Type::Int)
     {
-        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + lhsData->stringify() + ".");
+        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
     }
 }
 
@@ -1052,7 +806,43 @@ void Semantics::checkAsgnOperands(const Asgn *asgn) const
 
     if (lhsData->getType() != Data::Type::Int)
     {
-        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + rhsData->stringify() + ".");
+        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
+    }
+
+    if (rhsData->getType() != Data::Type::Int)
+    {
+        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but rhs is of type " + rhsData->stringify() + ".");
+    }
+}
+
+void Semantics::checkAsgnIntOperands(const Asgn *asgn) const
+{
+    if (!isAsgn(asgn))
+    {
+        throw std::runtime_error("Semantics::checkAsgnIntOperands() - Invalid Asgn");
+    }
+
+    // if (!expOperandsExist(asgn))
+    // {
+    //     throw std::runtime_error("Semantics::checkAsgnIntOperands() - LHS and RHS Exp operands must exist");
+    // }
+
+    std::vector<Node *> children = asgn->getChildren();
+
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
+
+    Data *lhsData = setAndGetExpData(lhsExp);
+    Data *rhsData = setAndGetExpData(rhsExp);
+
+    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
+    {
+        return;
+    }
+
+    if (lhsData->getType() != Data::Type::Int)
+    {
+        Emit::Error::generic(asgn->getLineNum(), "'" + asgn->getSym() + "' requires operands of type int but lhs is of type " + lhsData->stringify() + ".");
     }
 
     if (rhsData->getType() != Data::Type::Int)
@@ -1144,9 +934,9 @@ void Semantics::checkUnaryAsgnOperands(const UnaryAsgn *unaryAsgn) const
 void Semantics::leaveScope()
 {
     std::map<std::string, void *> syms = m_symTable->getSyms();
-    for (auto const& [name, voidNode] : syms)
+    for (auto const& [name, voisIdode] : syms)
     {
-        Node *node = (Node *)voidNode;
+        Node *node = (Node *)voisIdode;
         if (!isDecl(node))
         {
             throw std::runtime_error("Semantics: symbol table error: \'NonDecl\' node found in symbol table: node is \'NonDecl:{ any }\' or nullptr");
