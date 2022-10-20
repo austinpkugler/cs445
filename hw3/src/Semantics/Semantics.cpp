@@ -693,14 +693,23 @@ void Semantics::checkIndex(const Binary *binary) const
     Decl *prevDecl = (Decl *)(getFromSymTable(arrayId->getName()));
     if (prevDecl == nullptr || !prevDecl->getData()->getIsArray() || !arrayId->getIsArray())
     {
-        Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
+        Emit::Error::generic(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
+    }
+
+    if (prevDecl != nullptr && prevDecl->getData()->getIsArray() && isId(indexNode) )
+    {
+        Id *indexId = (Id *)indexNode;
+        if (arrayId->getName().compare(indexId->getName()) == 0)
+        {
+            Emit::Error::generic(indexNode->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
+        }
     }
 
     Exp *indexExp = (Exp *)indexNode;
     Data *indexData = setAndGetExpData(indexExp);
     if (indexData->getType() != Data::Type::Int)
     {
-        Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
+        Emit::Error::generic(binary->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
     }
 }
 
