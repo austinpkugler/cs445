@@ -1,6 +1,6 @@
 #include "Call.hpp"
 
-Call::Call(const unsigned lineNum, const std::string isFuncame) : Exp::Exp(lineNum, Exp::Kind::Call, new Data(Data::Type::None, false, false)), m_name(isFuncame)
+Call::Call(const unsigned lineNum, const std::string funcName) : Exp::Exp(lineNum, Exp::Kind::Call, new Data(Data::Type::None, false, false)), m_name(funcName)
 {
 
 }

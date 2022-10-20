@@ -168,7 +168,7 @@ funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
                         }
                         | ID LPAREN parms RPAREN compoundStmt
                         {
-                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
+                            $$ = new Func($1->lineNum, $1->tokenContent, new Data(Data::Type::Void, false, false));
                             $$->addChild($3);
                             $$->addChild($5);
                         }

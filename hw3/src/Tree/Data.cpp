@@ -80,6 +80,9 @@ std::string Data::stringify() const
         case Data::Type::None:
             stringy = "void";
             break;
+        case Data::Type::Void:
+            stringy = "void";
+            break;
         default:
             throw std::runtime_error("Data::stringify() - Unknown type");
             break;

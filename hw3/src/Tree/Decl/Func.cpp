@@ -1,6 +1,6 @@
 #include "Func.hpp"
 
-Func::Func(const unsigned lineNum, const std::string isFuncame, Data *data) : Decl::Decl(lineNum, Decl::Kind::Func, isFuncame, data)
+Func::Func(const unsigned lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, Decl::Kind::Func, funcName, data)
 {
 
 }

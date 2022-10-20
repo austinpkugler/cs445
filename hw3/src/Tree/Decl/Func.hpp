@@ -10,7 +10,7 @@ class Func : public Decl
          * @param name Name of the function
          * @param data Data associated with the decl (e.g. type, isArray, isStatic)
          */
-        Func(const unsigned lineNum, const std::string isFuncame, Data *data);
+        Func(const unsigned lineNum, const std::string funcName, Data *data);
 
         // Overridden
         std::string stringify() const;

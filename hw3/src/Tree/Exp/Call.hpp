@@ -7,9 +7,9 @@ class Call : public Exp
     public:
         /**
          * @param lineNum Line number of occurrence.
-         * @param isFuncame Name of the function being called.
+         * @param funcName Name of the function being called.
          */
-        Call(const unsigned lineNum, const std::string isFuncame);
+        Call(const unsigned lineNum, const std::string funcName);
 
         // Overridden
         std::string stringify() const;

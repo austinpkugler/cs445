@@ -958,7 +958,7 @@ Data * Semantics::setAndGetExpData(const Exp *exp) const
         {
             Call *call = (Call *)exp;
             Decl *prevDecl = getFromSymTable(call->getName());
-            if (prevDecl != nullptr)
+            if (prevDecl != nullptr && prevDecl->getDeclKind() != Decl::Kind::Var)
             {
                 call->setData(prevDecl->getData());
             }
@@ -968,7 +968,7 @@ Data * Semantics::setAndGetExpData(const Exp *exp) const
         {
             Id *id = (Id *)exp;
             Decl *prevDecl = getFromSymTable(id->getName());
-            if (prevDecl != nullptr)
+            if (prevDecl != nullptr && prevDecl->getDeclKind() != Decl::Kind::Func)
             {
                 id->setData(prevDecl->getData());
             }
