@@ -841,7 +841,8 @@ void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
         throw std::runtime_error("Semantics::checkArrayIndex() - Invalid Id");
     }
 
-    if (!arrayId->getIsArray())
+    Decl *prevDecl = (Decl *)(getFromSymTable(arrayId->getName()));
+    if ((prevDecl != nullptr && !prevDecl->getData()->getIsArray()) || !arrayId->getIsArray())
     {
         Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
         return;
