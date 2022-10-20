@@ -347,7 +347,8 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::Mod:
         case Binary::Type::Add:
         case Binary::Type::Sub:
-            checkBinaryOperands(binary);
+            checkBinaryIntOperands(binary);
+            checkBinaryOperandsAreNotArray(binary);
             break;
         case Binary::Type::Index:
         {
@@ -357,6 +358,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         }
         case Binary::Type::And:
         case Binary::Type::Or:
+            checkBinaryBoolOperands(binary);
             break;
         case Binary::Type::LT:
         case Binary::Type::LEQ:
@@ -908,16 +910,16 @@ void Semantics::checkOperandsAreSameType(const Exp *exp) const
     }
 }
 
-void Semantics::checkBinaryOperands(const Binary *binary) const
+void Semantics::checkBinaryIntOperands(const Binary *binary) const
 {
     if (!isBinary(binary))
     {
-        throw std::runtime_error("Semantics::checkBinaryOperands() - Invalid Binary");
+        throw std::runtime_error("Semantics::checkBinaryIntOperands() - Invalid Binary");
     }
 
     if (!expOperandsExist(binary))
     {
-        throw std::runtime_error("Semantics::checkBinaryOperands() - LHS and RHS Exp operands must exist");
+        throw std::runtime_error("Semantics::checkBinaryIntOperands() - LHS and RHS Exp operands must exist");
     }
 
     std::vector<Node *> children = binary->getChildren();
@@ -940,8 +942,40 @@ void Semantics::checkBinaryOperands(const Binary *binary) const
     {
         Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type int but rhs is of type " + lhsData->stringify() + ".");
     }
+}
 
-    checkBinaryOperandsAreNotArray(binary);
+void Semantics::checkBinaryBoolOperands(const Binary *binary) const
+{
+    if (!isBinary(binary))
+    {
+        throw std::runtime_error("Semantics::checkBinaryBoolOperands() - Invalid Binary");
+    }
+
+    if (!expOperandsExist(binary))
+    {
+        throw std::runtime_error("Semantics::checkBinaryBoolOperands() - LHS and RHS Exp operands must exist");
+    }
+
+    std::vector<Node *> children = binary->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
+    Data *lhsData = setAndGetExpData(lhsExp);
+    Data *rhsData = setAndGetExpData(rhsExp);
+
+    if (lhsData->getType() == Data::Type::None || rhsData->getType() == Data::Type::None)
+    {
+        return;
+    }
+
+    if (lhsData->getType() != Data::Type::Bool)
+    {
+        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type bool but lhs is of type " + lhsData->stringify() + ".");
+    }
+
+    if (rhsData->getType() != Data::Type::Bool)
+    {
+        Emit::Error::generic(binary->getLineNum(), "'" + binary->getSym() + "' requires operands of type bool but rhs is of type " + lhsData->stringify() + ".");
+    }
 }
 
 void Semantics::checkBinaryOperandsAreNotArray(const Binary *binary) const

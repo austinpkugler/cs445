@@ -70,7 +70,8 @@ class Semantics
         bool isDeclaredId(const Id *id) const;
         void checkArray(const Id *arrayId, const Node *indexNode) const;
         void checkOperandsAreSameType(const Exp *exp) const;
-        void checkBinaryOperands(const Binary *binary) const;
+        void checkBinaryIntOperands(const Binary *binary) const;
+        void checkBinaryBoolOperands(const Binary *binary) const;
         void checkBinaryOperandsAreNotArray(const Binary *binary) const;
         void checkAsgnOperands(const Asgn *asgn) const;
         void checkUnaryOperands(const Unary *unary) const;
