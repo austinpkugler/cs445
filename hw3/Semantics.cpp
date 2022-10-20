@@ -463,12 +463,10 @@ void Semantics::analyzeUnary(const Unary *unary) const
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
-            break;
         case Unary::Type::Sizeof:
-            break;
         case Unary::Type::Question:
-            break;
         case Unary::Type::Not:
+            checkUnaryOperands(unary);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeUnary() - Unknown Unary");
@@ -1026,6 +1024,36 @@ void Semantics::checkUnaryOperands(const Unary *unary) const
     }
 
     std::vector<Node *> children = unary->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+
+    if (children.size() == 0 || lhsExp == nullptr)
+    {
+        throw std::runtime_error("Semantics::checkUnaryOperands() - LHS operand must exist");
+    }
+
+    Data *lhsData = setAndGetExpData(lhsExp);
+
+    switch (unary->getType())
+    {
+        case Unary::Type::Chsign:
+        case Unary::Type::Question:
+            if (lhsData->getType() != Data::Type::Int)
+            {
+                Emit::Error::generic(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type int but was given type " + lhsData->stringify() + ".");
+            }
+            break;
+        case Unary::Type::Sizeof:
+            break;
+        case Unary::Type::Not:
+            if (lhsData->getType() != Data::Type::Bool)
+            {
+                Emit::Error::generic(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type bool but was given type " + lhsData->stringify() + ".");
+            }
+            break;
+        default:
+            throw std::runtime_error("Semantics::checkUnaryOperands() - Unknown Unary");
+            break;
+    }
 }
 
 void Semantics::leaveScope()
