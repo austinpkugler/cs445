@@ -845,10 +845,9 @@ void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
     }
 
     Decl *prevDecl = (Decl *)(getFromSymTable(arrayId->getName()));
-    if ((prevDecl != nullptr && !prevDecl->getData()->getIsArray()) || !arrayId->getIsArray())
+    if (prevDecl == nullptr || !prevDecl->getData()->getIsArray() || !arrayId->getIsArray())
     {
         Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
-        
     }
 
     Exp *indexExp = (Exp *)indexNode;
