@@ -12,6 +12,7 @@ namespace Emit
             static void count();
             static void generic(const unsigned lineNum, const std::string msg);
             static void linker(const std::string msg);
+            static void arglist(const std::string msg);
             static void undefinedMain();
 
         private:

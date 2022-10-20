@@ -1,6 +1,6 @@
 #include "Const.hpp"
 
-Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const, new Data(Data::Type::None, false, false)), m_type(type)
+Const::Const(const unsigned lineNum, const Const::Type type, const std::string constValue) : Exp::Exp(lineNum, Exp::Kind::Const, new Data(Data::Type::Undefined, false, false)), m_type(type)
 {
     switch (m_type)
     {
@@ -60,6 +60,19 @@ std::string Const::stringify() const
             break;
     }
     return stringy;
+}
+
+std::string Const::stringifyWithType() const
+{
+    std::string typeString = Data::typeToString(m_data->getNextType());
+    if (typeString != "undefined")
+    {
+        return stringify() + " of type " + typeString;
+    }
+    else
+    {
+        return stringify() + " of undefined type";
+    }
 }
 
 char Const::parseFirstChar(const std::string &str) const

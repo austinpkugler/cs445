@@ -15,11 +15,11 @@ class Asgn : public Exp
         Asgn(const unsigned lineNum, const Asgn::Type type);
 
         // Overridden
-        std::string stringify() const;
-        std::string getSym() const;
+        std::string stringify() const override;
 
         // Getters
         Asgn::Type getType() const { return m_type; }
+        std::string getSym() const;
 
     private:
         const Asgn::Type m_type;

@@ -13,7 +13,7 @@ class Parm : public Decl
         Parm(const unsigned lineNum, const std::string isParmame, Data *data);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 
         // Getters
         bool getIsUsed() const { return m_isUsed; }

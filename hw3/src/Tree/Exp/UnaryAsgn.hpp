@@ -15,11 +15,11 @@ class UnaryAsgn : public Exp
         UnaryAsgn(const unsigned lineNum, const UnaryAsgn::Type type);
 
         // Overridden
-        std::string stringify() const;
-        std::string getSym() const;
+        std::string stringify() const override;
 
         // Getters
         UnaryAsgn::Type getType() const { return m_type; }
+        std::string getSym() const;
 
     private:
         const UnaryAsgn::Type m_type;

@@ -13,5 +13,5 @@ class Func : public Decl
         Func(const unsigned lineNum, const std::string funcName, Data *data);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 };

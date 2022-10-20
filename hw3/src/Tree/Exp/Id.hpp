@@ -13,7 +13,8 @@ class Id : public Exp
         Id(const unsigned lineNum, const std::string isIdame, const bool isArray=false);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
+        std::string stringifyWithType() const override;
 
         // Getters
         std::string getName() const { return m_name; }

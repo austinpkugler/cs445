@@ -15,11 +15,11 @@ class Unary : public Exp
         Unary(const unsigned lineNum, const Unary::Type type);
 
         // Overridden
-        std::string stringify() const;
-        std::string getSym() const;
+        std::string stringify() const override;
 
         // Getters
         Unary::Type getType() const { return m_type; }
+        std::string getSym() const;
 
     private:
         const Unary::Type m_type;

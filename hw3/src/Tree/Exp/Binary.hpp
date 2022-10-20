@@ -15,11 +15,11 @@ class Binary : public Exp
         Binary(const unsigned lineNum, const Binary::Type type);
 
         // Overridden
-        std::string stringify() const;
-        std::string getSym() const;
+        std::string stringify() const override;
 
         // Getters
         Binary::Type getType() const { return m_type; }
+        std::string getSym() const;
 
     private:
         const Binary::Type m_type;

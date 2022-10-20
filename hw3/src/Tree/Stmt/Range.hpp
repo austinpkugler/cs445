@@ -11,5 +11,5 @@ class Range : public Stmt
         Range(const unsigned lineNum);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 };

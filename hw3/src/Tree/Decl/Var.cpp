@@ -9,7 +9,7 @@ std::string Var::stringify() const
 {
     if (m_data == nullptr)
     {
-        throw std::runtime_error("Var::stringify() - Data does not exist");
+        throw std::runtime_error("Var::stringify() - Data must exist");
     }
 
     if (m_data->getIsArray() && m_data->getIsStatic())

@@ -1,6 +1,6 @@
 #include "Unary.hpp"
 
-Unary::Unary(const unsigned lineNum, const Unary::Type type) : Exp::Exp(lineNum, Exp::Kind::Unary, new Data(Data::Type::None, false, false)), m_type(type)
+Unary::Unary(const unsigned lineNum, const Unary::Type type) : Exp::Exp(lineNum, Exp::Kind::Unary, new Data(Data::Type::Undefined, false, false)), m_type(type)
 {
     switch (m_type)
     {

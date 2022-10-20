@@ -12,7 +12,7 @@ class Call : public Exp
         Call(const unsigned lineNum, const std::string funcName);
 
         // Overridden
-        std::string stringify() const;
+        std::string stringify() const override;
 
         // Getters
         std::string getName() const { return m_name; }

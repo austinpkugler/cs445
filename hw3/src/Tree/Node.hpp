@@ -33,11 +33,12 @@ class Node
         void makeAnalyzed() { m_isAnalyzed = true; }
 
         // Print
-        void printTree() const;
-        void printNode() const;
+        void printTree(const bool showTypes=false) const;
+        void printNode(const bool showTypes=false) const;
 
         // Virtual
         virtual std::string stringify() const;
+        virtual std::string stringifyWithType() const { return stringify(); }
 
     protected:
         Node *m_sibling;    // Used by decl

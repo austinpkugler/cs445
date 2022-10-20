@@ -138,11 +138,11 @@ varDeclInit             : varDeclId
 
 varDeclId               : ID
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, false, false));
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
+                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
                         }
                         ;
 
@@ -223,11 +223,11 @@ parmIdList              : parmIdList COMMA parmId
 
 parmId                  : ID
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, false, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, false, false));
                         }
                         | ID LBRACK RBRACK
                         {
-                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::None, true, false));
+                            $$ = new Parm($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
                         }
                         ;
 
@@ -704,7 +704,10 @@ int main(int argc, char *argv[])
     std::string filename = flags.getFile();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        throw std::runtime_error("main() - Cannot open file \'" + filename + "\'");
+        Emit::Error::arglist("source file \"" + filename + "\" could not be opened.");
+        Emit::Warn::count();
+        Emit::Error::count();
+        return EXIT_FAILURE;
     }
 
     yyparse();
@@ -730,7 +733,7 @@ int main(int argc, char *argv[])
         {
             throw std::runtime_error("main() - Cannot print tree");
         }
-        root->printTree();
+        root->printTree(true);
     }
 
     Emit::Warn::count();
@@ -739,5 +742,5 @@ int main(int argc, char *argv[])
     delete root;
     fclose(yyin);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
