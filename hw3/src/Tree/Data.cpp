@@ -34,6 +34,9 @@ std::string Data::typeToString(Data::Type type)
         case Data::Type::None:
             stringy = "undefined";
             break;
+        case Data::Type::Void:
+            stringy = "void";
+            break;
         default:
             throw std::runtime_error("Data::typeToString() - Unknown type");
             break;
@@ -106,30 +109,5 @@ std::string Data::stringify() const
 
 std::string Data::stringifyWithType() const
 {
-    std::string stringy;
-    switch (m_type)
-    {
-        case Data::Type::Int:
-            stringy = "int";
-            break;
-        case Data::Type::Bool:
-            stringy = "bool";
-            break;
-        case Data::Type::Char:
-            stringy = "char";
-            break;
-        case Data::Type::String:
-            stringy = "string";
-            break;
-        case Data::Type::None:
-            stringy = "undefined";
-            break;
-        case Data::Type::Void:
-            stringy = "undefined";
-            break;
-        default:
-            throw std::runtime_error("Data::stringify() - Unknown type");
-            break;
-    }
-    return stringy;
+    return typeToString(m_type);
 }
