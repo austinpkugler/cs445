@@ -38,7 +38,6 @@ class Node
 
         // Virtual
         virtual std::string stringify() const;
-        virtual std::string stringifyWithType() const { return stringify(); }
 
     protected:
         Node *m_sibling;    // Used by decl
