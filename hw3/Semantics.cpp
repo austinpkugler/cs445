@@ -845,17 +845,14 @@ void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
     if ((prevDecl != nullptr && !prevDecl->getData()->getIsArray()) || !arrayId->getIsArray())
     {
         Emit::Error::generic(arrayId->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
-        return;
+        
     }
 
-    if (isId(indexNode))
+    Exp *indexExp = (Exp *)indexNode;
+    Data *indexData = setAndGetExpData(indexExp);
+    if (indexData->getType() != Data::Type::Int)
     {
-        Id *arrayIndexId = (Id *)indexNode;
-        Decl *prevDecl = (Decl *)(getFromSymTable(arrayIndexId->getName()));
-        if (prevDecl->getData()->getType() != Data::Type::Int)
-        {
-            Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + prevDecl->getData()->stringify() + ".");
-        }
+        Emit::Error::generic(indexNode->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexData->stringify() + ".");
     }
 }
 
