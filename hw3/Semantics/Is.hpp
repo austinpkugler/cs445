@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Tree/Tree.hpp"
+#include "../Tree/Tree.hpp"
 
 // Decl nodes
 bool isDecl(const Node *node);

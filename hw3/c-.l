@@ -2,10 +2,10 @@
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
 #include "TokenData.hpp"
-#include "Semantics.hpp"
-#include "SymTable.hpp"
+// #include "SymTable.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
+#include "Semantics/Semantics.hpp"
 #include "Tree/Tree.hpp"
 
 #include <string>

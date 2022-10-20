@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Tree/Tree.hpp"
 #include "SymTable.hpp"
-#include "Emit/Emit.hpp"
 #include "Is.hpp"
+#include "../Emit/Emit.hpp"
+#include "../Tree/Tree.hpp"
 
 #include <string>
 #include <sstream>
