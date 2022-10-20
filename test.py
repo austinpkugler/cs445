@@ -5,9 +5,10 @@ import sys
 
 class Test:
 
-    def __init__(self, src_dir, tst_dir, name):
+    def __init__(self, src_dir, tst_dir, tmp_dir, name):
         self._src_dir = src_dir
         self._tst_dir = tst_dir
+        self._tmp_dir = tmp_dir
         self._name = name
 
     def __repr__(self):
@@ -23,7 +24,7 @@ class Test:
         passed = True
 
         src = os.path.join(self._tst_dir, self._name + '.c-')
-        tmp, actual, expected, diff = self.mktmp()
+        actual, expected, diff = self.mktmp()
 
         expected_out = os.path.join(expected, self._name + '.out')
         out = os.path.join(self._tst_dir, self._name + '.out')
@@ -33,7 +34,7 @@ class Test:
             os.system(f'cp {out} {expected_out}')
 
         if sort_outs:
-            tmp_out = os.path.join(tmp, 'tmp.out')
+            tmp_out = os.path.join(self._tmp_dir, 'tmp.out')
             os.system(f'{compiler} {src} {flags} > {tmp_out}')
             actual_out = os.path.join(actual, self._name + '.out')
             os.system(f'sort {tmp_out} > {actual_out}')
@@ -56,23 +57,21 @@ class Test:
         return passed
 
     def mktmp(self):
-        tmp = os.path.join(self._src_dir, 'tmp')
-        actual = os.path.join(tmp, 'actual')
-        expected = os.path.join(tmp, 'expected')
-        diff = os.path.join(tmp, 'diff')
+        actual = os.path.join(self._tmp_dir, 'actual')
+        expected = os.path.join(self._tmp_dir, 'expected')
+        diff = os.path.join(self._tmp_dir, 'diff')
 
-        if not os.path.exists(tmp):
-            os.mkdir(tmp)
+        if not os.path.exists(self._tmp_dir):
+            os.mkdir(self._tmp_dir)
             os.mkdir(actual)
             os.mkdir(expected)
             os.mkdir(diff)
 
-        return tmp, actual, expected, diff
+        return actual, expected, diff
 
     def rmtmp(self):
-        tmp = os.path.join(self._src_dir, 'tmp')
-        if os.path.exists(tmp):
-            shutil.rmtree(tmp)
+        if os.path.exists(self._tmp_dir, ):
+            shutil.rmtree(self._tmp_dir, )
 
     @classmethod
     def diff(cls, path1, path2):
@@ -88,8 +87,8 @@ class Test:
         return are_different
 
     @classmethod
-    def get_tests(cls, src_dir, tst_dir):
-        return [Test(src_dir, tst_dir, f[:-4]) for f in os.listdir(tst_dir) if f.endswith('.out')]
+    def get_tests(cls, src_dir, tst_dir, tmp_dir):
+        return [Test(src_dir, tst_dir, tmp_dir, f[:-4]) for f in os.listdir(tst_dir) if f.endswith('.out')]
 
 
 class Make:
@@ -163,8 +162,8 @@ if __name__ == '__main__':
     flags = ''
 
     argc = len(sys.argv)
-    if argc < 3:
-        print('Usage: src_dir test_dir -flag -flag')
+    if argc < 4:
+        print('Usage: src_dir test_dir tmp_dir -flag -flag')
         print('Test Flags:')
         print('--diff \t Shows test diffs in the terminal.')
         print('--one \t Only run the first test.')
@@ -177,16 +176,18 @@ if __name__ == '__main__':
         print('For this project:')
         print('$ python3 test.py hw1/ hw1/test')
         print('$ python3 test.py hw2/ hw2/test -p')
-    elif argc == 3:
+    elif argc == 4:
         src_dir = sys.argv[1]
         tst_dir = sys.argv[2]
+        tmp_dir = sys.argv[3]
         compiler = os.path.join(src_dir, 'c-')
-    elif argc > 3:
+    elif argc > 4:
         src_dir = sys.argv[1]
         tst_dir = sys.argv[2]
+        tmp_dir = sys.argv[3]
         compiler = os.path.join(src_dir, 'c-')
 
-        flag_list = sys.argv[3:]
+        flag_list = sys.argv[4:]
         if '--diff' in flag_list:
             diff_flag = True
             flag_list.remove('--diff')
@@ -214,7 +215,7 @@ if __name__ == '__main__':
         raise Exception('Compilation failed')
 
     passed = 0
-    tests = Test.get_tests(src_dir, tst_dir)
+    tests = Test.get_tests(src_dir, tst_dir, tmp_dir)
     tests[0].rmtmp()
 
     if one_flag:
