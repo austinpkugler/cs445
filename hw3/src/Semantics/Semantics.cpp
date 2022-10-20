@@ -246,7 +246,7 @@ void Semantics::analyzeAsgn(const Asgn *asgn)
     switch (asgn->getType())
     {
         case Asgn::Type::Asgn:
-            checkOperandsAreSameType((Exp *)asgn);
+            checkSameTypeOperands((Exp *)asgn);
             break;
         case Asgn::Type::AddAsgn:
         case Asgn::Type::SubAsgn:
@@ -299,7 +299,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
         case Binary::Type::GEQ:
         case Binary::Type::EQ:
         case Binary::Type::NEQ:
-            checkOperandsAreSameType((Exp *)binary);
+            checkSameTypeOperands((Exp *)binary);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeBinary() - Unknown Binary");
@@ -560,22 +560,67 @@ bool Semantics::isDeclaredId(const Id *id) const
     return true;
 }
 
-bool Semantics::eqExpTypes(const Exp *lhsExp, const Exp *rhsExp) const
+void Semantics::checkSameTypeOperands(Exp *exp) const
 {
-    if (!isExp(lhsExp) || !isExp(rhsExp))
+    if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::eqExpTypes() - Invalid Exp");
+        throw std::runtime_error("Semantics::checkSameTypeOperands() - Invalid Exp");
     }
+
+    if (!expOperandsExist(exp))
+    {
+        throw std::runtime_error("Semantics::checkSameTypeOperands() - LHS and RHS Exp operands must exist");
+    }
+
+    std::string sym;
+    if (isAsgn(exp))
+    {
+        Asgn *asgn = (Asgn *)exp;
+        if (asgn->getType() != Asgn::Type::Asgn)
+        {
+            throw std::runtime_error("Semantics::checkSameTypeOperands() - Exp is not an operation");
+        }
+        sym = asgn->getSym();
+    }
+    else if (isBinary(exp))
+    {
+        Binary *binary = (Binary *)exp;
+        sym = binary->getSym();
+    }
+    else
+    {
+        throw std::runtime_error("Semantics::checkSameTypeOperands() - Exp is not an operation");
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+
+    Exp *lhsExp = (Exp *)(children[0]);
+    Exp *rhsExp = (Exp *)(children[1]);
 
     Data *lhsData = setAndGetExpData(lhsExp);
     Data *rhsData = setAndGetExpData(rhsExp);
 
-    if (lhsData->getType() != rhsData->getType())
+    // Ignore cases where the LHS has no type
+    if (lhsData->getType() == Data::Type::None)
     {
-        return false;
+        return;
     }
 
-    return true;
+    // Both sides must be the same type
+    if (lhsData->getType() != rhsData->getType())
+    {
+        Emit::Error::generic(exp->getLineNum(), "'" + sym + "' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
+    }
+
+    // Both sides must be arrays or both must not be arrays
+    if (lhsData->getIsArray() && !rhsData->getIsArray())
+    {
+        Emit::Error::generic(exp->getLineNum(), "'" + sym +"' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
+    }
+    if (!lhsData->getIsArray() && rhsData->getIsArray())
+    {
+        Emit::Error::generic(exp->getLineNum(), "'=' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
+    }
 }
 
 void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
@@ -607,68 +652,6 @@ void Semantics::checkArray(const Id *arrayId, const Node *indexNode) const
     //         prevDeclVar->setShowErrors(false);
     //     }
     // }
-}
-
-void Semantics::checkOperandsAreSameType(const Exp *exp) const
-{
-    if (!isExp(exp))
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreSameType() - Invalid Exp");
-    }
-
-    if (!isBinary(exp) && !isAsgn(exp))
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreSameType() - Exp is neither Binary nor Asgn");
-    }
-
-    if (!expOperandsExist(exp))
-    {
-        throw std::runtime_error("Semantics::checkOperandsAreSameType() - LHS and RHS Exp operands must exist");
-    }
-
-    std::vector<Node *> children = exp->getChildren();
-
-    Exp *lhsExp = (Exp *)(children[0]);
-    Exp *rhsExp = (Exp *)(children[1]);
-
-    Data *lhsData = setAndGetExpData(lhsExp);
-    Data *rhsData = setAndGetExpData(rhsExp);
-
-    if (lhsData->getType() == Data::Type::None)
-    {
-        return;
-    }
-
-    if (lhsData->getType() != rhsData->getType())
-    {
-        if (isBinary(exp))
-        {
-            Binary *binary = (Binary *)exp;
-            Emit::Error::generic(lhsExp->getLineNum(), "'" + binary->getSym() + "' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
-        }
-        else if (isAsgn(exp))
-        {
-            Asgn *asgn = (Asgn *)exp;
-            if (asgn->getType() == Asgn::Type::Asgn)
-            {
-                Emit::Error::generic(lhsExp->getLineNum(), "'=' requires operands of the same type but lhs is type " + lhsData->stringify() + " and rhs is type " + rhsData->stringify() + ".");
-            }
-            else
-            {
-                throw std::runtime_error("Semantics::checkOperandsAreSameType() - Exp is not a valid Asgn type");
-            }
-        }
-    }
-
-    if (lhsData->getIsArray() && !rhsData->getIsArray())
-    {
-        Emit::Error::generic(lhsExp->getLineNum(), "'=' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
-    }
-
-    if (!lhsData->getIsArray() && rhsData->getIsArray())
-    {
-        Emit::Error::generic(lhsExp->getLineNum(), "'=' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
-    }
 }
 
 void Semantics::checkBinaryIntOperands(const Binary *binary) const

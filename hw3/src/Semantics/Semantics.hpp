@@ -46,9 +46,9 @@ class Semantics
         // Error and warn checking
         bool isValidMainFunc(const Func *func) const;
         bool isDeclaredId(const Id *id) const;
-        bool eqExpTypes(const Exp *lhs, const Exp *rhs) const;
+        void checkSameTypeOperands(Exp *exp) const;
         void checkArray(const Id *arrayId, const Node *indexNode) const;
-        void checkOperandsAreSameType(const Exp *exp) const;
+        void checkOperandTypes(const Exp *exp) const;
         void checkBinaryIntOperands(const Binary *binary) const;
         void checkBinaryBoolOperands(const Binary *binary) const;
         void checkBinaryOperandsAreNotArray(const Binary *binary) const;
