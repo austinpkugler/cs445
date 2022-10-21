@@ -14,13 +14,4 @@ class Parm : public Decl
 
         // Overridden
         std::string stringify() const override;
-
-        // Getters
-        bool getIsUsed() const { return m_isUsed; }
-
-        // Setters
-        void makeUsed();
-
-    private:
-        bool m_isUsed = false;
 };

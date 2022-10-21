@@ -19,3 +19,8 @@ void Decl::setShowErrors(bool showErrors)
 {
     m_showErrors = showErrors;
 }
+
+void Decl::makeUsed()
+{
+    m_isUsed = true;
+}

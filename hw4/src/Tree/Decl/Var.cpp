@@ -32,11 +32,6 @@ void Var::makeInitialized()
     m_isInitialized = true;
 }
 
-void Var::makeUsed()
-{
-    m_isUsed = true;
-}
-
 void Var::makeStatic()
 {
     if (m_sibling != nullptr)

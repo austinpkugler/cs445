@@ -14,6 +14,26 @@ void Semantics::analyze(Node *node)
     {
         Emit::Error::undefinedMain();
     }
+
+    std::map<std::string, void *> syms = m_symTable->getSyms();
+    for (auto const& [name, currNode] : syms)
+    {
+        Node *node = (Node *)currNode;
+        if (!isDecl(node))
+        {
+            throw std::runtime_error("Semantics::analyze() - Illegal node found in symbol table");
+        }
+
+        Decl *decl = (Decl *)node;
+        if (isFunc(decl))
+        {
+            Func *func = (Func *)decl;
+            if (func->getIsUsed() == false && func->getName() != "main")
+            {
+                Emit::Warn::generic(func->getLineNum(), "The function '" + func->getName() + "' seems not to be used.");
+            }
+        }
+    }
 }
 
 void Semantics::analyzeTree(Node *node)
@@ -324,15 +344,19 @@ void Semantics::analyzeCall(const Call *call) const
         Emit::Error::generic(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
         if (isVar(prevDecl))
         {
-            Var *var = (Var *)prevDecl;
-            var->makeUsed();
+            Var *prevDeclVar = (Var *)prevDecl;
+            prevDeclVar->makeUsed();
         }
         else if (isParm(prevDecl))
         {
-            Parm *parm = (Parm *)prevDecl;
-            parm->makeUsed();
+            Parm *prevDeclParm = (Parm *)prevDecl;
+            prevDeclParm->makeUsed();
         }
-        return;
+    }
+    else
+    {
+        Func *prevDeclFunc = (Func *)prevDecl;
+        prevDeclFunc->makeUsed();
     }
 }
 
@@ -351,6 +375,8 @@ void Semantics::analyzeId(const Id *id) const
     }
     if (isFunc(prevDecl))
     {
+        Func *prevDeclFunc = (Func *)prevDecl;
+        prevDeclFunc->makeUsed();
         Emit::Error::generic(id->getLineNum(), "Cannot use function '" + id->getName() + "' as a variable.");
     }
     else if (isVar(prevDecl))
@@ -411,23 +437,17 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             // Not analyzed
             break;
         case Stmt::Kind::Compound:
-        {
-            Compound *compound = (Compound *)stmt;
-            analyzeCompound(compound);
+            analyzeCompound((Compound *)stmt);
             break;
-        }
         case Stmt::Kind::For:
             analyzeFor();
             break;
         case Stmt::Kind::If:
-            // Not analyzed
+            analyzeIf((If *)stmt);
             break;
         case Stmt::Kind::Return:
-        {
-            Return *isReturn = (Return *)stmt;
-            analyzeReturn(isReturn);
+            analyzeReturn((Return *)stmt);
             break;
-        }
         case Stmt::Kind::While:
             break;
         case Stmt::Kind::Range:
@@ -457,6 +477,22 @@ void Semantics::analyzeCompound(const Compound *compound) const
 void Semantics::analyzeFor() const
 {
     m_symTable->enter("For Loop");
+}
+
+void Semantics::analyzeIf(const If *ifN) const
+{
+    if (!isIf(ifN))
+    {
+        throw std::runtime_error("Semantics::analyzeIf() - Invalid If");
+    }
+
+    std::vector<Node *> children = ifN->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+    Data *lhsData = setAndGetExpData(lhsExp);
+    if (lhsData->getType() != Data::Type::Bool)
+    {
+        Emit::Error::generic(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhsData->stringify() + ".");
+    }
 }
 
 void Semantics::analyzeReturn(const Return *returnN) const
@@ -744,9 +780,9 @@ void Semantics::checkIndex(const Binary *binary) const
 void Semantics::leaveScope()
 {
     std::map<std::string, void *> syms = m_symTable->getSyms();
-    for (auto const& [name, voisIdode] : syms)
+    for (auto const& [name, currNode] : syms)
     {
-        Node *node = (Node *)voisIdode;
+        Node *node = (Node *)currNode;
         if (!isDecl(node))
         {
             throw std::runtime_error("Semantics::leaveScope() - Illegal node found in symbol table");
@@ -766,7 +802,7 @@ void Semantics::leaveScope()
             Parm *parm = (Parm *)decl;
             if (parm->getIsUsed() == false)
             {
-                Emit::Warn::generic(parm->getLineNum(), "The variable '" + parm->getName() + "' seems not to be used.");
+                Emit::Warn::generic(parm->getLineNum(), "The parameter '" + parm->getName() + "' seems not to be used.");
             }
         }
     }

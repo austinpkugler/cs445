@@ -35,6 +35,7 @@ class Semantics
         void analyzeStmt(const Stmt *stmt) const;
         void analyzeCompound(const Compound *compound) const;
         void analyzeFor() const;
+        void analyzeIf(const If *ifN) const;
         void analyzeReturn(const Return *returnN) const;
 
         // Check
