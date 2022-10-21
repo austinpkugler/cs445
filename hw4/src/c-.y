@@ -712,7 +712,13 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag())
+    SymTable symTable = SymTable();
+    symTable.debug(flags.getSymTableDebugFlag());
+
+    Semantics analyzer = Semantics(&symTable);
+    analyzer.analyze(root);
+
+    if (flags.getPrintSyntaxTreeFlag() && Emit::Error::getErrorCount() == 0)
     {
         if (root == nullptr)
         {
@@ -721,13 +727,7 @@ int main(int argc, char *argv[])
         root->printTree();
     }
 
-    SymTable symTable = SymTable();
-    symTable.debug(flags.getSymTableDebugFlag());
-
-    Semantics analyzer = Semantics(&symTable);
-    analyzer.analyze(root);
-
-    if (flags.getPrintAnnotatedSyntaxTreeFlag())
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && Emit::Error::getErrorCount() == 0)
     {
         if (root == nullptr)
         {
