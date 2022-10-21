@@ -14,6 +14,26 @@ void Semantics::analyze(Node *node)
     {
         Emit::Error::undefinedMain();
     }
+
+    std::map<std::string, void *> syms = m_symTable->getSyms();
+    for (auto const& [name, currNode] : syms)
+    {
+        Node *node = (Node *)currNode;
+        if (!isDecl(node))
+        {
+            throw std::runtime_error("Semantics::analyze() - Illegal node found in symbol table");
+        }
+
+        Decl *decl = (Decl *)node;
+        if (isFunc(decl))
+        {
+            Func *func = (Func *)decl;
+            if (func->getIsUsed() == false && func->getName() != "main")
+            {
+                Emit::Warn::generic(func->getLineNum(), "The function '" + func->getName() + "' seems not to be used.");
+            }
+        }
+    }
 }
 
 void Semantics::analyzeTree(Node *node)
@@ -324,15 +344,19 @@ void Semantics::analyzeCall(const Call *call) const
         Emit::Error::generic(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
         if (isVar(prevDecl))
         {
-            Var *var = (Var *)prevDecl;
-            var->makeUsed();
+            Var *prevDeclVar = (Var *)prevDecl;
+            prevDeclVar->makeUsed();
         }
         else if (isParm(prevDecl))
         {
-            Parm *parm = (Parm *)prevDecl;
-            parm->makeUsed();
+            Parm *prevDeclParm = (Parm *)prevDecl;
+            prevDeclParm->makeUsed();
         }
-        return;
+    }
+    else
+    {
+        Func *prevDeclFunc = (Func *)prevDecl;
+        prevDeclFunc->makeUsed();
     }
 }
 
@@ -351,6 +375,8 @@ void Semantics::analyzeId(const Id *id) const
     }
     if (isFunc(prevDecl))
     {
+        Func *prevDeclFunc = (Func *)prevDecl;
+        prevDeclFunc->makeUsed();
         Emit::Error::generic(id->getLineNum(), "Cannot use function '" + id->getName() + "' as a variable.");
     }
     else if (isVar(prevDecl))
@@ -744,9 +770,9 @@ void Semantics::checkIndex(const Binary *binary) const
 void Semantics::leaveScope()
 {
     std::map<std::string, void *> syms = m_symTable->getSyms();
-    for (auto const& [name, voisIdode] : syms)
+    for (auto const& [name, currNode] : syms)
     {
-        Node *node = (Node *)voisIdode;
+        Node *node = (Node *)currNode;
         if (!isDecl(node))
         {
             throw std::runtime_error("Semantics::leaveScope() - Illegal node found in symbol table");
@@ -766,7 +792,7 @@ void Semantics::leaveScope()
             Parm *parm = (Parm *)decl;
             if (parm->getIsUsed() == false)
             {
-                Emit::Warn::generic(parm->getLineNum(), "The variable '" + parm->getName() + "' seems not to be used.");
+                Emit::Warn::generic(parm->getLineNum(), "The parameter '" + parm->getName() + "' seems not to be used.");
             }
         }
     }

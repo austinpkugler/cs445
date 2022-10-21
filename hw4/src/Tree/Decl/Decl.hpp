@@ -22,10 +22,12 @@ class Decl : public Node
         std::string getName() const { return m_name; }
         Data * getData() const { return m_data; }
         bool getShowErrors() const { return m_showErrors; }
+        bool getIsUsed() const { return m_isUsed; }
 
         // Setters
         void setType(const Data::Type type);
         void setShowErrors(bool showErrors);
+        void makeUsed();
 
     protected:
         const std::string m_name;
@@ -34,4 +36,5 @@ class Decl : public Node
     private:
         const Decl::Kind m_declKind;
         bool m_showErrors = true;
+        bool m_isUsed = false;
 };
