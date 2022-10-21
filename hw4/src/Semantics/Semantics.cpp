@@ -539,18 +539,37 @@ void Semantics::analyzeReturn(const Return *returnN) const
     }
 
     std::vector<Node *> children = returnN->getChildren();
-    if (children.size() > 0)
+    if (children.size() == 0)
     {
-        Exp *returnChild = (Exp *)(children[0]);
-        if (isId(returnChild))
+        return;
+    }
+
+    Exp *returnExp = (Exp *)(children[0]);
+    if (isId(returnExp))
+    {
+        Id *returnId = (Id *)returnExp;
+        Decl *prevDecl = getFromSymTable(returnId->getName());
+        if (prevDecl != nullptr && prevDecl->getData()->getIsArray())
         {
-            Id *id = (Id *)returnChild;
-            Decl *prevDecl = getFromSymTable(id->getName());
-            if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || id->getIsArray())
-            {
-                Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
-            }
+            Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
         }
+    }
+
+    Node *parentNode = returnN->getParent();
+    while (parentNode != nullptr)
+    {
+        if (isFunc(parentNode))
+        {
+            Func *parentFunc = (Func *)parentNode;
+            if (parentFunc->getData()->getType() != returnExp->getData()->getType())
+            {
+                std::stringstream msg;
+                msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting to return type " << parentFunc->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
+                Emit::Error::generic(returnN->getLineNum(), msg.str());
+            }
+            break;
+        }
+        parentNode = parentNode->getParent();
     }
 }
 
