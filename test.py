@@ -11,6 +11,7 @@ class Test:
         self._tst_dir = tst_dir
         self._tmp_dir = tmp_dir
         self._name = name
+        self._diff_count = 0
 
     def __repr__(self):
         return f'Test(dir=\'{self._tst_dir}\', name=\'{self._name}\')'
@@ -20,6 +21,9 @@ class Test:
 
     def get_name(self):
         return self._name
+
+    def get_diff_count(self):
+        return self._diff_count
 
     def run(self, compiler, flags='', show_diff=False, sort_outs=False):
         passed = True
@@ -48,6 +52,9 @@ class Test:
 
             diff_out = os.path.join(diff, self._name + '.diff')
             os.system(f'diff {expected_out} {actual_out} > {diff_out}')
+
+            with open(diff_out, 'r') as file:
+                self._diff_count += len(file.readlines())
 
             if show_diff:
                 os.system(f'diff {expected_out} {actual_out}')
@@ -222,6 +229,7 @@ if __name__ == '__main__':
     if one_flag:
         tests = [tests[0]]
 
+    diff_count = 0
     for i, test in enumerate(tests):
         print(f'Running {test} {i + 1}/{len(tests)}...', end='')
         if test.run(compiler, flags, diff_flag, sort_flag):
@@ -230,13 +238,17 @@ if __name__ == '__main__':
         else:
             Emit.error(f'[ FAILED ]')
 
+        diff_count += test.get_diff_count()
+
     if passed == len(tests):
         Emit.success('=' * 30)
         Emit.success(f'Passed {passed}/{len(tests)} tests')
+        Emit.success(f'Total diff count: {diff_count}')
         Emit.success('=' * 30)
     else:
         Emit.error('=' * 30)
-        Emit.error(f'Passed {passed}/{len(tests)} tests')
+        Emit.error(f'Passed: {passed}/{len(tests)} tests')
+        Emit.error(f'Diff: {diff_count}')
         Emit.error('=' * 30)
 
     make.clean()
@@ -249,4 +261,4 @@ if __name__ == '__main__':
 
     with open('test.history', 'a') as history:
         cmd = ' '.join(sys.argv)
-        history.write(f'{time.time()},"python3 {cmd}",{passed},{len(tests)}\n')
+        history.write(f'{time.time()},"python3 {cmd}",{passed},{len(tests)},{diff_count}\n')
