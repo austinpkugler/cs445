@@ -437,23 +437,17 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             // Not analyzed
             break;
         case Stmt::Kind::Compound:
-        {
-            Compound *compound = (Compound *)stmt;
-            analyzeCompound(compound);
+            analyzeCompound((Compound *)stmt);
             break;
-        }
         case Stmt::Kind::For:
             analyzeFor();
             break;
         case Stmt::Kind::If:
-            // Not analyzed
+            analyzeIf((If *)stmt);
             break;
         case Stmt::Kind::Return:
-        {
-            Return *isReturn = (Return *)stmt;
-            analyzeReturn(isReturn);
+            analyzeReturn((Return *)stmt);
             break;
-        }
         case Stmt::Kind::While:
             break;
         case Stmt::Kind::Range:
@@ -483,6 +477,22 @@ void Semantics::analyzeCompound(const Compound *compound) const
 void Semantics::analyzeFor() const
 {
     m_symTable->enter("For Loop");
+}
+
+void Semantics::analyzeIf(const If *ifN) const
+{
+    if (!isIf(ifN))
+    {
+        throw std::runtime_error("Semantics::analyzeIf() - Invalid If");
+    }
+
+    std::vector<Node *> children = ifN->getChildren();
+    Exp *lhsExp = (Exp *)(children[0]);
+    Data *lhsData = setAndGetExpData(lhsExp);
+    if (lhsData->getType() != Data::Type::Bool)
+    {
+        Emit::Error::generic(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhsData->stringify() + ".");
+    }
 }
 
 void Semantics::analyzeReturn(const Return *returnN) const
