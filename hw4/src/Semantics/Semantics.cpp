@@ -555,6 +555,8 @@ void Semantics::analyzeReturn(const Return *returnN) const
         }
     }
 
+    Data *lhsData = setAndGetExpData(returnExp);
+
     Node *parentNode = returnN->getParent();
     while (parentNode != nullptr)
     {
