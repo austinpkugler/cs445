@@ -164,6 +164,18 @@ void Semantics::analyzeParm(const Parm *parm)
         throw std::runtime_error("Semantics::analyzeParm() - Invalid Parm");
     }
 
+    Node *parent = parm->getParent();
+    if (isFunc(parent))
+    {
+        Func *parentFunc = (Func *)parent;
+        Node *currParm = parentFunc->getChildren()[0];
+        while (currParm != nullptr)
+        {
+            parentFunc->incParmCount();
+            currParm = currParm->getSibling();
+        }
+    }
+
     addToSymTable(parm);
 }
 
@@ -357,6 +369,30 @@ void Semantics::analyzeCall(const Call *call) const
     {
         Func *prevDeclFunc = (Func *)prevDecl;
         prevDeclFunc->makeUsed();
+
+        // Count the parms
+        unsigned parmCount = 0;
+        Node *currParm = call->getChildren()[0];
+        while (currParm != nullptr)
+        {
+            parmCount += 1;
+            currParm = currParm->getSibling();
+        }
+
+        if (parmCount < prevDeclFunc->getParmCount())
+        {
+            std::stringstream msg;
+            msg << "Too few parameters passed for function '" << prevDeclFunc->getName() << "' declared on line " << prevDeclFunc->getLineNum() << ".";
+
+            Emit::Error::generic(call->getLineNum(), msg.str());
+        }
+        else if (parmCount > prevDeclFunc->getParmCount())
+        {
+            std::stringstream msg;
+            msg << "Too many parameters passed for function '" << prevDeclFunc->getName() << "' declared on line " << prevDeclFunc->getLineNum() << ".";
+
+            Emit::Error::generic(call->getLineNum(), msg.str());
+        }
     }
 }
 
@@ -867,10 +903,10 @@ bool Semantics::isMainFunc(const Func *func) const
     }
 
     // Get the function children
-    std::vector<Node *> funcChildren = func->getChildren();
+    std::vector<Node *> children = func->getChildren();
 
     // There can't be any parms (children)
-    if (funcChildren[0] != nullptr)
+    if (children[0] != nullptr)
     {
         return false;
     }
