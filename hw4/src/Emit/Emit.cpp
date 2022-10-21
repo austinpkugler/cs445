@@ -28,7 +28,7 @@ void Emit::Error::arglist(const std::string msg)
 
 void Emit::Error::undefinedMain()
 {
-    linker("A function named 'main()' must be defined.");
+    linker("A function named 'main' with no parameters must be defined.");
 }
 
 /**

@@ -329,7 +329,7 @@ void Semantics::analyzeCall(const Call *call) const
         throw std::runtime_error("Semantics::analyzeCall() - Invalid Call");
     }
 
-    Decl *prevDecl = (Decl *)(getFromSymTable(call->getName()));
+    Decl *prevDecl = getFromSymTable(call->getName());
 
     // If the function name is not in the symbol table
     if (prevDecl == nullptr)
@@ -367,7 +367,7 @@ void Semantics::analyzeId(const Id *id) const
         throw std::runtime_error("Semantics::analyzeId() - Invalid Id");
     }
 
-    Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
+    Decl *prevDecl = getFromSymTable(id->getName());
     if (prevDecl == nullptr)
     {
         Emit::Error::generic(id->getLineNum(), "Symbol '" + id->getName() + "' is not declared.");
@@ -509,7 +509,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
         if (isId(returnChild))
         {
             Id *id = (Id *)returnChild;
-            Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
+            Decl *prevDecl = getFromSymTable(id->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || id->getIsArray())
             {
                 Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
@@ -565,8 +565,8 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
         Id *rhsId = (Id *)rhsExp;
         if (lhsId->getName() != rhsId->getName())
         {
-            Decl *prevLhsDecl = (Decl *)(getFromSymTable(lhsId->getName()));
-            Decl *prevRhsDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+            Decl *prevLhsDecl = getFromSymTable(lhsId->getName());
+            Decl *prevRhsDecl = getFromSymTable(rhsId->getName());
             if ((prevLhsDecl != nullptr && isVar(prevLhsDecl)) && (prevRhsDecl != nullptr && isVar(prevRhsDecl)))
             {
                 if (rhsData->getCopyOf() != lhsId->getName())
@@ -621,7 +621,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
         if (isId(lhsExp))
         {
             Id *lhsId = (Id *)lhsExp;
-            Decl *prevDecl = (Decl *)(getFromSymTable(lhsId->getName()));
+            Decl *prevDecl = getFromSymTable(lhsId->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || lhsId->getIsArray())
             {
                 Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
@@ -631,7 +631,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
         if (isId(rhsExp))
         {
             Id *rhsId = (Id *)rhsExp;
-            Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+            Decl *prevDecl = getFromSymTable(rhsId->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || rhsId->getIsArray())
             {
                 Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
@@ -745,7 +745,7 @@ void Semantics::checkIndex(const Binary *binary) const
     Id *arrayId = (Id *)(children[0]);
     Node *indexNode = children[1];
 
-    Decl *prevArrayDecl = (Decl *)(getFromSymTable(arrayId->getName()));
+    Decl *prevArrayDecl = getFromSymTable(arrayId->getName());
     if (prevArrayDecl == nullptr || !prevArrayDecl->getData()->getIsArray() || !arrayId->getIsArray())
     {
         Emit::Error::generic(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
@@ -829,7 +829,7 @@ bool Semantics::addToSymTable(const Decl *decl, const bool global)
 
     if (!inserted)
     {
-        Decl *prevDecl = (Decl *)(getFromSymTable(decl->getName()));
+        Decl *prevDecl = getFromSymTable(decl->getName());
         if (prevDecl == nullptr)
         {
             throw std::runtime_error("Semantics::addToSymTable() - Failed to insert Decl");
