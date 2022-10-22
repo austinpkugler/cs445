@@ -14,7 +14,7 @@ void Semantics::analyze(Node *node)
 
     if (!m_mainExists)
     {
-        Emit::error("LINKER", "A function named 'main' with no parameters must be defined.");
+        Emit::error("LINKER", "A function named 'main()' must be defined.");
     }
 }
 
