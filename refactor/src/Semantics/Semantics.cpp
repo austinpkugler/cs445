@@ -59,17 +59,9 @@ void Semantics::analyzeTree(Node *node)
             analyzeUnaryAsgn((UnaryAsgn *)node);
             break;
         case Node::Kind::Break:
-            // Not analyzed
-            break;
         case Node::Kind::Compound:
-            analyzeCompound((Compound *)node);
-            break;
         case Node::Kind::For:
-            analyzeFor();
-            break;
         case Node::Kind::If:
-            // Not analyzed
-            break;
         case Node::Kind::Range:
             // Not analyzed
             break;
