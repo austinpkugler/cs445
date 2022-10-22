@@ -10,7 +10,7 @@ void Semantics::analyze(Node *node)
     symTableSimpleLeaveScope();
 
     analyzeTree(node);
-    checkUnusedDecl();
+    checkUnusedWarns();
 
     if (!m_mainExists)
     {
@@ -556,7 +556,7 @@ void Semantics::checkIndex(const Binary *binary) const
     }
 }
 
-void Semantics::checkUnusedDecl() const
+void Semantics::checkUnusedWarns() const
 {
     std::map<std::string, void *> syms = m_symTable->getSyms();
     for (auto const& [name, currNode] : syms)
@@ -716,64 +716,64 @@ void Semantics::symTableSimpleEnterScope(const std::string name)
     m_symTable->enter(name);
 }
 
-void Semantics::symTableSimpleLeaveScope()
+void Semantics::symTableSimpleLeaveScope(const bool showWarns)
 {
+    if (showWarns)
+    {
+        checkUnusedWarns();
+    }
     m_symTable->leave();
 }
 
 void Semantics::symTableEnterScope(const Node *node)
 {
+    if (node->getNodeKind() == Node::Kind::Compound)
+    {
+        if (node->getParent() != nullptr)
+        {
+            Node::Kind parentKind = node->getParent()->getNodeKind();
+            if (parentKind == Node::Kind::For || parentKind == Node::Kind::Func)
+            {
+                return;
+            }
+        }
+        symTableSimpleEnterScope("Compound statement");
+        return;
+    }
+
     switch (node->getNodeKind())
     {
-        case Node::Kind::Compound:
-        {
-            if (node->parentExists())
-            {
-                Node::Kind parentKind = node->getParent()->getNodeKind();
-                if (parentKind == Node::Kind::For || parentKind == Node::Kind::Func)
-                {
-                    return;
-                }
-            }
-            symTableSimpleEnterScope("Compound statement");
-            break;
-        }
         case Node::Kind::For:
             symTableSimpleEnterScope("For loop");
             break;
         case Node::Kind::Func:
-            symTableSimpleEnterScope(((Func *)node)->getName());
+            symTableSimpleEnterScope("Function body");
             break;
     }
 }
 
-void Semantics::symTableLeaveScope(const Node *node, const bool checkUnused)
+void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
 {
-    switch (node->getNodeKind())
+    Node::Kind nodeKind = node->getNodeKind();
+    if (nodeKind == Node::Kind::For || nodeKind == Node::Kind::Func)
     {
-        case Node::Kind::For:
-        case Node::Kind::Func:
-            if (checkUnused)
-            {
-                checkUnusedDecl();
-            }
-            symTableSimpleLeaveScope();
-            break;
-        case Node::Kind::Compound:
+        symTableSimpleLeaveScope(showWarns);
+        return;
+    }
+
+    if (node->getParent() != nullptr)
+    {
+        Node::Kind parentKind = node->getParent()->getNodeKind();
+        if (nodeKind == Node::Kind::Compound && (parentKind != Node::Kind::For && parentKind != Node::Kind::Func))
         {
-            Node *parent = node->getParent();
-            if (parent != nullptr)
-            {
-                if (parent->getNodeKind() != Node::Kind::For && parent->getNodeKind() != Node::Kind::Func)
-                {
-                    if (checkUnused)
-                    {
-                        checkUnusedDecl();
-                    }
-                    symTableSimpleLeaveScope();
-                }
-            }
-            break;
+            symTableSimpleLeaveScope(showWarns);
+        }
+    }
+    else
+    {
+        if (nodeKind == Node::Kind::Compound)
+        {
+            symTableSimpleLeaveScope(showWarns);
         }
     }
 }
@@ -856,7 +856,7 @@ std::string Semantics::getExpSym(const Exp *exp) const
     else if (isBinary(exp))
     {
         Binary *binary = (Binary *)exp;
-        return  binary->getSym();
+        return binary->getSym();
     }
     else
     {

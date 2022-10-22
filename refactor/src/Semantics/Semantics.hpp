@@ -33,7 +33,7 @@ class Semantics
         void checkOperandsOfSameType(Exp *exp) const;
         void checkOperandsOfType(Exp *exp, const Data::Type type) const;
         void checkIndex(const Binary *binary) const;
-        void checkUnusedDecl() const;
+        void checkUnusedWarns() const;
 
         // Symbol table
         bool symTableInsert(const Decl *decl, const bool global=false);
@@ -41,9 +41,9 @@ class Semantics
         void symTableInitialize(Node *node);
         Data * symTableSetType(Node *node);
         void symTableSimpleEnterScope(const std::string name);
-        void symTableSimpleLeaveScope();
+        void symTableSimpleLeaveScope(const bool showWarns=false);
         void symTableEnterScope(const Node *node);
-        void symTableLeaveScope(const Node *node, const bool checkUnused=true);
+        void symTableLeaveScope(const Node *node, const bool showWarns=true);
 
         // Helpers
         bool isMainFunc(const Func *func) const;
