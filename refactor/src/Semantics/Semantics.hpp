@@ -27,8 +27,6 @@ class Semantics
         void analyzeId(const Id *id) const;
         void analyzeUnary(const Unary *unary) const;
         void analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const;
-        void analyzeCompound(const Compound *compound) const;
-        void analyzeFor() const;
         void analyzeReturn(const Return *returnN) const;
 
         // Checks

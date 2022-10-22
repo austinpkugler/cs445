@@ -385,25 +385,6 @@ void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
     }
 }
 
-void Semantics::analyzeCompound(const Compound *compound) const
-{
-    if (!isCompound(compound))
-    {
-        throw std::runtime_error("Semantics::analyzeCompound() - Invalid Compound");
-    }
-
-    // Ignore compounds following func or for
-    if (!isFunc(compound->getParent()) && !isFor(compound->getParent()))
-    {
-        m_symTable->enter("Compound Statement");
-    }
-}
-
-void Semantics::analyzeFor() const
-{
-    m_symTable->enter("For Loop");
-}
-
 void Semantics::analyzeReturn(const Return *returnN) const
 {
     if (!isReturn(returnN))
