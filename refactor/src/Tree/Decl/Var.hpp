@@ -13,14 +13,11 @@ class Var : public Decl
 
         // Getters
         bool getIsInitialized() const { return m_isInitialized; }
-        bool getIsUsed() const { return m_isUsed; }
 
         // Setters
         void makeInitialized() { m_isInitialized = true; }
-        void makeUsed() { m_isUsed = true; }
         void makeStatic();
 
     private:
         bool m_isInitialized;
-        bool m_isUsed;
 };

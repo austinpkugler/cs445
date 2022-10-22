@@ -627,7 +627,7 @@ mutable                 : ID
                         | ID LBRACK exp RBRACK
                         {
                             $$ = new Binary($1->lineNum, Binary::Type::Index);
-                            Id *node = new Id($1->lineNum, $1->tokenContent, true);
+                            Id *node = new Id($1->lineNum, $1->tokenContent);
                             $$->addChild(node);
                             $$->addChild($3);
                         }

@@ -10,13 +10,4 @@ class Parm : public Decl
         // Overridden
         Node::Kind getNodeKind() const override { return Node::Kind::Parm; }
         std::string stringify() const override;
-
-        // Getters
-        bool getIsUsed() const { return m_isUsed; }
-
-        // Setters
-        void makeUsed() { m_isUsed = true; }
-
-    private:
-        bool m_isUsed;
 };
