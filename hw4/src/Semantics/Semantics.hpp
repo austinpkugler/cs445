@@ -33,6 +33,7 @@ class Semantics
         void analyzeUnary(const Unary *unary) const;
         void analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const;
         void analyzeStmt(const Stmt *stmt) const;
+        void analyzeBreak(const Break *breakN) const;
         void analyzeCompound(const Compound *compound) const;
         void analyzeFor() const;
         void analyzeIf(const If *ifN) const;

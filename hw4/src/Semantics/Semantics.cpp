@@ -470,7 +470,7 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
     switch (stmt->getStmtKind())
     {
         case Stmt::Kind::Break:
-            // Not analyzed
+            analyzeBreak((Break *)stmt);
             break;
         case Stmt::Kind::Compound:
             analyzeCompound((Compound *)stmt);
@@ -494,6 +494,26 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             throw std::runtime_error("Semantics::analyzeStmt() - Unknown kind");
             break;
     }
+}
+
+void Semantics::analyzeBreak(const Break *breakN) const
+{
+    // bool inFor = false;
+    // Node *parentNode = breakN->getParent();
+    // while (parentNode != nullptr)
+    // {
+    //     if (isFor(parentNode))
+    //     {
+    //         inFor = true;
+    //         break;
+    //     }
+    //     parentNode = parentNode->getParent();
+    // }
+
+    // if (!inFor)
+    // {
+    //     Emit::Error::generic(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
+    // }
 }
 
 void Semantics::analyzeCompound(const Compound *compound) const
