@@ -340,7 +340,7 @@ void Semantics::analyzeCall(const Call *call) const
             Data *funcParmData = funcParm->getData();
             Data::Type callParmType = callParmData->getType();
             Data::Type funcParmType = funcParmData->getType();
-            if (callParmType != funcParmType)
+            if (callParmType != Data::Type::Undefined && funcParmType != Data::Type::Undefined && callParmType != funcParmType)
             {
                 std::stringstream msg;
                 msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << parmCount << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
