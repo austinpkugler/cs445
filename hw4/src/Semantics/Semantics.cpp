@@ -248,7 +248,7 @@ void Semantics::analyzeBinary(const Binary *binary) const
             break;
         case Binary::Type::And:
         case Binary::Type::Or:
-            checkOperandsOfType((Exp *)binary, Data::Type::Bool);
+            checkOperandsOfType((Exp *)binary, Data::Type::Bool, false);
             break;
         case Binary::Type::LT:
         case Binary::Type::LEQ:
@@ -703,7 +703,7 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     }
 }
 
-void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
+void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type, const bool isMath) const
 {
     if (!isExp(exp))
     {
@@ -719,18 +719,13 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
     Exp *lhs = (Exp *)(exp->getChild());
     Exp *rhs = (Exp *)(exp->getChild(1));
 
-    // Ignore cases where the LHS or RHS has no type
-    if (lhs->getData()->getType() == Data::Type::Undefined || rhs->getData()->getType() == Data::Type::Undefined)
-    {
-        return;
-    }
-
-    if (lhs->getData()->getType() != type)
+    // Ignore cases where the LHS is undefined
+    if (lhs->getData()->getType() != type && lhs->getData()->getType() != Data::Type::Undefined)
     {
         Emit::error(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but lhs is of type " + lhs->getData()->stringify() + ".");
     }
-
-    if (rhs->getData()->getType() != type)
+    // Ignore cases where the RHS is undefined
+    if (rhs->getData()->getType() != type && rhs->getData()->getType() != Data::Type::Undefined)
     {
         Emit::error(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but rhs is of type " + rhs->getData()->stringify() + ".");
     }
@@ -919,7 +914,7 @@ Data * Semantics::symTableSetType(Node *node)
             {
                 exp->setData(symTableSetType(asgn->getChild())->getNextData());
             }
-            else if (symTableSetType(asgn->getChild())->getType() == Data::Type::Undefined || symTableSetType(asgn->getChild(1))->getType() == Data::Type::Undefined)
+            else if (symTableSetType(asgn->getChild())->getType() == Data::Type::Undefined && symTableSetType(asgn->getChild(1))->getType() == Data::Type::Undefined)
             {
                 exp->setData(new Data(Data::Type::Undefined, false, false));
             }
@@ -931,7 +926,7 @@ Data * Semantics::symTableSetType(Node *node)
             {
                 exp->setData(symTableSetType(binary->getChild())->getNextData());
             }
-            else if (symTableSetType(binary->getChild())->getType() == Data::Type::Undefined || symTableSetType(binary->getChild(1))->getType() == Data::Type::Undefined)
+            else if (symTableSetType(binary->getChild())->getType() == Data::Type::Undefined && symTableSetType(binary->getChild(1))->getType() == Data::Type::Undefined)
             {
                 exp->setData(new Data(Data::Type::Undefined, false, false));
             }

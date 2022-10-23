@@ -36,7 +36,7 @@ class Semantics
 
         // Checks
         void checkOperandsOfSameType(Exp *exp) const;
-        void checkOperandsOfType(Exp *exp, const Data::Type type) const;
+        void checkOperandsOfType(Exp *exp, const Data::Type type, const bool isMath=true) const;
         void checkIndex(const Binary *binary) const;
         void checkUnusedWarns() const;
 
