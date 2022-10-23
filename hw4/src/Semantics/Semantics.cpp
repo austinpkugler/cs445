@@ -773,7 +773,7 @@ void Semantics::checkIndex(const Binary *binary) const
         Emit::error(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
     }
 
-    if (indexExp->getData()->getType() != Data::Type::Int)
+    if (indexExp->getData()->getType() != Data::Type::Undefined && indexExp->getData()->getType() != Data::Type::Int)
     {
         Emit::error(binary->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexExp->getData()->stringify() + ".");
     }
