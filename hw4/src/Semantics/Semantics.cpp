@@ -308,14 +308,33 @@ void Semantics::analyzeCall(const Call *call) const
         unsigned parmCount = 1;
         while (callParm != nullptr && funcParm != nullptr)
         {
-            Data::Type callParmType = callParm->getData()->getType();
-            Data::Type funcParmType = funcParm->getData()->getType();
+            Data *callParmData = callParm->getData();
+            Data *funcParmData = funcParm->getData();
+            Data::Type callParmType = callParmData->getType();
+            Data::Type funcParmType = funcParmData->getType();
             if (callParmType != funcParmType)
             {
                 std::stringstream msg;
                 msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << parmCount << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
                 Emit::error(call->getLineNum(), msg.str());
             }
+
+            if (callParmData->getIsArray() != funcParmData->getIsArray())
+            {
+                if (callParmData->getIsArray())
+                {
+                    std::stringstream ss;
+                    ss << "Not expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
+                    Emit::error(call->getLineNum(), ss.str());
+                }
+                else if (funcParmData->getIsArray())
+                {
+                    std::stringstream ss;
+                    ss << "Expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
+                    Emit::error(call->getLineNum(), ss.str());
+                }
+            }
+
             parmCount++;
             callParm = (Exp *)(callParm->getSibling());
             funcParm = (Var *)(funcParm->getSibling());
