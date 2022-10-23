@@ -74,7 +74,7 @@ void Semantics::analyzeTree(Node *node)
             analyzeReturn((Return *)node);
             break;
         case Node::Kind::While:
-            // Not analyzed
+            analyzeWhile((While *)node);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeTree() - Invalid Node");
@@ -132,10 +132,35 @@ void Semantics::analyzeVar(Var *var)
     }
 
     // Check for initializer errors if there is a child
-    // if (isExp(var->getChild()))
-    // {
-    //     Exp *exp = (Exp *)(var->getChild());
-    // }
+    if (var->getChildCount() != 0 && isExp(var->getChild()))
+    {
+        Exp *exp = (Exp *)(var->getChild());
+        analyzeTree(exp);
+
+        Data *expData = exp->getData();
+        Data *varData = var->getData();
+        Data::Type expType = expData->getType();
+        Data::Type varType = varData->getType();
+        if (varType != Data::Type::Undefined && expType != Data::Type::Undefined)
+        {
+            if (varType != expType)
+            {
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' " + Data::typeToString(varType) + " is " + Data::typeToString(expType));
+            }
+        }
+
+        if (varData->getIsArray() != expData->getIsArray())
+        {
+            if (varData->getIsArray())
+            {
+                Emit::error(var->getLineNum(), "Initialize for variable '" + var->getName() + "' requires both operands be arrays or not but variable is an array and rhs is not an array.");
+            }
+            else if (expData->getIsArray())
+            {
+                Emit::error(var->getLineNum(), "Initialize for variable '" + var->getName() + "' requires both operands be arrays or not but variable is not an array and rhs is an array.");
+            }
+        }
+    }
 
     symTableInsert(var);
 }
@@ -323,15 +348,15 @@ void Semantics::analyzeCall(const Call *call) const
             {
                 if (callParmData->getIsArray())
                 {
-                    std::stringstream ss;
-                    ss << "Not expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
-                    Emit::error(call->getLineNum(), ss.str());
+                    std::stringstream msg;
+                    msg << "Not expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
+                    Emit::error(call->getLineNum(), msg.str());
                 }
                 else if (funcParmData->getIsArray())
                 {
-                    std::stringstream ss;
-                    ss << "Expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
-                    Emit::error(call->getLineNum(), ss.str());
+                    std::stringstream msg;
+                    msg << "Expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
+                    Emit::error(call->getLineNum(), msg.str());
                 }
             }
 
@@ -529,6 +554,14 @@ void Semantics::analyzeRange(const Range *range) const
             msg << "Cannot use array in position " << i + 1 << " in range of for statement.";
             Emit::error(children[i]->getLineNum(), msg.str());
         }
+
+        Exp *exp = (Exp *)(children[i]);
+        if (isExp(exp) && exp->getData()->getType() != Data::Type::Undefined && exp->getData()->getType() != Data::Type::Int)
+        {
+            std::stringstream msg;
+            msg << "Expecting type int in position " << i + 1 << " in range of for statement but got type " << exp->getData()->stringify() << ".";
+            Emit::error(range->getLineNum(), msg.str());
+        }
     }
 }
 
@@ -579,6 +612,29 @@ void Semantics::analyzeReturn(const Return *returnN) const
             break;
         }
         currParent = currParent->getParent();
+    }
+}
+
+void Semantics::analyzeWhile(const While *whileN) const
+{
+    if (!isWhile(whileN))
+    {
+        throw std::runtime_error("Semantics::analyzeWhile() - Invalid While");
+    }
+
+    Exp *testExp = (Exp *)(whileN->getChild());
+    Data *testData = testExp->getData();
+    if (testData->getType() != Data::Type::Undefined)
+    {
+        if (testData->getType() != Data::Type::Bool)
+        {
+            Emit::error(whileN->getLineNum(), "Expecting Boolean test condition in while statement but got " + testExp->stringify() + ".");
+        }
+
+        if (testData->getIsArray())
+        {
+            Emit::error(whileN->getLineNum(), "Cannot use array as test condition in while statement.");
+        }
     }
 }
 

@@ -32,6 +32,7 @@ class Semantics
         void analyzeIf(const If *ifN) const;
         void analyzeRange(const Range *range) const;
         void analyzeReturn(const Return *returnN) const;
+        void analyzeWhile(const While *whileN) const;
 
         // Checks
         void checkOperandsOfSameType(Exp *exp) const;
