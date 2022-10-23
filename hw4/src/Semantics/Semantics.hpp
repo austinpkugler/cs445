@@ -5,6 +5,7 @@
 #include "../Emit/Emit.hpp"
 #include "../Tree/Tree.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 

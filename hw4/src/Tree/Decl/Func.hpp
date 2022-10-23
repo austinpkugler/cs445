@@ -13,4 +13,5 @@ class Func : public Decl
 
         // Getters
         unsigned getParmCount() const;
+        std::vector<Node *> getParms() const;
 };

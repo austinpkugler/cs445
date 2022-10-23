@@ -254,20 +254,71 @@ void Semantics::analyzeCall(const Call *call) const
     }
     else
     {
-        Func *funcDecl = (Func *)decl;
-        unsigned funcParmCount = funcDecl->getParmCount();
+        Func *func = (Func *)decl;
+        unsigned funcParmCount = func->getParmCount();
         unsigned callParmCount = call->getParmCount();
         if (callParmCount < funcParmCount)
         {
             std::stringstream msg;
-            msg << "Too few parameters passed for function '" << funcDecl->getName() << "' declared on line " << funcDecl->getLineNum() << ".";
+            msg << "Too few parameters passed for function '" << func->getName() << "' declared on line " << func->getLineNum() << ".";
             Emit::error(call->getLineNum(), msg.str());
         }
         else if (callParmCount > funcParmCount)
         {
             std::stringstream msg;
-            msg << "Too many parameters passed for function '" << funcDecl->getName() << "' declared on line " << funcDecl->getLineNum() << ".";
+            msg << "Too many parameters passed for function '" << func->getName() << "' declared on line " << func->getLineNum() << ".";
             Emit::error(call->getLineNum(), msg.str());
+        }
+
+        // Somehow some of the parms don't have values?
+        // std::vector<Node *> callParms = call->getParms();
+        // std::vector<Node *> funcParms = func->getParms();
+
+        // std::cout << call->getLineNum() << " Expecting: ";
+        // for (int i = 0; i < funcParms.size(); i++)
+        // {
+        //     std::cout << "_" << funcParms[i]->stringifyWithType() << " ";
+        // }
+        // std::cout << " but got: ";
+        // for (int i = 0; i < callParms.size(); i++)
+        // {
+        //     std::cout << "_" << callParms[i]->stringifyWithType() << " ";
+        // }
+        // std::cout << "\n";
+
+        // std::vector<Node *> callParms = call->getParms();
+        // std::vector<Node *> funcParms = func->getParms();
+        // unsigned minSize = std::min(callParms.size(), funcParms.size());
+        // for (int i = 0; i < minSize; i++)
+        // {
+            // if (isExp(callParms[i]) && isExp(funcParms[i]))
+            // {
+                // Data::Type callParmType = ((Exp *)callParms[i])->getData()->getType();
+                // Data::Type funcParmType = ((Exp *)funcParms[i])->getData()->getType();
+                // if (callParmType != funcParmType)
+                // {
+                //     std::stringstream msg;
+                //     msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << i + 1 << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
+                //     Emit::error(call->getLineNum(), msg.str());
+                // }
+            // }
+        // }
+        Exp *callParm = (Exp *)(call->getChild());
+        Var *funcParm = (Var *)(func->getChild());
+        unsigned parmCount = 1;
+        while (callParm != nullptr && funcParm != nullptr)
+        {
+            Data::Type callParmType = callParm->getData()->getType();
+            Data::Type funcParmType = funcParm->getData()->getType();
+            if (callParmType != funcParmType)
+            {
+                std::stringstream msg;
+                msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << parmCount << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
+                Emit::error(call->getLineNum(), msg.str());
+            }
+            parmCount++;
+            callParm = (Exp *)(callParm->getSibling());
+            funcParm = (Var *)(funcParm->getSibling());
         }
     }
 
