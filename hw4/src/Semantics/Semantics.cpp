@@ -595,6 +595,14 @@ void Semantics::analyzeReturn(const Return *returnN) const
             Emit::error(returnN->getLineNum(), "Cannot return an array.");
         }
     }
+    else if (isConst(returnExp))
+    {
+        Const *returnConst = (Const *)returnExp;
+        if (returnConst->getType() == Const::Type::String)
+        {
+            Emit::error(returnN->getLineNum(), "Cannot return an array.");
+        }
+    }
 
     Node *currParent = returnN->getParent();
     while (currParent != nullptr)
@@ -821,7 +829,7 @@ void Semantics::checkUnusedWarns() const
         if (isFunc(decl))
         {
             Func *func = (Func *)decl;
-            if (func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void &&!func->getHasReturn())
+            if (func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void && !func->getHasReturn())
             {
                 Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
             }
