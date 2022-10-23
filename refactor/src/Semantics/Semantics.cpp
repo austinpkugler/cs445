@@ -121,7 +121,12 @@ void Semantics::analyzeVar(Var *var)
     }
 
     // Global vars are always initialized
-    if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
+    if (m_symTable->depth() == 1)
+    {
+        var->makeInitialized();
+        var->makeUsed();
+    }
+    if (var->getData()->getIsStatic())
     {
         var->makeInitialized();
     }
