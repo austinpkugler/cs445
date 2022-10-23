@@ -62,10 +62,6 @@ void Semantics::analyzeTree(Node *node)
         case Node::Kind::Stmt:
         {
             Stmt *stmt = (Stmt *)node;
-            if (stmt->getStmtKind() == Stmt::Kind::Range)
-            {
-                return;
-            }
             analyzeStmt(stmt);
             break;
         }
@@ -487,8 +483,7 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
         case Stmt::Kind::While:
             break;
         case Stmt::Kind::Range:
-            // Not analyzed
-            throw std::runtime_error("Semantics::analyzeStmt() - Range kind");
+            analyzeRange((Range *)stmt);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeStmt() - Unknown kind");
@@ -548,6 +543,40 @@ void Semantics::analyzeIf(const If *ifN) const
     if (lhsData->getType() != Data::Type::Bool)
     {
         Emit::Error::generic(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhsData->stringify() + ".");
+    }
+}
+
+void Semantics::analyzeRange(const Range *range) const
+{
+    if (!isRange(range))
+    {
+        throw std::runtime_error("Semantics::analyzeRange() - Invalid Range");
+    }
+
+    std::vector<Node *> children = range->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        if (children[i] == nullptr)
+        {
+            continue;
+        }
+
+        bool isArray = false;
+        if (isId(children[i]))
+        {
+            Id *id = (Id *)(children[i]);
+            if (id->getData()->getIsArray())
+            {
+                isArray = true;
+            }
+        }
+        if (isArray)
+        {
+            std::stringstream ss;
+            ss << "Cannot use array in position " << i+1
+               << " in range of for statement.";
+            Emit::Error::generic(children[i]->getLineNum(), ss.str());
+        }
     }
 }
 

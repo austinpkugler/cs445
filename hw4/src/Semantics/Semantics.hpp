@@ -37,6 +37,7 @@ class Semantics
         void analyzeCompound(const Compound *compound) const;
         void analyzeFor() const;
         void analyzeIf(const If *ifN) const;
+        void analyzeRange(const Range *range) const;
         void analyzeReturn(const Return *returnN) const;
 
         // Check
