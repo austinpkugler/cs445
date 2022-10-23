@@ -30,11 +30,7 @@ unsigned Node::getChildCount() const
 
 Node * Node::getRelative(const Node::Kind nodeKind) const
 {
-    if (m_parent == nullptr)
-    {
-        return nullptr;
-    }
-    if (m_parent->getNodeKind() == nodeKind)
+    if (m_parent->getNodeKind() == nodeKind || m_parent == nullptr)
     {
         return m_parent;
     }
@@ -136,7 +132,6 @@ bool Node::hasRelative(const Node::Kind nodeKind) const
 {
     return (getRelative(nodeKind) != nullptr);
 }
-
 
 std::string Node::stringify() const
 {

@@ -6,3 +6,15 @@ std::string Call::stringify() const
 {
     return "Call: " + m_name;
 }
+
+unsigned Call::getParmCount() const
+{
+    int parmCount = 0;
+    Node *currParm = getChild();
+    while (currParm != nullptr)
+    {
+        parmCount += 1;
+        currParm = currParm->getSibling();
+    }
+    return parmCount;
+}

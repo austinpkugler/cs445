@@ -27,6 +27,9 @@ class Semantics
         void analyzeId(const Id *id) const;
         void analyzeUnary(const Unary *unary) const;
         void analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const;
+        void analyzeBreak(const Break *breakN) const;
+        void analyzeIf(const If *ifN) const;
+        void analyzeRange(const Range *range) const;
         void analyzeReturn(const Return *returnN) const;
 
         // Checks

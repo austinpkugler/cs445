@@ -14,7 +14,7 @@ void Semantics::analyze(Node *node)
 
     if (!m_mainExists)
     {
-        Emit::error("LINKER", "A function named 'main()' must be defined.");
+        Emit::error("LINKER", "A function named 'main' with no parameters must be defined.");
     }
 }
 
@@ -59,13 +59,17 @@ void Semantics::analyzeTree(Node *node)
             analyzeUnaryAsgn((UnaryAsgn *)node);
             break;
         case Node::Kind::Break:
+            analyzeBreak((Break *)node);
+            break;
         case Node::Kind::Compound:
         case Node::Kind::For:
+            break;
         case Node::Kind::If:
+            analyzeIf((If *)node);
             break;
         case Node::Kind::Range:
-            // Not analyzed
-            return;
+            analyzeRange((Range *)node);
+            break;
         case Node::Kind::Return:
             analyzeReturn((Return *)node);
             break;
@@ -243,21 +247,40 @@ void Semantics::analyzeCall(const Call *call) const
         throw std::runtime_error("Semantics::analyzeCall() - Invalid Call");
     }
 
-    Decl *callDecl = (Decl *)(symTableGet(call->getName()));
+    Decl *decl = (Decl *)(symTableGet(call->getName()));
 
     // If the function name is not in the symbol table
-    if (callDecl == nullptr)
+    if (decl == nullptr)
     {
         Emit::error(call->getLineNum(), "Symbol '" + call->getName() + "' is not declared.");
         return;
     }
 
     // If the function name is not associated with a function
-    if (!isFunc(callDecl))
+    if (!isFunc(decl))
     {
         Emit::error(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
     }
-    callDecl->makeUsed();
+    else
+    {
+        Func *funcDecl = (Func *)decl;
+        unsigned funcParmCount = funcDecl->getParmCount();
+        unsigned callParmCount = call->getParmCount();
+        if (callParmCount < funcParmCount)
+        {
+            std::stringstream msg;
+            msg << "Too few parameters passed for function '" << funcDecl->getName() << "' declared on line " << funcDecl->getLineNum() << ".";
+            Emit::error(call->getLineNum(), msg.str());
+        }
+        else if (callParmCount > funcParmCount)
+        {
+            std::stringstream msg;
+            msg << "Too many parameters passed for function '" << funcDecl->getName() << "' declared on line " << funcDecl->getLineNum() << ".";
+            Emit::error(call->getLineNum(), msg.str());
+        }
+    }
+
+    decl->makeUsed();
 }
 
 void Semantics::analyzeId(const Id *id) const
@@ -386,6 +409,67 @@ void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
     }
 }
 
+void Semantics::analyzeBreak(const Break *breakN) const
+{
+    if (!isBreak(breakN))
+    {
+        throw std::runtime_error("Semantics::analyzeBreak() - Invalid Break");
+    }
+    // bool inForLoop = breakN->hasRelative(Node::Kind::For);
+    // bool inWhileLoop = breakN->hasRelative(Node::Kind::While);
+    // if (!inForLoop && !inWhileLoop)
+    // {
+    //     Emit::error(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
+    // }
+}
+
+void Semantics::analyzeIf(const If *ifN) const
+{
+    if (!isIf(ifN))
+    {
+        throw std::runtime_error("Semantics::analyzeIf() - Invalid If");
+    }
+
+    Exp *lhs = (Exp *)(ifN->getChild());
+    if (lhs->getData()->getType() != Data::Type::Bool)
+    {
+        Emit::error(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhs->getData()->stringify() + ".");
+    }
+}
+
+void Semantics::analyzeRange(const Range *range) const
+{
+    if (!isRange(range))
+    {
+        throw std::runtime_error("Semantics::analyzeRange() - Invalid Range");
+    }
+
+    std::vector<Node *> children = range->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        if (children[i] == nullptr)
+        {
+            continue;
+        }
+
+        bool isArray = false;
+        if (isId(children[i]))
+        {
+            Id *id = (Id *)(children[i]);
+            if (id->getData()->getIsArray())
+            {
+                isArray = true;
+            }
+        }
+        if (isArray)
+        {
+            std::stringstream msg;
+            msg << "Cannot use array in position " << i + 1 << " in range of for statement.";
+            Emit::error(children[i]->getLineNum(), msg.str());
+        }
+    }
+}
+
 void Semantics::analyzeReturn(const Return *returnN) const
 {
     if (!isReturn(returnN))
@@ -393,18 +477,46 @@ void Semantics::analyzeReturn(const Return *returnN) const
         throw std::runtime_error("Semantics::analyzeReturn() - Invalid Return");
     }
 
-    if (returnN->getChildCount() > 0)
+    if (returnN->getChildCount() == 0)
     {
-        Exp *lhs = (Exp *)(returnN->getChild());
-        if (isId(lhs))
+        return;
+    }
+
+    Exp *returnExp = (Exp *)(returnN->getChild());
+    if (isId(returnExp))
+    {
+        Id *returnId = (Id *)returnExp;
+        Decl *returnIdDecl = (Decl *)(symTableGet(returnId->getName()));
+        if ((returnIdDecl != nullptr && returnIdDecl->getData()->getIsArray()))
         {
-            Id *lhsId = (Id *)lhs;
-            Decl *idDecl = (Decl *)(symTableGet(lhsId->getName()));
-            if ((idDecl != nullptr && idDecl->getData()->getIsArray()))
-            {
-                Emit::error(returnN->getLineNum(), "Cannot return an array.");
-            }
+            Emit::error(returnN->getLineNum(), "Cannot return an array.");
         }
+    }
+
+    Node *currParent = returnN->getParent();
+    while (currParent != nullptr)
+    {
+        if (isFunc(currParent))
+        {
+            Func *parentFunc = (Func *)currParent;
+            if (parentFunc->getData()->getType() != returnExp->getData()->getType())
+            {
+                if (parentFunc->getData()->getType() == Data::Type::Void)
+                {
+                    std::stringstream msg;
+                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting no return value, but return has a value.";
+                    Emit::error(returnN->getLineNum(), msg.str());
+                }
+                else
+                {
+                    std::stringstream msg;
+                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting to return type " << parentFunc->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
+                    Emit::error(returnN->getLineNum(), msg.str());
+                }
+            }
+            break;
+        }
+        currParent = currParent->getParent();
     }
 }
 
@@ -571,12 +683,17 @@ void Semantics::checkUnusedWarns() const
     for (auto const& [name, currNode] : syms)
     {
         Decl *decl = (Decl *)currNode;
-        if (isVar(decl) || isParm(decl))
+        if (isVar(decl) && !decl->getIsUsed())
         {
-            if (!decl->getIsUsed())
-            {
-                Emit::warn(decl->getLineNum(), "The variable '" + decl->getName() + "' seems not to be used.");
-            }
+            Emit::warn(decl->getLineNum(), "The variable '" + decl->getName() + "' seems not to be used.");
+        }
+        else if (isParm(decl) && !decl->getIsUsed())
+        {
+            Emit::warn(decl->getLineNum(), "The parameter '" + decl->getName() + "' seems not to be used.");
+        }
+        else if (isFunc(decl) && !decl->getIsUsed() && decl->getName() != "main")
+        {
+            Emit::warn(decl->getLineNum(), "The function '" + decl->getName() + "' seems not to be used.");
         }
     }
 }

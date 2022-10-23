@@ -725,7 +725,7 @@ int main(int argc, char *argv[])
     Semantics analyzer = Semantics(&symTable);
     analyzer.analyze(root);
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag())
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && !Emit::getErrorCount())
     {
         if (root == nullptr)
         {

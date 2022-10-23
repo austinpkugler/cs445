@@ -10,4 +10,7 @@ class Func : public Decl
         // Overridden
         Node::Kind getNodeKind() const override { return Node::Kind::Func; }
         std::string stringify() const override;
+
+        // Getters
+        unsigned getParmCount() const;
 };
