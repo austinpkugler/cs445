@@ -156,11 +156,11 @@ void Semantics::analyzeVar(Var *var)
         {
             if (varData->getIsArray())
             {
-                Emit::error(var->getLineNum(), "Initialize for variable '" + var->getName() + "' requires both operands be arrays or not but variable is an array and rhs is not an array.");
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is an array and rhs is not an array.");
             }
             else if (expData->getIsArray())
             {
-                Emit::error(var->getLineNum(), "Initialize for variable '" + var->getName() + "' requires both operands be arrays or not but variable is not an array and rhs is an array.");
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is not an array and rhs is an array.");
             }
         }
     }
