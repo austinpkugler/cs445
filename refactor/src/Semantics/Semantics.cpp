@@ -62,9 +62,10 @@ void Semantics::analyzeTree(Node *node)
         case Node::Kind::Compound:
         case Node::Kind::For:
         case Node::Kind::If:
+            break;
         case Node::Kind::Range:
             // Not analyzed
-            break;
+            return;
         case Node::Kind::Return:
             analyzeReturn((Return *)node);
             break;
