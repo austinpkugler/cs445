@@ -1,6 +1,6 @@
 #include "Func.hpp"
 
-Func::Func(const int lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, funcName, data) {}
+Func::Func(const int lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, funcName, data), m_hasReturn(false) {}
 
 std::string Func::stringify() const
 {

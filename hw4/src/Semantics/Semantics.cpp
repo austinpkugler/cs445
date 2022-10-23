@@ -582,7 +582,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
     {
         Id *returnId = (Id *)returnExp;
         Decl *returnIdDecl = (Decl *)(symTableGet(returnId->getName()));
-        if ((returnIdDecl != nullptr && returnIdDecl->getData()->getIsArray()))
+        if (isDecl(returnIdDecl) && returnIdDecl->getData()->getIsArray())
         {
             Emit::error(returnN->getLineNum(), "Cannot return an array.");
         }
@@ -609,6 +609,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
                     Emit::error(returnN->getLineNum(), msg.str());
                 }
             }
+            parentFunc->makeHasReturn();
             break;
         }
         currParent = currParent->getParent();
@@ -1010,6 +1011,11 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
         Node::Kind parentKind = node->getParent()->getNodeKind();
         if (nodeKind == Node::Kind::Compound && (parentKind != Node::Kind::For && parentKind != Node::Kind::Func))
         {
+            Func *func = (Func *)node;
+            if (showWarns && isFunc(func) && !func->getHasReturn())
+            {
+                Emit::error(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
+            }
             symTableSimpleLeaveScope(showWarns);
         }
     }
