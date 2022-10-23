@@ -590,6 +590,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but return has no value.";
             Emit::error(returnN->getLineNum(), msg.str());
         }
+        func->makeHasReturn();
         return;
     }
 
