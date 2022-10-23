@@ -526,6 +526,11 @@ void Semantics::analyzeIf(const If *ifN) const
     }
 
     Exp *lhs = (Exp *)(ifN->getChild());
+    if (lhs->getData()->getIsArray())
+    {
+        Emit::error(ifN->getLineNum(), "Cannot use array as test condition in if statement.");
+    }
+
     if (lhs->getData()->getType() != Data::Type::Bool)
     {
         Emit::error(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhs->getData()->stringify() + ".");
@@ -580,64 +585,39 @@ void Semantics::analyzeReturn(const Return *returnN) const
         throw std::runtime_error("Semantics::analyzeReturn() - Invalid Return");
     }
 
+    Func *func = (Func *)(returnN->getRelative(Node::Kind::Func));
+    func->makeHasReturn();
     if (returnN->getChildCount() == 0)
     {
-        // ERROR(28): Function 'max' at line 7 is expecting to return type int but return has no value.
-        Func *func = (Func *)(returnN->getRelative(Node::Kind::Func));
         if (func->getData()->getType() != Data::Type::Void)
         {
             std::stringstream msg;
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but return has no value.";
             Emit::error(returnN->getLineNum(), msg.str());
         }
-        func->makeHasReturn();
         return;
     }
 
     Exp *returnExp = (Exp *)(returnN->getChild());
-    if (isId(returnExp))
+    if (returnExp->getData()->getIsArray())
     {
-        Id *returnId = (Id *)returnExp;
-        Decl *returnIdDecl = (Decl *)(symTableGet(returnId->getName()));
-        if (isDecl(returnIdDecl) && returnIdDecl->getData()->getIsArray())
-        {
-            Emit::error(returnN->getLineNum(), "Cannot return an array.");
-        }
-    }
-    else if (isConst(returnExp))
-    {
-        Const *returnConst = (Const *)returnExp;
-        if (returnConst->getType() == Const::Type::String)
-        {
-            Emit::error(returnN->getLineNum(), "Cannot return an array.");
-        }
+        Emit::error(returnN->getLineNum(), "Cannot return an array.");
     }
 
-    Node *currParent = returnN->getParent();
-    while (currParent != nullptr)
+    if (func->getData()->getType() != returnExp->getData()->getType())
     {
-        if (isFunc(currParent))
+        if (func->getData()->getType() == Data::Type::Void)
         {
-            Func *parentFunc = (Func *)currParent;
-            if (parentFunc->getData()->getType() != returnExp->getData()->getType())
-            {
-                if (parentFunc->getData()->getType() == Data::Type::Void)
-                {
-                    std::stringstream msg;
-                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting no return value, but return has a value.";
-                    Emit::error(returnN->getLineNum(), msg.str());
-                }
-                else
-                {
-                    std::stringstream msg;
-                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting to return type " << parentFunc->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
-                    Emit::error(returnN->getLineNum(), msg.str());
-                }
-            }
-            parentFunc->makeHasReturn();
-            break;
+            std::stringstream msg;
+            msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting no return value, but return has a value.";
+            Emit::error(returnN->getLineNum(), msg.str());
         }
-        currParent = currParent->getParent();
+        else
+        {
+            std::stringstream msg;
+            msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
+            Emit::error(returnN->getLineNum(), msg.str());
+        }
     }
 }
 
@@ -835,14 +815,16 @@ void Semantics::checkUnusedWarns() const
             Emit::warn(decl->getLineNum(), "The function '" + decl->getName() + "' seems not to be used.");
         }
 
-        if (isFunc(decl))
-        {
-            Func *func = (Func *)decl;
-            if (func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void && !func->getHasReturn())
-            {
-                Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
-            }
-        }
+        // if (isFunc(decl))
+        // {
+        //     Func *func = (Func *)decl;
+        //     // Emit::warn(func->getLineNum(), "Checking func: " + func->getName());
+        //     // Emit::warn(func->getLineNum(), "Has return: " + func->getHasReturn());
+        //     if (func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void && !func->getHasReturn())
+        //     {
+        //         Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
+        //     }
+        // }
     }
 }
 
@@ -929,7 +911,7 @@ Data * Semantics::symTableSetType(Node *node)
             Asgn *asgn = (Asgn *)exp;
             if (asgn->getType() == Asgn::Type::Asgn)
             {
-                exp->setData(symTableSetType(asgn->getChild())->getNextData());
+                exp->setData(symTableSetType(asgn->getChild()));
             }
             else if (symTableSetType(asgn->getChild())->getType() == Data::Type::Undefined && symTableSetType(asgn->getChild(1))->getType() == Data::Type::Undefined)
             {
@@ -1029,8 +1011,18 @@ void Semantics::symTableEnterScope(const Node *node)
 void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
 {
     Node::Kind nodeKind = node->getNodeKind();
-    if (nodeKind == Node::Kind::For || nodeKind == Node::Kind::Func)
+    if (nodeKind == Node::Kind::For)
     {
+        symTableSimpleLeaveScope(showWarns);
+        return;
+    }
+    else if (nodeKind == Node::Kind::Func)
+    {
+        Func *func = (Func *)node;
+        if (showWarns && func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void && !func->getHasReturn())
+        {
+            Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
+        }
         symTableSimpleLeaveScope(showWarns);
         return;
     }
@@ -1273,7 +1265,7 @@ bool Semantics::hasNonConstantRelative(const Exp *exp) const
         throw std::runtime_error("Semantics::hasNonConstantRelative() - Invalid Exp");
     }
 
-    Node *child = exp->getChild();
+    Node *child = (Node *)exp;
     while (child != nullptr)
     {
         if (isUnary(child))
@@ -1288,25 +1280,7 @@ bool Semantics::hasNonConstantRelative(const Exp *exp) const
         {
             return true;
         }
-        child = child->getParent();
-    }
-
-    Node *sibling = exp->getSibling();
-    while (sibling != nullptr)
-    {
-        if (isUnary(sibling))
-        {
-            Unary *unary = (Unary *)sibling;
-            if (unary->getType() == Unary::Type::Question)
-            {
-                return true;
-            }
-        }
-        else if (isCall(sibling) || isId(sibling))
-        {
-            return true;
-        }
-        sibling = sibling->getSibling();
+        child = child->getChild();
     }
 
     return false;
