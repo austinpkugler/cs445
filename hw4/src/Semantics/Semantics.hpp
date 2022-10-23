@@ -49,8 +49,8 @@ class Semantics
         void symTableSimpleLeaveScope(const bool showWarns=false);
         void symTableEnterScope(const Node *node);
         void symTableLeaveScope(const Node *node, const bool showWarns=true);
-        void symTableInjectIO();
-        void symTableAddTree(Node *node);
+        void symTableInitializeIOTree();
+        void symTableInjectIOTree(Node *node);
 
         // Helpers
         bool isMainFunc(const Func *func) const;

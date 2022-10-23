@@ -16,7 +16,7 @@ Node::~Node()
 
 Node * Node::getChild(const unsigned index) const
 {
-    if (index > m_children.size() - 1)
+    if (index > m_children.size() - 1 || m_children.size() == 0)
     {
         return nullptr;
     }

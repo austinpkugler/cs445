@@ -4,8 +4,8 @@ Semantics::Semantics(SymTable *symTable) : m_symTable(symTable), m_mainExists(fa
 
 void Semantics::analyze(Node *node)
 {
-    // symTableInjectIO();
-    // symTableAddTree(m_ioRoot);
+    symTableInitializeIOTree();
+    symTableInjectIOTree(m_ioRoot);
 
     // Initialize the symbol table
     symTableSimpleEnterScope("Symbol table initialization");
@@ -1040,34 +1040,37 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
     }
 }
 
-void Semantics::symTableInjectIO()
+void Semantics::symTableInitializeIOTree()
 {
     Func *outputFunc = new Func(-1, "output", new Data(Data::Type::Void, false, false));
-    Parm *outputParm = new Parm(-1, "*dummy*", new Data(Data::Type::Int, false, false));
+    Parm *outputParm = new Parm(-1, "*dummy1*", new Data(Data::Type::Int, false, false));
     outputFunc->makeUsed();
     outputParm->makeUsed();
     outputFunc->addChild(outputParm);
 
     Func *outputbFunc = new Func(-1, "outputb", new Data(Data::Type::Void, false, false));
-    Parm *outputbParm = new Parm(-1, "*dummy*", new Data(Data::Type::Bool, false, false));
+    Parm *outputbParm = new Parm(-1, "*dummy2*", new Data(Data::Type::Bool, false, false));
     outputbFunc->makeUsed();
     outputbParm->makeUsed();
     outputbFunc->addChild(outputbParm);
 
     Func *outputcFunc = new Func(-1, "outputc", new Data(Data::Type::Void, false, false));
-    Parm *outputcParm = new Parm(-1, "*dummy*", new Data(Data::Type::Char, false, false));
+    Parm *outputcParm = new Parm(-1, "*dummy3*", new Data(Data::Type::Char, false, false));
     outputcFunc->makeUsed();
     outputcParm->makeUsed();
     outputcFunc->addChild(outputcParm);
 
     Func *inputFunc = new Func(-1, "input", new Data(Data::Type::Int, false, false));
     inputFunc->makeUsed();
+    inputFunc->makeHasReturn();
 
     Func *inputbFunc = new Func(-1, "inputb", new Data(Data::Type::Bool, false, false));
     inputbFunc->makeUsed();
+    inputbFunc->makeHasReturn();
 
     Func *inputcFunc = new Func(-1, "inputc", new Data(Data::Type::Char, false, false));
     inputcFunc->makeUsed();
+    inputcFunc->makeHasReturn();
 
     Func *outnlFunc = new Func(-1, "outnl", new Data(Data::Type::Void, false, false));
     outnlFunc->makeUsed();
@@ -1082,7 +1085,7 @@ void Semantics::symTableInjectIO()
     m_ioRoot = outputFunc;
 }
 
-void Semantics::symTableAddTree(Node *node)
+void Semantics::symTableInjectIOTree(Node *node)
 {
     if (node == nullptr)
     {
@@ -1091,15 +1094,15 @@ void Semantics::symTableAddTree(Node *node)
 
     if (isDecl(node))
     {
-        symTableInsert((Decl *)node);
+        symTableInsert((Decl *)node, false);
     }
 
     std::vector<Node *> children = node->getChildren();
     for (int i = 0; i < children.size(); i++)
     {
-        symTableAddTree(children[i]);
+        symTableInjectIOTree(children[i]);
     }
-    symTableAddTree(node->getSibling());
+    symTableInjectIOTree(node->getSibling());
 }
 
 bool Semantics::isMainFunc(const Func *func) const
