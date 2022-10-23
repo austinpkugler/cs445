@@ -416,12 +416,12 @@ void Semantics::analyzeBreak(const Break *breakN) const
         throw std::runtime_error("Semantics::analyzeBreak() - Invalid Break");
     }
 
-    // bool inForLoop = breakN->hasRelative(Node::Kind::For);
-    // bool inWhileLoop = breakN->hasRelative(Node::Kind::While);
-    // if (!inForLoop && !inWhileLoop)
-    // {
-    //     Emit::error(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
-    // }
+    bool inForLoop = breakN->hasRelative(Node::Kind::For);
+    bool inWhileLoop = breakN->hasRelative(Node::Kind::While);
+    if (!inForLoop && !inWhileLoop)
+    {
+        Emit::error(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
+    }
 }
 
 void Semantics::analyzeIf(const If *ifN) const
