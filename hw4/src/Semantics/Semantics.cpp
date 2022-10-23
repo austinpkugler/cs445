@@ -402,14 +402,14 @@ void Semantics::analyzeId(const Id *id) const
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         if (!varDecl->getIsInitialized() && varDecl->getShowErrors())
         {
-            if (!hasIndexRelative((Exp *)id) || idDecl->getData()->getIsArray())
-            {
+            // if (!hasIndexRelative((Exp *)id) || idDecl->getData()->getIsArray())
+            // {
                 if (!hasAsgnRelative((Exp *)id))
                 {
                     Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
                     varDecl->setShowErrors(false);
                 }
-            }
+            // }
         }
     }
     idDecl->makeUsed();
@@ -531,7 +531,7 @@ void Semantics::analyzeIf(const If *ifN) const
         Emit::error(ifN->getLineNum(), "Cannot use array as test condition in if statement.");
     }
 
-    if (lhs->getData()->getType() != Data::Type::Bool)
+    if (lhs->getData()->getType() != Data::Type::Bool && lhs->getData()->getType() != Data::Type::Undefined)
     {
         Emit::error(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhs->getData()->stringify() + ".");
     }
@@ -612,7 +612,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting no return value, but return has a value.";
             Emit::error(returnN->getLineNum(), msg.str());
         }
-        else
+        else if (returnExp->getData()->getType() != Data::Type::Undefined)
         {
             std::stringstream msg;
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
@@ -1265,23 +1265,46 @@ bool Semantics::hasNonConstantRelative(const Exp *exp) const
         throw std::runtime_error("Semantics::hasNonConstantRelative() - Invalid Exp");
     }
 
-    Node *child = (Node *)exp;
-    while (child != nullptr)
+    if (isUnary(exp))
     {
-        if (isUnary(child))
-        {
-            Unary *unary = (Unary *)child;
-            if (unary->getType() == Unary::Type::Question)
-            {
-                return true;
-            }
-        }
-        else if (isCall(child) || isId(child))
+        Unary *unary = (Unary *)(exp);
+        if (unary->getType() == Unary::Type::Question)
         {
             return true;
         }
-        child = child->getChild();
     }
+    else if (isCall(exp) || isId(exp))
+    {
+        return true;
+    }
+
+    std::vector<Node *> children = exp->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        if (hasNonConstantRelative((Exp *)children[i]))
+        {
+            return true;
+        }
+    }
+
+    // Node *child = (Node *)exp;
+    // while (child != nullptr)
+    // {
+    //     Emit::error(child->getLineNum(), child->stringifyWithType());
+    //     if (isUnary(child))
+    //     {
+    //         Unary *unary = (Unary *)child;
+    //         if (unary->getType() == Unary::Type::Question)
+    //         {
+    //             return true;
+    //         }
+    //     }
+    //     else if (isCall(child) || isId(child))
+    //     {
+    //         return true;
+    //     }
+    //     child = child->getChild();
+    // }
 
     return false;
 }
