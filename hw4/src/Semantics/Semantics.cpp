@@ -658,7 +658,7 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     Exp *rhs = (Exp *)(exp->getChild(1));
 
     // Ignore cases where the LHS has no type
-    if (lhs->getData()->getType() == Data::Type::Undefined)
+    if (lhs->getData()->getType() == Data::Type::Undefined || rhs->getData()->getType() == Data::Type::Undefined)
     {
         return;
     }
