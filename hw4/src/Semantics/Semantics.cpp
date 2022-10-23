@@ -582,6 +582,14 @@ void Semantics::analyzeReturn(const Return *returnN) const
 
     if (returnN->getChildCount() == 0)
     {
+        // ERROR(28): Function 'max' at line 7 is expecting to return type int but return has no value.
+        Func *func = (Func *)(returnN->getRelative(Node::Kind::Func));
+        if (func->getData()->getType() != Data::Type::Void)
+        {
+            std::stringstream msg;
+            msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but return has no value.";
+            Emit::error(returnN->getLineNum(), msg.str());
+        }
         return;
     }
 
