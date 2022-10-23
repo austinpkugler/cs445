@@ -45,6 +45,7 @@ class Node
         Node *m_sibling;
 
     private:
+        void setSiblingParents(Node *node);
         void printTabs(const unsigned tabCount) const;
 
         const int m_lineNum;

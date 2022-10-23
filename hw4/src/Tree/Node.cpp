@@ -16,7 +16,7 @@ Node::~Node()
 
 Node * Node::getChild(const unsigned index) const
 {
-    if (index > m_children.size() - 1)
+    if (index > m_children.size() - 1 || m_children.size() == 0)
     {
         return nullptr;
     }
@@ -44,10 +44,12 @@ Node * Node::getRelative(const Node::Kind nodeKind) const
 void Node::addChild(Node *node)
 {
     m_children.push_back(node);
-    if (node != nullptr)
+    if (node == nullptr)
     {
-        node->m_parent = this;
+        return;
     }
+    node->m_parent = this;
+    node->setSiblingParents(this);
 }
 
 void Node::addSibling(Node *node)
@@ -56,7 +58,7 @@ void Node::addSibling(Node *node)
     {
         return;
     }
-
+    node->setSiblingParents(this);
     if (m_sibling == nullptr)
     {
         m_sibling = node;
@@ -147,6 +149,19 @@ void Node::printTabs(const unsigned tabCount) const
     for (int i = 0; i < tabCount; i++)
     {
         std::cout << ".   ";
+    }
+}
+
+void Node::setSiblingParents(Node *node)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+    m_parent = node;
+    if (m_sibling != nullptr)
+    {
+        m_sibling->setSiblingParents(node);
     }
 }
 

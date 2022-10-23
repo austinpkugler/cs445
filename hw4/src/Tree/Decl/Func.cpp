@@ -1,6 +1,6 @@
 #include "Func.hpp"
 
-Func::Func(const int lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, funcName, data) {}
+Func::Func(const int lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, funcName, data), m_hasReturn(false) {}
 
 std::string Func::stringify() const
 {
@@ -9,12 +9,17 @@ std::string Func::stringify() const
 
 unsigned Func::getParmCount() const
 {
-    int parmCount = 0;
+    return getParms().size();
+}
+
+std::vector<Node *> Func::getParms() const
+{
+    std::vector<Node *> parms;
     Node *currParm = getChild();
     while (currParm != nullptr)
     {
-        parmCount += 1;
+        parms.push_back(currParm);
         currParm = currParm->getSibling();
     }
-    return parmCount;
+    return parms;
 }

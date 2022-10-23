@@ -28,7 +28,7 @@ class Data
 
         // Print
         std::string stringify() const;
-        std::string stringifyWithType() const;
+        // std::string stringifyWithType() const;
 
     private:
         bool m_isArray = false;

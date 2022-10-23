@@ -81,7 +81,7 @@ std::string Data::stringify() const
     return typeToString(m_type);
 }
 
-std::string Data::stringifyWithType() const
-{
-    return typeToString(m_type);
-}
+// std::string Data::stringifyWithType() const
+// {
+//     return typeToString(m_type);
+// }

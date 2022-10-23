@@ -5,6 +5,7 @@
 #include "../Emit/Emit.hpp"
 #include "../Tree/Tree.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -31,10 +32,11 @@ class Semantics
         void analyzeIf(const If *ifN) const;
         void analyzeRange(const Range *range) const;
         void analyzeReturn(const Return *returnN) const;
+        void analyzeWhile(const While *whileN) const;
 
         // Checks
         void checkOperandsOfSameType(Exp *exp) const;
-        void checkOperandsOfType(Exp *exp, const Data::Type type) const;
+        void checkOperandsOfType(Exp *exp, const Data::Type type, const bool isMath=true) const;
         void checkIndex(const Binary *binary) const;
         void checkUnusedWarns() const;
 
@@ -47,15 +49,19 @@ class Semantics
         void symTableSimpleLeaveScope(const bool showWarns=false);
         void symTableEnterScope(const Node *node);
         void symTableLeaveScope(const Node *node, const bool showWarns=true);
+        void symTableInitializeIOTree();
+        void symTableInjectIOTree(Node *node);
 
         // Helpers
         bool isMainFunc(const Func *func) const;
         bool expOperandsExist(const Exp *exp) const;
         bool lhsExists(const Exp *exp) const;
         std::string getExpSym(const Exp *exp) const;
-        bool hasIndexAncestor(const Exp *exp) const;
-        bool hasAsgnAncestor(const Exp *exp) const;
+        bool hasIndexRelative(const Exp *exp) const;
+        bool hasAsgnRelative(const Exp *exp) const;
+        bool hasNonConstantRelative(const Exp *exp) const;
 
         SymTable *m_symTable;
         bool m_mainExists;
+        Node *m_ioRoot;
 };

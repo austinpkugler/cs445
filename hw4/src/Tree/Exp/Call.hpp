@@ -14,6 +14,7 @@ class Call : public Exp
         // Getters
         std::string getName() const { return m_name; }
         unsigned getParmCount() const;
+        std::vector<Node *> getParms() const;
 
     private:
         const std::string m_name;

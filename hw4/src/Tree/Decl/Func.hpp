@@ -13,4 +13,12 @@ class Func : public Decl
 
         // Getters
         unsigned getParmCount() const;
+        std::vector<Node *> getParms() const;
+        bool getHasReturn() const { return m_hasReturn; }
+
+        // Setters
+        void makeHasReturn() { m_hasReturn = true; }
+
+    private:
+        bool m_hasReturn;
 };

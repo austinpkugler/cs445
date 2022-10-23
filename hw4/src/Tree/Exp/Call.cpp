@@ -9,12 +9,17 @@ std::string Call::stringify() const
 
 unsigned Call::getParmCount() const
 {
-    int parmCount = 0;
+    return getParms().size();
+}
+
+std::vector<Node *> Call::getParms() const
+{
+    std::vector<Node *> parms;
     Node *currParm = getChild();
     while (currParm != nullptr)
     {
-        parmCount += 1;
+        parms.push_back(currParm);
         currParm = currParm->getSibling();
     }
-    return parmCount;
+    return parms;
 }
