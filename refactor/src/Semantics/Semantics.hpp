@@ -50,6 +50,8 @@ class Semantics
         bool expOperandsExist(const Exp *exp) const;
         bool lhsExists(const Exp *exp) const;
         std::string getExpSym(const Exp *exp) const;
+        bool hasIndexAncestor(const Exp *exp) const;
+        bool hasAsgnAncestor(const Exp *exp) const;
 
         SymTable *m_symTable;
         bool m_mainExists;

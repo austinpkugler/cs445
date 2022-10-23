@@ -246,8 +246,8 @@ void Semantics::analyzeCall(const Call *call) const
     if (!isFunc(callDecl))
     {
         Emit::error(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
-        callDecl->makeUsed();
     }
+    callDecl->makeUsed();
 }
 
 void Semantics::analyzeId(const Id *id) const
@@ -275,15 +275,14 @@ void Semantics::analyzeId(const Id *id) const
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         if (!varDecl->getIsInitialized() && varDecl->getShowErrors())
         {
-            // if (!id->hasRelative(Node::Kind::Asgn))
-            // if (!hasIndexAncestor((Exp *)id) || id->getIsArray())
-            // {
-            //     if (!hasAsgnAncestor((Exp *)id))
-            //     {
-            Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
-            varDecl->setShowErrors(false);
-            //     }
-            // }
+            if (!hasIndexAncestor((Exp *)id) || idDecl->getData()->getIsArray())
+            {
+                if (!hasAsgnAncestor((Exp *)id))
+                {
+                    Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
+                    varDecl->setShowErrors(false);
+                }
+            }
         }
     }
     idDecl->makeUsed();
@@ -862,4 +861,62 @@ std::string Semantics::getExpSym(const Exp *exp) const
     {
         throw std::runtime_error("Semantics::getExpSym() - Exp is not an operation");
     }
+}
+
+bool Semantics::hasIndexAncestor(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::hasIndexAncestor() - Invalid Exp");
+    }
+
+    Node *lastParent = (Node *)exp;
+    Node *parent = exp->getParent();
+    while (parent != nullptr)
+    {
+        if (isBinary(parent))
+        {
+            Binary *binary = (Binary *)parent;
+            if (binary->getType() == Binary::Type::Index)
+            {
+                // On the right side
+                if (binary->getChild(1) == lastParent)
+                {
+                    return true;
+                }
+            }
+        }
+        lastParent = parent;
+        parent = parent->getParent();
+    }
+    return false;
+}
+
+bool Semantics::hasAsgnAncestor(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::hasAsgnAncestor() - Invalid Exp");
+    }
+
+    Node *lastParent = (Node *)exp;
+    Node *parent = exp->getParent();
+    while (parent != nullptr)
+    {
+        if (isAsgn(parent))
+        {
+            Asgn *asgn = (Asgn *)parent;
+            if (asgn->getType() == Asgn::Type::Asgn)
+            {
+                // On the left side
+                if (asgn->getChild() == lastParent)
+                {
+                    return true;
+                }
+            }
+        }
+        lastParent = parent;
+        parent = parent->getParent();
+    }
+    return false;
 }
