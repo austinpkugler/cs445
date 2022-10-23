@@ -10,6 +10,7 @@ bool isVar(const Node *node);
 
 // Exp nodes
 bool isExp(const Node *node);
+bool isExp2(const Node *node);
 bool isAsgn(const Node *node);
 bool isBinary(const Node *node);
 bool isCall(const Node *node);
