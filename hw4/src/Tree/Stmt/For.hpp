@@ -5,11 +5,9 @@
 class For : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        For(const unsigned lineNum);
+        For(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::For; }
         std::string stringify() const override;
 };

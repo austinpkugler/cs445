@@ -1,40 +1,29 @@
 #pragma once
 
-#include "../Node.hpp"
 #include "../Data.hpp"
+#include "../Node.hpp"
 
 class Decl : public Node
 {
     public:
-        // Enums
-        enum class Kind { Func, Parm, Var };
-
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param declKind The category of decl node.
-         * @param name Name of the declaration (e.g. name of func, var, or parm)
-         * @param data Data associated with the decl (e.g. type, isArray, isStatic)
-         */
-        Decl(const unsigned lineNum, const Decl::Kind declKind, const std::string name, Data *data);
+        Decl(const int lineNum, const std::string name, Data *data);
 
         // Getters
-        Decl::Kind getDeclKind() const { return m_declKind; }
         std::string getName() const { return m_name; }
         Data * getData() const { return m_data; }
         bool getShowErrors() const { return m_showErrors; }
         bool getIsUsed() const { return m_isUsed; }
 
         // Setters
+        void setShowErrors(const bool showErrors) { m_showErrors = showErrors; }
         void setType(const Data::Type type);
-        void setShowErrors(bool showErrors);
-        void makeUsed();
+        void makeUsed() { m_isUsed = true; }
 
     protected:
         const std::string m_name;
         Data *m_data;
 
     private:
-        const Decl::Kind m_declKind;
-        bool m_showErrors = true;
-        bool m_isUsed = false;
+        bool m_showErrors;
+        bool m_isUsed;
 };

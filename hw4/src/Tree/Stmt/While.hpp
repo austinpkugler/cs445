@@ -5,11 +5,9 @@
 class While : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        While(const unsigned lineNum);
+        While(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::While; }
         std::string stringify() const override;
 };

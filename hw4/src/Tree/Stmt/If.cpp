@@ -1,9 +1,6 @@
 #include "If.hpp"
 
-If::If(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::If)
-{
-
-}
+If::If(const int lineNum) : Stmt::Stmt(lineNum) {}
 
 std::string If::stringify() const
 {

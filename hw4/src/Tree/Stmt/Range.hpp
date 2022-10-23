@@ -5,11 +5,9 @@
 class Range : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        Range(const unsigned lineNum);
+        Range(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Range; }
         std::string stringify() const override;
 };

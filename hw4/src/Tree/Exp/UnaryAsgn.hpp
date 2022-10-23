@@ -5,16 +5,12 @@
 class UnaryAsgn : public Exp
 {
     public:
-        // Enums
         enum class Type { Inc, Dec };
 
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param type Type of unary assignment.
-         */
-        UnaryAsgn(const unsigned lineNum, const UnaryAsgn::Type type);
+        UnaryAsgn(const int lineNum, const UnaryAsgn::Type type);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::UnaryAsgn; }
         std::string stringify() const override;
 
         // Getters

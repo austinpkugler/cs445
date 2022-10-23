@@ -53,17 +53,16 @@ Data::Type Data::getNextType() const
     return m_next->getNextType();
 }
 
-void Data::setIsArray(bool isArray)
+Data * Data::getNextData() const
 {
-    m_isArray = isArray;
+    if (m_next == nullptr)
+    {
+        return new Data(m_type, false, false);
+    }
+    return m_next->getNextData();
 }
 
-void Data::setIsStatic(bool isStatic)
-{
-    m_isStatic = isStatic;
-}
-
-void Data::setType(Data::Type type)
+void Data::setType(const Data::Type type)
 {
     m_type = type;
     if (m_next != nullptr)
@@ -72,7 +71,7 @@ void Data::setType(Data::Type type)
     }
 }
 
-void Data::setCopyOf(std::string copyOf)
+void Data::setCopyOf(const std::string copyOf)
 {
     m_copyOf = copyOf;
 }

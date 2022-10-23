@@ -1,46 +1,31 @@
 #include "Emit.hpp"
 
-/**
- * Error
- */
-void Emit::Error::count()
+void Emit::error(const std::string type, const std::string msg)
 {
-    std::cout << "Number of errors: " << s_errorCount << std::endl;
+    std::cout << "ERROR(" << type << "): " << msg << std::endl;
+    s_errorCount++;
 }
 
-void Emit::Error::generic(const unsigned lineNum, const std::string msg)
+void Emit::error(const int lineNum, const std::string msg)
 {
     std::cout << "ERROR(" << lineNum << "): " << msg << std::endl;
     s_errorCount++;
 }
 
-void Emit::Error::linker(const std::string msg)
+void Emit::warn(const std::string type, const std::string msg)
 {
-    std::cout << "ERROR(LINKER): " << msg << std::endl;
-    s_errorCount++;
+    std::cout << "WARNING(" << type << "): " << msg << std::endl;
+    s_warnCount++;
 }
 
-void Emit::Error::arglist(const std::string msg)
-{
-    std::cout << "ERROR(ARGLIST): " << msg << std::endl;
-    s_errorCount++;
-}
-
-void Emit::Error::undefinedMain()
-{
-    linker("A function named 'main' with no parameters must be defined.");
-}
-
-/**
- * Warn
- */
-void Emit::Warn::count()
-{
-    std::cout << "Number of warnings: " << s_warnCount << std::endl;
-}
-
-void Emit::Warn::generic(const unsigned lineNum, const std::string msg)
+void Emit::warn(const int lineNum, const std::string msg)
 {
     std::cout << "WARNING(" << lineNum << "): " << msg << std::endl;
     s_warnCount++;
+}
+
+void Emit::count()
+{
+    std::cout << "Number of warnings: " << s_warnCount << std::endl;
+    std::cout << "Number of errors: " << s_errorCount << std::endl;
 }

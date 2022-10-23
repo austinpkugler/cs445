@@ -5,11 +5,9 @@
 class Return : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        Return(const unsigned lineNum);
+        Return(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Return; }
         std::string stringify() const override;
 };

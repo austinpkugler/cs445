@@ -1,9 +1,6 @@
 #include "UnaryAsgn.hpp"
 
-UnaryAsgn::UnaryAsgn(const unsigned lineNum, const UnaryAsgn::Type type) : Exp::Exp(lineNum, Exp::Kind::UnaryAsgn, new Data(Data::Type::Int, false, false)), m_type(type)
-{
-
-}
+UnaryAsgn::UnaryAsgn(const int lineNum, const UnaryAsgn::Type type) : Exp::Exp(lineNum, new Data(Data::Type::Int, false, false)), m_type(type) {}
 
 std::string UnaryAsgn::stringify() const
 {

@@ -1,6 +1,6 @@
 #include "Asgn.hpp"
 
-Asgn::Asgn(const unsigned lineNum, const Asgn::Type type) : Exp::Exp(lineNum, Exp::Kind::Asgn, new Data(Data::Type::Undefined, false, false)), m_type(type)
+Asgn::Asgn(const int lineNum, const Asgn::Type type) : Exp::Exp(lineNum, new Data(Data::Type::Undefined, false, false)), m_type(type)
 {
     switch (m_type)
     {

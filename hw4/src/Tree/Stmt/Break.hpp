@@ -5,11 +5,9 @@
 class Break : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        Break(const unsigned lineNum);
+        Break(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Break; }
         std::string stringify() const override;
 };

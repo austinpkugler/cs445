@@ -5,14 +5,8 @@
 class Data
 {
     public:
-        // Enums
         enum class Type { Undefined, Int, Bool, Char, String, Void };
 
-        /**
-         * @param type Primitive datatype of the data.
-         * @param isArray Whether the data is an array.
-         * @param isStatic Whether the data is static.
-         */
         Data(Data::Type type, bool isArray, bool isStatic);
 
         // Static
@@ -24,12 +18,13 @@ class Data
         Type getType() const { return m_type; }
         std::string getCopyOf() const { return m_copyOf; }
         Data::Type getNextType() const;
+        Data * getNextData() const;
 
         // Setters
-        void setIsArray(bool isArray);
-        void setIsStatic(bool isStatic);
-        void setType(Data::Type type);
-        void setCopyOf(std::string copyOf);
+        void setIsArray(const bool isArray) { m_isArray = isArray; }
+        void setIsStatic(const bool isStatic) { m_isStatic = isStatic; }
+        void setType(const Data::Type type);
+        void setCopyOf(const std::string copyOf);
 
         // Print
         std::string stringify() const;

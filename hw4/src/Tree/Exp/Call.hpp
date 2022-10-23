@@ -5,17 +5,15 @@
 class Call : public Exp
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param funcName Name of the function being called.
-         */
-        Call(const unsigned lineNum, const std::string funcName);
+        Call(const int lineNum, const std::string funcName);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Call; }
         std::string stringify() const override;
 
         // Getters
         std::string getName() const { return m_name; }
+        unsigned getParmCount() const;
 
     private:
         const std::string m_name;

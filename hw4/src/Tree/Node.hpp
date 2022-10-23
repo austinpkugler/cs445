@@ -6,49 +6,50 @@
 class Node
 {
     public:
-        // Enums
-        enum class Kind { None, Decl, Stmt, Exp };
+        enum class Kind { None, Func, Parm, Var, Asgn, Binary, Call, Const, Id, Unary, UnaryAsgn, Break, Compound, For, If, Range, Return, While };
 
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param nodeKind The category of node. None if unknown.
-         */
-        Node(const unsigned lineNum);
-        Node(const unsigned lineNum, const Node::Kind nodeKind);
+        Node(const int lineNum);
         ~Node();
 
         // Getters
-        unsigned getLineNum() const { return m_lineNum; }
-        Node::Kind getNodeKind() const { return m_nodeKind; }
-        std::vector<Node *> getChildren() const { return m_children; }
-        Node * getSibling() const { return m_sibling; }
-        Node * getParent() const { return m_parent; }
+        int getLineNum() const { return m_lineNum; }
         bool getIsAnalyzed() { return m_isAnalyzed; }
-        Node * getAncestor(const Node::Kind nodeKind) const;
-        bool ancestorHasKind(const Node::Kind nodeKind) const;
+        Node * getParent() const { return m_parent; }
+        Node * getSibling() const { return m_sibling; }
+        unsigned getSiblingCount() const { return m_siblingCount; }
+        std::vector<Node *> getChildren() const { return m_children; }
+        Node * getChild(const unsigned index=0) const;
+        unsigned getChildCount() const;
+        Node * getRelative(const Node::Kind nodeKind) const;
 
         // Setters
+        void makeAnalyzed() { m_isAnalyzed = true; }
         void addChild(Node *node);
         void addSibling(Node *node);
-        void makeAnalyzed() { m_isAnalyzed = true; }
 
         // Print
         void printTree(const bool showTypes=false) const;
         void printNode(const bool showTypes=false) const;
 
+        // Helpers
+        bool hasRelative(const Node *node) const;
+        bool hasRelative(const Node::Kind nodeKind) const;
+        bool parentExists() const;
+
         // Virtual
         virtual std::string stringify() const;
         virtual std::string stringifyWithType() const { return stringify(); }
+        virtual Node::Kind getNodeKind() const { return Node::Kind::None; }
 
     protected:
-        Node *m_sibling;    // Used by decl
+        Node *m_sibling;
 
     private:
         void printTabs(const unsigned tabCount) const;
 
-        const unsigned m_lineNum;
-        const Node::Kind m_nodeKind;
-        std::vector<Node *> m_children;
+        const int m_lineNum;
+        bool m_isAnalyzed;
         Node *m_parent;
-        bool m_isAnalyzed = false;
+        unsigned m_siblingCount;
+        std::vector<Node *> m_children;
 };

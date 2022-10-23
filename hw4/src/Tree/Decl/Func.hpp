@@ -5,26 +5,12 @@
 class Func : public Decl
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param name Name of the function
-         * @param data Data associated with the decl (e.g. type, isArray, isStatic)
-         */
-        Func(const unsigned lineNum, const std::string funcName, Data *data);
+        Func(const int lineNum, const std::string funcName, Data *data);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Func; }
         std::string stringify() const override;
 
         // Getters
-        int getParmCount() const { return m_parmCount; }
-        bool getHasReturn() const { return m_hasReturn; }
-
-        // Setters
-        void setParmCount(const bool parmCount) { m_parmCount = parmCount; }
-        void incParmCount() { m_parmCount++; }
-        void setHasReturn(const bool hasReturn) { m_hasReturn = hasReturn; }
-
-    private:
-        int m_parmCount = 0;
-        bool m_hasReturn = false;
+        unsigned getParmCount() const;
 };

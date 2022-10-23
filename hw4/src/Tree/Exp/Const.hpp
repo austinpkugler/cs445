@@ -5,17 +5,12 @@
 class Const : public Exp
 {
     public:
-        // Enums
         enum class Type { Int, Bool, Char, String };
 
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param type Type of the const.
-         * @param value Stringified value of the const
-         */
-        Const(const unsigned lineNum, const Const::Type type, const std::string value);
+        Const(const int lineNum, const Const::Type type, const std::string value);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Const; }
         std::string stringify() const override;
         std::string stringifyWithType() const override;
 
@@ -23,7 +18,6 @@ class Const : public Exp
         bool getCharLengthWarning() const { return m_charLengthWarning; }
 
     private:
-        // Helpers
         char parseFirstChar(const std::string &str) const;
         std::string removeFirstAndLastChar(const std::string &str) const;
         std::string parseChars(const std::string &str) const;

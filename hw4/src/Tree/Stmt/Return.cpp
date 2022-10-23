@@ -1,9 +1,6 @@
 #include "Return.hpp"
 
-Return::Return(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Return)
-{
-
-}
+Return::Return(const int lineNum) : Stmt::Stmt(lineNum) {}
 
 std::string Return::stringify() const
 {

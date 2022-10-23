@@ -1,9 +1,6 @@
 #include "Var.hpp"
 
-Var::Var(const unsigned lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, Decl::Kind::Var, isVarame, data)
-{
-
-}
+Var::Var(const int lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, isVarame, data), m_isInitialized(false) {}
 
 std::string Var::stringify() const
 {
@@ -25,11 +22,6 @@ std::string Var::stringify() const
         return "Var: " + m_name + " of type " + m_data->stringify();
     }
     return "Var: " + m_name + " of type " + m_data->stringify();
-}
-
-void Var::makeInitialized()
-{
-    m_isInitialized = true;
 }
 
 void Var::makeStatic()

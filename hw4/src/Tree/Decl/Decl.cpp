@@ -1,9 +1,6 @@
 #include "Decl.hpp"
 
-Decl::Decl(const unsigned lineNum, const Decl::Kind declKind, const std::string name, Data *data) : Node::Node(lineNum, Node::Kind::Decl), m_declKind(declKind), m_name(name), m_data(data)
-{
-
-}
+Decl::Decl(const int lineNum, const std::string name, Data *data) : Node::Node(lineNum), m_name(name), m_data(data), m_showErrors(true), m_isUsed(false) {}
 
 void Decl::setType(const Data::Type type)
 {
@@ -13,14 +10,4 @@ void Decl::setType(const Data::Type type)
         Decl *node = (Decl *)m_sibling;
         node->setType(type);
     }
-}
-
-void Decl::setShowErrors(bool showErrors)
-{
-    m_showErrors = showErrors;
-}
-
-void Decl::makeUsed()
-{
-    m_isUsed = true;
 }

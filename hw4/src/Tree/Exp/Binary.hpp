@@ -5,16 +5,12 @@
 class Binary : public Exp
 {
     public:
-        // Enums
         enum class Type { Mul, Div, Mod, Add, Sub, Index, And, Or, LT, LEQ, GT, GEQ, EQ, NEQ };
 
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param type Type of binary operation.
-         */
-        Binary(const unsigned lineNum, const Binary::Type type);
+        Binary(const int lineNum, const Binary::Type type);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Binary; }
         std::string stringify() const override;
 
         // Getters

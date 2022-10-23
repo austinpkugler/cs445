@@ -1,11 +1,11 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
-#include "TokenData.hpp"
-// #include "SymTable.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
+#include "Semantics/SymTable.hpp"
+#include "TokenData.hpp"
 #include "Tree/Tree.hpp"
 
 #include <string>
@@ -16,7 +16,7 @@
 int lineCount = 1;
 int errorCount;
 
-static int setValue(unsigned lineNum, int tokenClass, char *sValue)
+static int setValue(int lineNum, int tokenClass, char *sValue)
 {
     // Create the pass-back data space
     yylval.tokenData = new TokenData;
