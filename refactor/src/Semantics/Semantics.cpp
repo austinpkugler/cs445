@@ -649,146 +649,71 @@ void Semantics::symTableInitialize(Node *node)
     symTableInitialize(node->getSibling());
 }
 
-Data * Semantics::symTableSetType(Node* node)
+Data * Semantics::symTableSetType(Node *node)
 {
-    if (node == nullptr || !isExp2(node))
+    if (!isExp(node))
     {
         return new Data(Data::Type::Undefined, false, false);
     }
 
-    auto expNode = (Exp *)node;
-
-    int lineNum = expNode->getLineNum();
-    std::string name;
-
-    if (expNode->getNodeKind() == Node::Kind::Id)
+    Exp *exp = (Exp *)node;
+    switch (exp->getNodeKind())
     {
-        name = ((Id *)expNode)->getName();
-        Decl *declNode = (Decl *)(m_symTable->lookup(name));
-        if (declNode && (declNode->getNodeKind() == Node::Kind::Var || declNode->getNodeKind() == Node::Kind::Parm))
+        case Node::Kind::Asgn:
         {
-            expNode->setData(declNode->getData());
+            Asgn *asgn = (Asgn *)exp;
+            if (asgn->getType() == Asgn::Type::Asgn)
+            {
+                exp->setData(symTableSetType(asgn->getChild())->getNextData());
+            }
+            else if (symTableSetType(asgn->getChild())->getType() == Data::Type::Undefined || symTableSetType(asgn->getChild(1))->getType() == Data::Type::Undefined)
+            {
+                exp->setData(new Data(Data::Type::Undefined, false, false));
+            }
+        }
+        case Node::Kind::Binary:
+        {
+            Binary *binary = (Binary *)exp;
+            if (binary->getType() == Binary::Type::Index)
+            {
+                exp->setData(symTableSetType(binary->getChild())->getNextData());
+            }
+            else if (symTableSetType(binary->getChild())->getType() == Data::Type::Undefined || symTableSetType(binary->getChild(1))->getType() == Data::Type::Undefined)
+            {
+                exp->setData(new Data(Data::Type::Undefined, false, false));
+            }
+            break;
+        }
+        case Node::Kind::Call:
+        {
+            Decl *decl = symTableGet(((Call *)node)->getName());
+            if (isFunc(decl))
+            {
+                exp->setData(decl->getData());
+            }
+            break;
+        }
+        case Node::Kind::Id:
+        {
+            Decl *decl = symTableGet(((Id *)node)->getName());
+            if (isVar(decl) || isParm(decl))
+            {
+                exp->setData(decl->getData());
+            }
+            break;
+        }
+        case Node::Kind::Unary:
+        {
+            Unary *unary = (Unary *)exp;
+            if (symTableSetType(unary->getChild())->getType() == Data::Type::Undefined)
+            {
+                exp->setData(new Data(Data::Type::Undefined, false, false));
+            }
+            break;
         }
     }
-    else if (expNode->getNodeKind() == Node::Kind::Call)
-    {
-        name = ((Call *)expNode)->getName();
-        Decl *declNode = (Decl *)(m_symTable->lookup(name));
-        if (declNode && declNode->getNodeKind() == Node::Kind::Func)
-        {
-            expNode->setData(declNode->getData());
-        }
-    
-    }
-    else if (expNode->getNodeKind() == Node::Kind::Binary)
-    {
-        auto binaryOpNode = (Binary *)(expNode);
-        auto lval = (Exp *)(expNode->getChild(0));
-        auto rval = (Exp *)(expNode->getChild(1));
-
-        if (binaryOpNode->getType() == Binary::Type::Index)
-        {
-            expNode->setData(symTableSetType(lval)->getNextData());
-        }
-        else if (symTableSetType(lval)->getType() == Data::Type::Undefined || 
-                   symTableSetType(rval)->getType() == Data::Type::Undefined)
-        {
-            expNode->setData(new Data(Data::Type::Undefined, false, false));
-        }
-    }
-    else if (expNode->getNodeKind() == Node::Kind::Asgn)
-    {
-        Asgn *asgn = (Asgn *)expNode;
-        auto lval = (Exp *)(expNode->getChild(0));
-        auto rval = (Exp *)(expNode->getChild(1));
-
-        if (asgn->getType() == Asgn::Type::Asgn)
-        {
-            expNode->setData(symTableSetType(lval)->getNextData());
-        }
-        else if (symTableSetType(lval)->getType() == Data::Type::Undefined || 
-                   symTableSetType(rval)->getType() == Data::Type::Undefined)
-        {
-            expNode->setData(new Data(Data::Type::Undefined, false, false));
-        }
-    }
-    else if (expNode->getNodeKind() == Node::Kind::Unary)
-    {
-        auto rval = (Exp *)(expNode->getChild(0));
-        if (symTableSetType(rval)->getType() == Data::Type::Undefined)
-        {
-            expNode->setData(new Data(Data::Type::Undefined, false, false));
-        }
-    }
-
-    return expNode->getData();
+    return exp->getData();
 }
-
-// Data * Semantics::symTableSetType(Node *node)
-// {
-//     if (!isExp(node))
-//     {
-//         return new Data(Data::Type::Undefined, false, false);
-//     }
-
-//     Exp *exp = (Exp *)node;
-//     switch (exp->getNodeKind())
-//     {
-//         case Node::Kind::Asgn:
-//         {
-//             Asgn *asgn = (Asgn *)exp;
-//             if (asgn->getType() == Asgn::Type::Asgn)
-//             {
-//                 exp->setData(symTableSetType(asgn->getChild())->getNextData());
-//             }
-//             else if (symTableSetType(asgn->getChild())->getType() == Data::Type::Undefined || symTableSetType(asgn->getChild(1))->getType() == Data::Type::Undefined)
-//             {
-//                 exp->setData(new Data(Data::Type::Undefined, false, false));
-//             }
-//         }
-//         case Node::Kind::Binary:
-//         {
-//             Binary *binary = (Binary *)exp;
-//             if (binary->getType() == Binary::Type::Index)
-//             {
-//                 exp->setData(symTableSetType(binary->getChild())->getNextData());
-//             }
-//             else if (symTableSetType(binary->getChild())->getType() == Data::Type::Undefined || symTableSetType(binary->getChild(1))->getType() == Data::Type::Undefined)
-//             {
-//                 exp->setData(new Data(Data::Type::Undefined, false, false));
-//             }
-//             break;
-//         }
-//         case Node::Kind::Call:
-//         {
-//             Decl *decl = symTableGet(((Call *)node)->getName());
-//             if (isFunc(decl))
-//             {
-//                 exp->setData(decl->getData());
-//             }
-//             break;
-//         }
-//         case Node::Kind::Id:
-//         {
-//             Decl *decl = symTableGet(((Id *)node)->getName());
-//             if (isVar(decl))
-//             {
-//                 exp->setData(decl->getData());
-//             }
-//             break;
-//         }
-//         case Node::Kind::Unary:
-//         {
-//             Unary *unary = (Unary *)exp;
-//             if (symTableSetType(unary->getChild())->getType() == Data::Type::Undefined)
-//             {
-//                 exp->setData(new Data(Data::Type::Undefined, false, false));
-//             }
-//             break;
-//         }
-//     }
-//     return exp->getData();
-// }
 
 void Semantics::symTableSimpleEnterScope(const std::string name)
 {
