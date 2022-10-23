@@ -1,9 +1,6 @@
 #include "Break.hpp"
 
-Break::Break(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Break)
-{
-
-}
+Break::Break(const int lineNum) : Stmt::Stmt(lineNum) {}
 
 std::string Break::stringify() const
 {

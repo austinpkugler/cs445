@@ -5,11 +5,9 @@
 class Compound : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        Compound(const unsigned lineNum);
+        Compound(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Compound; }
         std::string stringify() const override;
 };

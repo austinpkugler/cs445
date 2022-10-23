@@ -1,9 +1,6 @@
 #include "Id.hpp"
 
-Id::Id(const unsigned lineNum, const std::string isIdame, const bool isArray) : Exp::Exp(lineNum, Exp::Kind::Id, new Data(Data::Type::Undefined, false, false)), m_name(isIdame), m_isArray(isArray)
-{
-
-}
+Id::Id(const int lineNum, const std::string isIdame) : Exp::Exp(lineNum, new Data(Data::Type::Undefined, false, false)), m_name(isIdame) {}
 
 std::string Id::stringify() const
 {

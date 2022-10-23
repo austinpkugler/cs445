@@ -1,14 +1,6 @@
 #include "Exp.hpp"
 
-Exp::Exp(const unsigned lineNum, const Exp::Kind expKind, Data *data) : Node::Node(lineNum, Node::Kind::Exp), m_expKind(expKind), m_data(data)
-{
-
-}
-
-void Exp::setData(Data *data)
-{
-    m_data = data;
-}
+Exp::Exp(const int lineNum, Data *data) : Node::Node(lineNum), m_data(data) {}
 
 std::string Exp::stringifyWithType() const
 {

@@ -13,7 +13,7 @@ Flags::Flags(int argc, char *argv[])
 
     resetAll();
 
-    bool helpFlag = false;  // -h
+    bool helpFlag = false;
     bool errorFlag = false;
 
     char flag = ' ';
@@ -58,8 +58,9 @@ Flags::Flags(int argc, char *argv[])
         else
         {
             // Pick off a nonoption
-            if (optind < argc) {
-                m_file = argv[optind];
+            if (optind < argc)
+            {
+                m_filename = argv[optind];
                 optind++;
             }
             else

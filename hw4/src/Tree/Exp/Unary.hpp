@@ -5,16 +5,12 @@
 class Unary : public Exp
 {
     public:
-        // Enums
         enum class Type { Chsign, Sizeof, Question, Not };
 
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param type Type of unary operation.
-         */
-        Unary(const unsigned lineNum, const Unary::Type type);
+        Unary(const int lineNum, const Unary::Type type);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Unary; }
         std::string stringify() const override;
 
         // Getters

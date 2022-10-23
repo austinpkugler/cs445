@@ -1,9 +1,6 @@
 #include "Compound.hpp"
 
-Compound::Compound(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::Compound)
-{
-
-}
+Compound::Compound(const int lineNum) : Stmt::Stmt(lineNum) {}
 
 std::string Compound::stringify() const
 {

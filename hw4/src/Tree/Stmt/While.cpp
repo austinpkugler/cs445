@@ -1,9 +1,6 @@
 #include "While.hpp"
 
-While::While(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::While)
-{
-
-}
+While::While(const int lineNum) : Stmt::Stmt(lineNum) {}
 
 std::string While::stringify() const
 {

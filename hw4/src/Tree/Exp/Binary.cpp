@@ -1,6 +1,6 @@
 #include "Binary.hpp"
 
-Binary::Binary(const unsigned lineNum, const Binary::Type type) : Exp::Exp(lineNum, Exp::Kind::Binary, new Data(Data::Type::Undefined, false, false)), m_type(type)
+Binary::Binary(const int lineNum, const Binary::Type type) : Exp::Exp(lineNum, new Data(Data::Type::Undefined, false, false)), m_type(type)
 {
     switch (m_type)
     {

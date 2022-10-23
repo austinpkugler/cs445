@@ -5,16 +5,12 @@
 class Asgn : public Exp
 {
     public:
-        // Enums
         enum class Type { Asgn, AddAsgn, SubAsgn, DivAsgn, MulAsgn };
 
-        /**
-         * @param lineNum Line number of occurrence.
-         * @param type Type of assignment.
-         */
-        Asgn(const unsigned lineNum, const Asgn::Type type);
+        Asgn(const int lineNum, const Asgn::Type type);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::Asgn; }
         std::string stringify() const override;
 
         // Getters

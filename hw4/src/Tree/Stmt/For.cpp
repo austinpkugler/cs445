@@ -1,9 +1,6 @@
 #include "For.hpp"
 
-For::For(const unsigned lineNum) : Stmt::Stmt(lineNum, Stmt::Kind::For)
-{
-
-}
+For::For(const int lineNum) : Stmt::Stmt(lineNum) {}
 
 std::string For::stringify() const
 {

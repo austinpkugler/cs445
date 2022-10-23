@@ -1,14 +1,6 @@
 #include "Node.hpp"
 
-Node::Node(const unsigned lineNum) : m_lineNum(lineNum), m_nodeKind(Node::Kind::None), m_sibling(nullptr), m_parent(nullptr)
-{
-
-}
-
-Node::Node(const unsigned lineNum, const Node::Kind nodeKind) : m_lineNum(lineNum), m_nodeKind(nodeKind), m_sibling(nullptr), m_parent(nullptr)
-{
-
-}
+Node::Node(const int lineNum) : m_lineNum(lineNum), m_isAnalyzed(false), m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1) {}
 
 Node::~Node()
 {
@@ -16,41 +8,33 @@ Node::~Node()
     {
         delete m_sibling;
     }
-
     for (auto &node : m_children)
     {
         delete node;
     }
 }
 
-Node * Node::getAncestor(const Node::Kind nodeKind) const
+Node * Node::getChild(const unsigned index) const
 {
-    if (m_parent == nullptr)
+    if (index > m_children.size() - 1)
     {
         return nullptr;
     }
+    return m_children[index];
+}
 
-    if (m_parent->getNodeKind() == nodeKind)
+unsigned Node::getChildCount() const
+{
+    return m_children.size();
+}
+
+Node * Node::getRelative(const Node::Kind nodeKind) const
+{
+    if (m_parent->getNodeKind() == nodeKind || m_parent == nullptr)
     {
         return m_parent;
     }
-
-    return m_parent->getAncestor(nodeKind);
-}
-
-bool Node::ancestorHasKind(const Node::Kind nodeKind) const
-{
-    if (m_parent == nullptr)
-    {
-        return false;
-    }
-
-    if (m_parent->getNodeKind() == nodeKind)
-    {
-        return true;
-    }
-
-    return m_parent->ancestorHasKind(nodeKind);
+    return m_parent->getRelative(nodeKind);
 }
 
 void Node::addChild(Node *node)
@@ -77,6 +61,7 @@ void Node::addSibling(Node *node)
     {
         m_sibling->addSibling(node);
     }
+    m_siblingCount++;
 }
 
 void Node::printTree(const bool showTypes) const
@@ -130,6 +115,24 @@ void Node::printNode(const bool showTypes) const
     }
 }
 
+bool Node::hasRelative(const Node *node) const
+{
+    if (this == node)
+    {
+        return true;
+    }
+    if (m_parent == nullptr)
+    {
+        return false;
+    }
+    return m_parent->hasRelative(node);
+}
+
+bool Node::hasRelative(const Node::Kind nodeKind) const
+{
+    return (getRelative(nodeKind) != nullptr);
+}
+
 std::string Node::stringify() const
 {
     return " [line: " + std::to_string(m_lineNum) + "]";
@@ -141,4 +144,9 @@ void Node::printTabs(const unsigned tabCount) const
     {
         std::cout << ".   ";
     }
+}
+
+bool Node::parentExists() const
+{
+    return (m_parent != nullptr);
 }

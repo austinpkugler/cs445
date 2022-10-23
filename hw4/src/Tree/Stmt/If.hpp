@@ -5,11 +5,9 @@
 class If : public Stmt
 {
     public:
-        /**
-         * @param lineNum Line number of occurrence.
-         */
-        If(const unsigned lineNum);
+        If(const int lineNum);
 
         // Overridden
+        Node::Kind getNodeKind() const override { return Node::Kind::If; }
         std::string stringify() const override;
 };
