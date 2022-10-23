@@ -163,6 +163,11 @@ void Semantics::analyzeVar(Var *var)
                 Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is not an array and rhs is an array.");
             }
         }
+
+        if (hasNonConstantRelative(exp)) // if not a constant exp
+        {
+            Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' is not a constant expression.");
+        }
     }
 
     symTableInsert(var);
@@ -397,9 +402,9 @@ void Semantics::analyzeId(const Id *id) const
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         if (!varDecl->getIsInitialized() && varDecl->getShowErrors())
         {
-            if (!hasIndexAncestor((Exp *)id) || idDecl->getData()->getIsArray())
+            if (!hasIndexRelative((Exp *)id) || idDecl->getData()->getIsArray())
             {
-                if (!hasAsgnAncestor((Exp *)id))
+                if (!hasAsgnRelative((Exp *)id))
                 {
                     Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
                     varDecl->setShowErrors(false);
@@ -1191,11 +1196,11 @@ std::string Semantics::getExpSym(const Exp *exp) const
     }
 }
 
-bool Semantics::hasIndexAncestor(const Exp *exp) const
+bool Semantics::hasIndexRelative(const Exp *exp) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::hasIndexAncestor() - Invalid Exp");
+        throw std::runtime_error("Semantics::hasIndexRelative() - Invalid Exp");
     }
 
     Node *lastParent = (Node *)exp;
@@ -1220,11 +1225,11 @@ bool Semantics::hasIndexAncestor(const Exp *exp) const
     return false;
 }
 
-bool Semantics::hasAsgnAncestor(const Exp *exp) const
+bool Semantics::hasAsgnRelative(const Exp *exp) const
 {
     if (!isExp(exp))
     {
-        throw std::runtime_error("Semantics::hasAsgnAncestor() - Invalid Exp");
+        throw std::runtime_error("Semantics::hasAsgnRelative() - Invalid Exp");
     }
 
     Node *lastParent = (Node *)exp;
@@ -1246,5 +1251,51 @@ bool Semantics::hasAsgnAncestor(const Exp *exp) const
         lastParent = parent;
         parent = parent->getParent();
     }
+    return false;
+}
+
+bool Semantics::hasNonConstantRelative(const Exp *exp) const
+{
+    if (!isExp(exp))
+    {
+        throw std::runtime_error("Semantics::hasNonConstantRelative() - Invalid Exp");
+    }
+
+    Node *child = exp->getChild();
+    while (child != nullptr)
+    {
+        if (isUnary(child))
+        {
+            Unary *unary = (Unary *)child;
+            if (unary->getType() == Unary::Type::Question)
+            {
+                return true;
+            }
+        }
+        else if (isCall(child) || isId(child))
+        {
+            return true;
+        }
+        child = child->getParent();
+    }
+
+    Node *sibling = exp->getSibling();
+    while (sibling != nullptr)
+    {
+        if (isUnary(sibling))
+        {
+            Unary *unary = (Unary *)sibling;
+            if (unary->getType() == Unary::Type::Question)
+            {
+                return true;
+            }
+        }
+        else if (isCall(sibling) || isId(sibling))
+        {
+            return true;
+        }
+        sibling = sibling->getSibling();
+    }
+
     return false;
 }
