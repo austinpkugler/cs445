@@ -81,11 +81,7 @@ void Semantics::analyzeTree(Node *node)
     }
 
     // Leave the scope for every scope that was previously entered
-    if (isFunc(node))
-    {
-        leaveScope();
-    }
-    else if (isFor(node))
+    if (isFunc(node) || isFor(node) || isWhile(node))
     {
         leaveScope();
     }
@@ -367,7 +363,7 @@ void Semantics::analyzeCall(const Call *call) const
         prevDeclFunc->makeUsed();
 
         // Count the parms
-        unsigned parmCount = 0;
+        int parmCount = 0;
         Node *currParm = call->getChildren()[0];
         while (currParm != nullptr)
         {
@@ -389,6 +385,32 @@ void Semantics::analyzeCall(const Call *call) const
 
             Emit::Error::generic(call->getLineNum(), msg.str());
         }
+
+        // Exp *callParm = (Exp *)(call->getChildren()[0]);
+        // Var *funcDeclVar = (Var *)(prevDeclFunc->getChildren()[0]);
+        // parmCount = 1;
+        // while (callParm != nullptr && funcDeclVar != nullptr)
+        // {
+        //     Data::Type callParmType = callParm->getData()->getType();
+        //     Data::Type funcDeclVarType = funcDeclVar->getData()->getType();
+        //     if (callParmType == Data::Type::Undefined || funcDeclVarType == Data::Type::Undefined)
+        //     {
+        //         callParm = (Exp *)(callParm->getSibling());
+        //         funcDeclVar = (Var *)(funcDeclVar->getSibling());
+        //         parmCount++;
+        //         continue;
+        //     }
+
+        //     if (callParmType != funcDeclVarType)
+        //     {
+        //         std::stringstream msg;
+        //         msg << "Expecting type " << Data::typeToString(funcDeclVarType) << " in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << prevDeclFunc->getLineNum() << " but got type " << Data::typeToString(callParmType) << ".";
+        //     }
+
+        //     callParm = (Exp *)(callParm->getSibling());
+        //     funcDeclVar = (Var *)(funcDeclVar->getSibling());
+        //     parmCount++;
+        // }
     }
 }
 
@@ -481,6 +503,7 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             analyzeReturn((Return *)stmt);
             break;
         case Stmt::Kind::While:
+            m_symTable->enter("While Loop");
             break;
         case Stmt::Kind::Range:
             analyzeRange((Range *)stmt);
@@ -494,10 +517,10 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
 void Semantics::analyzeBreak(const Break *breakN) const
 {
     // bool inFor = false;
-    // Node *parentNode = breakN->getParent();
+    // Node *parentNode = (Node *)breakN;
     // while (parentNode != nullptr)
     // {
-    //     if (isFor(parentNode))
+    //     if (isFor(parentNode) || isWhile(parentNode))
     //     {
     //         inFor = true;
     //         break;
@@ -572,10 +595,9 @@ void Semantics::analyzeRange(const Range *range) const
         }
         if (isArray)
         {
-            std::stringstream ss;
-            ss << "Cannot use array in position " << i+1
-               << " in range of for statement.";
-            Emit::Error::generic(children[i]->getLineNum(), ss.str());
+            std::stringstream msg;
+            msg << "Cannot use array in position " << i + 1 << " in range of for statement.";
+            Emit::Error::generic(children[i]->getLineNum(), msg.str());
         }
     }
 }
@@ -614,9 +636,19 @@ void Semantics::analyzeReturn(const Return *returnN) const
             Func *parentFunc = (Func *)parentNode;
             if (parentFunc->getData()->getType() != returnExp->getData()->getType())
             {
-                std::stringstream msg;
-                msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting to return type " << parentFunc->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
-                Emit::Error::generic(returnN->getLineNum(), msg.str());
+                if (parentFunc->getData()->getType() == Data::Type::Void)
+                {
+                    std::stringstream msg;
+                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting no return value, but return has a value.";
+                    Emit::Error::generic(returnN->getLineNum(), msg.str());
+                }
+                else
+                {
+                    std::stringstream msg;
+                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting to return type " << parentFunc->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
+                    Emit::Error::generic(returnN->getLineNum(), msg.str());
+                }
+                
             }
             break;
         }
