@@ -49,6 +49,8 @@ class Semantics
         void symTableSimpleLeaveScope(const bool showWarns=false);
         void symTableEnterScope(const Node *node);
         void symTableLeaveScope(const Node *node, const bool showWarns=true);
+        void symTableInjectIO();
+        void symTableAddTree(Node *node);
 
         // Helpers
         bool isMainFunc(const Func *func) const;
@@ -60,4 +62,5 @@ class Semantics
 
         SymTable *m_symTable;
         bool m_mainExists;
+        Node *m_ioRoot;
 };

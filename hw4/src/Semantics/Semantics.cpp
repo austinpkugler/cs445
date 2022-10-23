@@ -1,9 +1,12 @@
 #include "Semantics.hpp"
 
-Semantics::Semantics(SymTable *symTable) : m_symTable(symTable), m_mainExists(false) {}
+Semantics::Semantics(SymTable *symTable) : m_symTable(symTable), m_mainExists(false), m_ioRoot(nullptr) {}
 
 void Semantics::analyze(Node *node)
 {
+    // symTableInjectIO();
+    // symTableAddTree(m_ioRoot);
+
     // Initialize the symbol table
     symTableSimpleEnterScope("Symbol table initialization");
     symTableInitialize(node);
@@ -1026,6 +1029,68 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
             symTableSimpleLeaveScope(showWarns);
         }
     }
+}
+
+void Semantics::symTableInjectIO()
+{
+    Func *outputFunc = new Func(-1, "output", new Data(Data::Type::Void, false, false));
+    Parm *outputParm = new Parm(-1, "*dummy*", new Data(Data::Type::Int, false, false));
+    outputFunc->makeUsed();
+    outputParm->makeUsed();
+    outputFunc->addChild(outputParm);
+
+    Func *outputbFunc = new Func(-1, "outputb", new Data(Data::Type::Void, false, false));
+    Parm *outputbParm = new Parm(-1, "*dummy*", new Data(Data::Type::Bool, false, false));
+    outputbFunc->makeUsed();
+    outputbParm->makeUsed();
+    outputbFunc->addChild(outputbParm);
+
+    Func *outputcFunc = new Func(-1, "outputc", new Data(Data::Type::Void, false, false));
+    Parm *outputcParm = new Parm(-1, "*dummy*", new Data(Data::Type::Char, false, false));
+    outputcFunc->makeUsed();
+    outputcParm->makeUsed();
+    outputcFunc->addChild(outputcParm);
+
+    Func *inputFunc = new Func(-1, "input", new Data(Data::Type::Int, false, false));
+    inputFunc->makeUsed();
+
+    Func *inputbFunc = new Func(-1, "inputb", new Data(Data::Type::Bool, false, false));
+    inputbFunc->makeUsed();
+
+    Func *inputcFunc = new Func(-1, "inputc", new Data(Data::Type::Char, false, false));
+    inputcFunc->makeUsed();
+
+    Func *outnlFunc = new Func(-1, "outnl", new Data(Data::Type::Void, false, false));
+    outnlFunc->makeUsed();
+
+    outputFunc->addSibling(outputbFunc);
+    outputFunc->addSibling(outputcFunc);
+    outputFunc->addSibling(inputFunc);
+    outputFunc->addSibling(inputbFunc);
+    outputFunc->addSibling(inputcFunc);
+    outputFunc->addSibling(outnlFunc);
+
+    m_ioRoot = outputFunc;
+}
+
+void Semantics::symTableAddTree(Node *node)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    if (isDecl(node))
+    {
+        symTableInsert((Decl *)node);
+    }
+
+    std::vector<Node *> children = node->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        symTableAddTree(children[i]);
+    }
+    symTableAddTree(node->getSibling());
 }
 
 bool Semantics::isMainFunc(const Func *func) const
