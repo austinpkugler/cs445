@@ -6,7 +6,7 @@
 class Node
 {
     public:
-        enum class Kind { None, Func, Parm, Var, Asgn, Binary, Call, Const, Id, Unary, UnaryAsgn, Break, Compound, For, If, Range, Return, While };
+        enum class Kind { Func, Parm, Var, Asgn, Binary, Call, Const, Id, Unary, UnaryAsgn, Break, Compound, For, If, Range, Return, While };
 
         Node(const int lineNum);
         ~Node();
@@ -39,7 +39,7 @@ class Node
         // Virtual
         virtual std::string stringify() const;
         virtual std::string stringifyWithType() const { return stringify(); }
-        virtual Node::Kind getNodeKind() const { return Node::Kind::None; }
+        virtual Node::Kind getNodeKind() const = 0;
 
     protected:
         Node *m_sibling;

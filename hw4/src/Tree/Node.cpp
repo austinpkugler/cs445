@@ -30,7 +30,11 @@ unsigned Node::getChildCount() const
 
 Node * Node::getRelative(const Node::Kind nodeKind) const
 {
-    if (m_parent->getNodeKind() == nodeKind || m_parent == nullptr)
+    if (m_parent == nullptr)
+    {
+        return nullptr;
+    }
+    if (m_parent->getNodeKind() == nodeKind)
     {
         return m_parent;
     }

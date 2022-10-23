@@ -56,23 +56,6 @@ bool isExp(const Node *node)
     }
 }
 
-bool isExp2(const Node *node)
-{
-    switch (node->getNodeKind())
-    {
-        case Node::Kind::Asgn:
-        case Node::Kind::Binary:
-        case Node::Kind::Call:
-        case Node::Kind::Const:
-        case Node::Kind::Id:
-        case Node::Kind::Unary:
-        case Node::Kind::UnaryAsgn:
-            return true;
-        default:
-            return false;
-    }
-}
-
 bool isAsgn(const Node *node)
 {
     if (!isExp(node)) return false;
