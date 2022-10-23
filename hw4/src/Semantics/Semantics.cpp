@@ -632,7 +632,7 @@ void Semantics::analyzeWhile(const While *whileN) const
     {
         if (testData->getType() != Data::Type::Bool)
         {
-            Emit::error(whileN->getLineNum(), "Expecting Boolean test condition in while statement but got " + testExp->stringify() + ".");
+            Emit::error(whileN->getLineNum(), "Expecting Boolean test condition in while statement but got type " + testExp->getData()->stringify() + ".");
         }
 
         if (testData->getIsArray())
