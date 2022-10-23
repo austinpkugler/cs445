@@ -36,7 +36,7 @@ class Semantics
         void checkUnusedWarns() const;
 
         // Symbol table
-        bool symTableInsert(const Decl *decl, const bool global=false);
+        bool symTableInsert(const Decl *decl, const bool global=false, const bool showWarns=true);
         Decl * symTableGet(const std::string name) const;
         void symTableInitialize(Node *node);
         Data * symTableSetType(Node *node);

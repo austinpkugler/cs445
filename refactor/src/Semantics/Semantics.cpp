@@ -580,7 +580,7 @@ void Semantics::checkUnusedWarns() const
     }
 }
 
-bool Semantics::symTableInsert(const Decl *decl, const bool global)
+bool Semantics::symTableInsert(const Decl *decl, const bool global, const bool showWarns)
 {
     if (!isDecl(decl))
     {
@@ -597,7 +597,7 @@ bool Semantics::symTableInsert(const Decl *decl, const bool global)
         inserted = m_symTable->insert(decl->getName(), (void *)decl);
     }
 
-    if (!inserted)
+    if (!inserted && showWarns)
     {
         Decl *prevDecl = (Decl *)(symTableGet(decl->getName()));
         if (prevDecl == nullptr)
@@ -632,7 +632,7 @@ void Semantics::symTableInitialize(Node *node)
 
     if (isDecl(node))
     {
-        symTableInsert((Decl *)node);
+        symTableInsert((Decl *)node, false, false);
     }
 
     symTableSetType(node);
