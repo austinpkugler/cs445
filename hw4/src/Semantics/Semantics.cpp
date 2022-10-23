@@ -148,7 +148,7 @@ void Semantics::analyzeVar(Var *var)
         {
             if (varType != expType)
             {
-                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' " + Data::typeToString(varType) + " is " + Data::typeToString(expType));
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' of type " + Data::typeToString(varType) + " is of type " + Data::typeToString(expType));
             }
         }
 
