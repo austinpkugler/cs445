@@ -25,7 +25,7 @@ class Test:
     def get_diff_count(self):
         return self._diff_count
 
-    def run(self, compiler, flags='', show_diff=False, sort_outs=False):
+    def run(self, compiler, flags='', show_diff=False, sort_outs=False, no_print_tree=False):
         passed = True
 
         src = os.path.join(self._tst_dir, self._name + '.c-')
@@ -46,6 +46,10 @@ class Test:
         else:
             actual_out = os.path.join(actual, self._name + '.out')
             os.system(f'{compiler} {src} {flags} > {actual_out}')
+
+        if no_print_tree:
+            Test.remove_tree(expected_out)
+            Test.remove_tree(actual_out)
 
         if Test.diff(expected_out, actual_out):
             passed = False
@@ -97,6 +101,16 @@ class Test:
     @classmethod
     def get_tests(cls, src_dir, tst_dir, tmp_dir):
         return [Test(src_dir, tst_dir, tmp_dir, f[:-4]) for f in os.listdir(tst_dir) if f.endswith('.out')]
+
+    @classmethod
+    def remove_tree(cls, path):
+        arr = []
+        with open(path, "r") as file:
+            for line in file:
+                if line.startswith("ERROR") or line.startswith("WARNING") or line.startswith("Number of "):
+                    arr.append(line)
+        with open(path, "w") as file:
+            file.write(''.join(arr))
 
 
 class Make:
@@ -165,6 +179,7 @@ if __name__ == '__main__':
     one_flag = False
     sort_flag = False
     removetmp_flag = False
+    no_print_tree_flag = False
     src_dir = ''
     tst_dir = ''
     flags = ''
@@ -212,6 +227,10 @@ if __name__ == '__main__':
             removetmp_flag = True
             flag_list.remove('--removetmp')
 
+        if '--notree' in flag_list:
+            no_print_tree_flag = True
+            flag_list.remove('--notree')
+
         flags = ' '.join(flag_list)
 
     make = Make(src_dir)
@@ -232,7 +251,7 @@ if __name__ == '__main__':
     diff_count = 0
     for i, test in enumerate(tests):
         print(f'Running {test} {i + 1}/{len(tests)}...', end='')
-        if test.run(compiler, flags, diff_flag, sort_flag):
+        if test.run(compiler, flags, diff_flag, sort_flag, no_print_tree_flag):
             passed += 1
             Emit.success(f'[ PASSED ]')
         else:

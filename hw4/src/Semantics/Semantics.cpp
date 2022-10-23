@@ -62,10 +62,6 @@ void Semantics::analyzeTree(Node *node)
         case Node::Kind::Stmt:
         {
             Stmt *stmt = (Stmt *)node;
-            if (stmt->getStmtKind() == Stmt::Kind::Range)
-            {
-                return;
-            }
             analyzeStmt(stmt);
             break;
         }
@@ -85,11 +81,7 @@ void Semantics::analyzeTree(Node *node)
     }
 
     // Leave the scope for every scope that was previously entered
-    if (isFunc(node))
-    {
-        leaveScope();
-    }
-    else if (isFor(node))
+    if (isFunc(node) || isFor(node) || isWhile(node))
     {
         leaveScope();
     }
@@ -162,6 +154,18 @@ void Semantics::analyzeParm(const Parm *parm)
     if (!isParm(parm))
     {
         throw std::runtime_error("Semantics::analyzeParm() - Invalid Parm");
+    }
+
+    Node *parent = parm->getParent();
+    if (isFunc(parent))
+    {
+        Func *parentFunc = (Func *)parent;
+        Node *currParm = parentFunc->getChildren()[0];
+        while (currParm != nullptr)
+        {
+            parentFunc->incParmCount();
+            currParm = currParm->getSibling();
+        }
     }
 
     addToSymTable(parm);
@@ -329,7 +333,7 @@ void Semantics::analyzeCall(const Call *call) const
         throw std::runtime_error("Semantics::analyzeCall() - Invalid Call");
     }
 
-    Decl *prevDecl = (Decl *)(getFromSymTable(call->getName()));
+    Decl *prevDecl = getFromSymTable(call->getName());
 
     // If the function name is not in the symbol table
     if (prevDecl == nullptr)
@@ -357,6 +361,56 @@ void Semantics::analyzeCall(const Call *call) const
     {
         Func *prevDeclFunc = (Func *)prevDecl;
         prevDeclFunc->makeUsed();
+
+        // Count the parms
+        int parmCount = 0;
+        Node *currParm = call->getChildren()[0];
+        while (currParm != nullptr)
+        {
+            parmCount += 1;
+            currParm = currParm->getSibling();
+        }
+
+        if (parmCount < prevDeclFunc->getParmCount())
+        {
+            std::stringstream msg;
+            msg << "Too few parameters passed for function '" << prevDeclFunc->getName() << "' declared on line " << prevDeclFunc->getLineNum() << ".";
+
+            Emit::Error::generic(call->getLineNum(), msg.str());
+        }
+        else if (parmCount > prevDeclFunc->getParmCount())
+        {
+            std::stringstream msg;
+            msg << "Too many parameters passed for function '" << prevDeclFunc->getName() << "' declared on line " << prevDeclFunc->getLineNum() << ".";
+
+            Emit::Error::generic(call->getLineNum(), msg.str());
+        }
+
+        // Exp *callParm = (Exp *)(call->getChildren()[0]);
+        // Var *funcDeclVar = (Var *)(prevDeclFunc->getChildren()[0]);
+        // parmCount = 1;
+        // while (callParm != nullptr && funcDeclVar != nullptr)
+        // {
+        //     Data::Type callParmType = callParm->getData()->getType();
+        //     Data::Type funcDeclVarType = funcDeclVar->getData()->getType();
+        //     if (callParmType == Data::Type::Undefined || funcDeclVarType == Data::Type::Undefined)
+        //     {
+        //         callParm = (Exp *)(callParm->getSibling());
+        //         funcDeclVar = (Var *)(funcDeclVar->getSibling());
+        //         parmCount++;
+        //         continue;
+        //     }
+
+        //     if (callParmType != funcDeclVarType)
+        //     {
+        //         std::stringstream msg;
+        //         msg << "Expecting type " << Data::typeToString(funcDeclVarType) << " in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << prevDeclFunc->getLineNum() << " but got type " << Data::typeToString(callParmType) << ".";
+        //     }
+
+        //     callParm = (Exp *)(callParm->getSibling());
+        //     funcDeclVar = (Var *)(funcDeclVar->getSibling());
+        //     parmCount++;
+        // }
     }
 }
 
@@ -367,7 +421,7 @@ void Semantics::analyzeId(const Id *id) const
         throw std::runtime_error("Semantics::analyzeId() - Invalid Id");
     }
 
-    Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
+    Decl *prevDecl = getFromSymTable(id->getName());
     if (prevDecl == nullptr)
     {
         Emit::Error::generic(id->getLineNum(), "Symbol '" + id->getName() + "' is not declared.");
@@ -434,7 +488,7 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
     switch (stmt->getStmtKind())
     {
         case Stmt::Kind::Break:
-            // Not analyzed
+            analyzeBreak((Break *)stmt);
             break;
         case Stmt::Kind::Compound:
             analyzeCompound((Compound *)stmt);
@@ -449,15 +503,35 @@ void Semantics::analyzeStmt(const Stmt *stmt) const
             analyzeReturn((Return *)stmt);
             break;
         case Stmt::Kind::While:
+            m_symTable->enter("While Loop");
             break;
         case Stmt::Kind::Range:
-            // Not analyzed
-            throw std::runtime_error("Semantics::analyzeStmt() - Range kind");
+            analyzeRange((Range *)stmt);
             break;
         default:
             throw std::runtime_error("Semantics::analyzeStmt() - Unknown kind");
             break;
     }
+}
+
+void Semantics::analyzeBreak(const Break *breakN) const
+{
+    // bool inFor = false;
+    // Node *parentNode = (Node *)breakN;
+    // while (parentNode != nullptr)
+    // {
+    //     if (isFor(parentNode) || isWhile(parentNode))
+    //     {
+    //         inFor = true;
+    //         break;
+    //     }
+    //     parentNode = parentNode->getParent();
+    // }
+
+    // if (!inFor)
+    // {
+    //     Emit::Error::generic(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
+    // }
 }
 
 void Semantics::analyzeCompound(const Compound *compound) const
@@ -495,6 +569,39 @@ void Semantics::analyzeIf(const If *ifN) const
     }
 }
 
+void Semantics::analyzeRange(const Range *range) const
+{
+    if (!isRange(range))
+    {
+        throw std::runtime_error("Semantics::analyzeRange() - Invalid Range");
+    }
+
+    std::vector<Node *> children = range->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        if (children[i] == nullptr)
+        {
+            continue;
+        }
+
+        bool isArray = false;
+        if (isId(children[i]))
+        {
+            Id *id = (Id *)(children[i]);
+            if (id->getData()->getIsArray())
+            {
+                isArray = true;
+            }
+        }
+        if (isArray)
+        {
+            std::stringstream msg;
+            msg << "Cannot use array in position " << i + 1 << " in range of for statement.";
+            Emit::Error::generic(children[i]->getLineNum(), msg.str());
+        }
+    }
+}
+
 void Semantics::analyzeReturn(const Return *returnN) const
 {
     if (!isReturn(returnN))
@@ -503,18 +610,49 @@ void Semantics::analyzeReturn(const Return *returnN) const
     }
 
     std::vector<Node *> children = returnN->getChildren();
-    if (children.size() > 0)
+    if (children.size() == 0)
     {
-        Exp *returnChild = (Exp *)(children[0]);
-        if (isId(returnChild))
+        return;
+    }
+
+    Exp *returnExp = (Exp *)(children[0]);
+    if (isId(returnExp))
+    {
+        Id *returnId = (Id *)returnExp;
+        Decl *prevDecl = getFromSymTable(returnId->getName());
+        if (prevDecl != nullptr && prevDecl->getData()->getIsArray())
         {
-            Id *id = (Id *)returnChild;
-            Decl *prevDecl = (Decl *)(getFromSymTable(id->getName()));
-            if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || id->getIsArray())
-            {
-                Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
-            }
+            Emit::Error::generic(returnN->getLineNum(), "Cannot return an array.");
         }
+    }
+
+    Data *lhsData = setAndGetExpData(returnExp);
+
+    Node *parentNode = returnN->getParent();
+    while (parentNode != nullptr)
+    {
+        if (isFunc(parentNode))
+        {
+            Func *parentFunc = (Func *)parentNode;
+            if (parentFunc->getData()->getType() != returnExp->getData()->getType())
+            {
+                if (parentFunc->getData()->getType() == Data::Type::Void)
+                {
+                    std::stringstream msg;
+                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting no return value, but return has a value.";
+                    Emit::Error::generic(returnN->getLineNum(), msg.str());
+                }
+                else
+                {
+                    std::stringstream msg;
+                    msg << "Function '" << parentFunc->getName() << "' at line " << parentFunc->getLineNum() << " is expecting to return type " << parentFunc->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
+                    Emit::Error::generic(returnN->getLineNum(), msg.str());
+                }
+                
+            }
+            break;
+        }
+        parentNode = parentNode->getParent();
     }
 }
 
@@ -565,8 +703,8 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
         Id *rhsId = (Id *)rhsExp;
         if (lhsId->getName() != rhsId->getName())
         {
-            Decl *prevLhsDecl = (Decl *)(getFromSymTable(lhsId->getName()));
-            Decl *prevRhsDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+            Decl *prevLhsDecl = getFromSymTable(lhsId->getName());
+            Decl *prevRhsDecl = getFromSymTable(rhsId->getName());
             if ((prevLhsDecl != nullptr && isVar(prevLhsDecl)) && (prevRhsDecl != nullptr && isVar(prevRhsDecl)))
             {
                 if (rhsData->getCopyOf() != lhsId->getName())
@@ -621,7 +759,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
         if (isId(lhsExp))
         {
             Id *lhsId = (Id *)lhsExp;
-            Decl *prevDecl = (Decl *)(getFromSymTable(lhsId->getName()));
+            Decl *prevDecl = getFromSymTable(lhsId->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || lhsId->getIsArray())
             {
                 Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
@@ -631,7 +769,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type) const
         if (isId(rhsExp))
         {
             Id *rhsId = (Id *)rhsExp;
-            Decl *prevDecl = (Decl *)(getFromSymTable(rhsId->getName()));
+            Decl *prevDecl = getFromSymTable(rhsId->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()) || rhsId->getIsArray())
             {
                 Emit::Error::generic(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
@@ -745,7 +883,7 @@ void Semantics::checkIndex(const Binary *binary) const
     Id *arrayId = (Id *)(children[0]);
     Node *indexNode = children[1];
 
-    Decl *prevArrayDecl = (Decl *)(getFromSymTable(arrayId->getName()));
+    Decl *prevArrayDecl = getFromSymTable(arrayId->getName());
     if (prevArrayDecl == nullptr || !prevArrayDecl->getData()->getIsArray() || !arrayId->getIsArray())
     {
         Emit::Error::generic(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
@@ -829,7 +967,7 @@ bool Semantics::addToSymTable(const Decl *decl, const bool global)
 
     if (!inserted)
     {
-        Decl *prevDecl = (Decl *)(getFromSymTable(decl->getName()));
+        Decl *prevDecl = getFromSymTable(decl->getName());
         if (prevDecl == nullptr)
         {
             throw std::runtime_error("Semantics::addToSymTable() - Failed to insert Decl");
@@ -867,10 +1005,10 @@ bool Semantics::isMainFunc(const Func *func) const
     }
 
     // Get the function children
-    std::vector<Node *> funcChildren = func->getChildren();
+    std::vector<Node *> children = func->getChildren();
 
     // There can't be any parms (children)
-    if (funcChildren[0] != nullptr)
+    if (children[0] != nullptr)
     {
         return false;
     }

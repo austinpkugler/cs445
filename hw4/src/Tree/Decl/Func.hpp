@@ -14,4 +14,17 @@ class Func : public Decl
 
         // Overridden
         std::string stringify() const override;
+
+        // Getters
+        int getParmCount() const { return m_parmCount; }
+        bool getHasReturn() const { return m_hasReturn; }
+
+        // Setters
+        void setParmCount(const bool parmCount) { m_parmCount = parmCount; }
+        void incParmCount() { m_parmCount++; }
+        void setHasReturn(const bool hasReturn) { m_hasReturn = hasReturn; }
+
+    private:
+        int m_parmCount = 0;
+        bool m_hasReturn = false;
 };

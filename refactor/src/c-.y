@@ -1,11 +1,10 @@
 %{
 // Based off CS445 - Calculator Example Program by Robert Heckendorn
-#include "TokenData.hpp"
-
-// #include "SymTable.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
+#include "Semantics/SymTable.hpp"
+#include "TokenData.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -628,7 +627,7 @@ mutable                 : ID
                         | ID LBRACK exp RBRACK
                         {
                             $$ = new Binary($1->lineNum, Binary::Type::Index);
-                            Id *node = new Id($1->lineNum, $1->tokenContent, true);
+                            Id *node = new Id($1->lineNum, $1->tokenContent);
                             $$->addChild(node);
                             $$->addChild($3);
                         }
@@ -701,24 +700,17 @@ int main(int argc, char *argv[])
     Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
 
-    std::string filename = flags.getFile();
+    std::string filename = flags.getFilename();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        Emit::Error::arglist("source file \"" + filename + "\" could not be opened.");
-        Emit::Warn::count();
-        Emit::Error::count();
+        Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
+        Emit::count();
         return EXIT_FAILURE;
     }
 
     yyparse();
 
-    SymTable symTable = SymTable();
-    symTable.debug(flags.getSymTableDebugFlag());
-
-    Semantics analyzer = Semantics(&symTable);
-    analyzer.analyze(root);
-
-    if (flags.getPrintSyntaxTreeFlag() && Emit::Error::getErrorCount() == 0)
+    if (flags.getPrintSyntaxTreeFlag())
     {
         if (root == nullptr)
         {
@@ -727,7 +719,13 @@ int main(int argc, char *argv[])
         root->printTree();
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && Emit::Error::getErrorCount() == 0)
+    SymTable symTable = SymTable();
+    symTable.debug(flags.getSymTableDebugFlag());
+
+    Semantics analyzer = Semantics(&symTable);
+    analyzer.analyze(root);
+
+    if (flags.getPrintAnnotatedSyntaxTreeFlag())
     {
         if (root == nullptr)
         {
@@ -736,8 +734,7 @@ int main(int argc, char *argv[])
         root->printTree(true);
     }
 
-    Emit::Warn::count();
-    Emit::Error::count();
+    Emit::count();
 
     delete root;
     fclose(yyin);
