@@ -32,7 +32,8 @@ void yyerror(const char *msg)
 
 %}
 
-%union {
+%union
+{
     Data::Type type;
     TokenData *tokenData;
     Node *node;
@@ -86,6 +87,10 @@ decl                    : varDecl
                         {
                             $$ = $1;
                         }
+                        | error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 varDecl                 : typeSpec varDeclList SEMICOLON
@@ -93,6 +98,17 @@ varDecl                 : typeSpec varDeclList SEMICOLON
                             $$ = $2;
                             Var *node = (Var *)$$;
                             node->setType($1);
+                            yyerrok;
+                        }
+                        | error varDeclList SEMICOLON
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | typeSpec error SEMICOLON
+                        {
+                            $$ = nullptr;
+                            yyerrok;
                         }
                         ;
 
@@ -102,12 +118,14 @@ scopedVarDecl           : STATIC typeSpec varDeclList SEMICOLON
                             Var *node = (Var *)$$;
                             node->setType($2);
                             node->makeStatic();
+                            yyerrok;
                         }
                         | typeSpec varDeclList SEMICOLON
                         {
                             $$ = $2;
                             Var *node = (Var *)$$;
                             node->setType($1);
+                            yyerrok;
                         }
                         ;
 
@@ -115,10 +133,19 @@ varDeclList             : varDeclList COMMA varDeclInit
                         {
                             $$ = $1;
                             $$->addSibling($3);
+                            yyerrok;
                         }
                         | varDeclInit
                         {
                             $$ = $1;
+                        }
+                        | varDeclList COMMA error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -133,6 +160,11 @@ varDeclInit             : varDeclId
                             $$ = var;
                             $$->addChild($3);
                         }
+                        | error COLON simpleExp
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
                         ;
 
 varDeclId               : ID
@@ -142,6 +174,15 @@ varDeclId               : ID
                         | ID LBRACK NUMCONST RBRACK
                         {
                             $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
+                        }
+                        | ID LBRACK error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error RBRACK
+                        {
+                            $$ = nullptr;
+                            yyerrok;
                         }
                         ;
 
@@ -171,6 +212,22 @@ funDecl                 : typeSpec ID LPAREN parms RPAREN compoundStmt
                             $$->addChild($3);
                             $$->addChild($5);
                         }
+                        | typeSpec error
+                        {
+                            $$ = nullptr;
+                        }
+                        | typeSpec ID LPAREN error
+                        {
+                            $$ = nullptr;
+                        }
+                        | ID LPAREN error
+                        {
+                            $$ = nullptr;
+                        }
+                        | ID LPAREN parms RPAREN error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 parms                   : parmList
@@ -192,6 +249,14 @@ parmList                : parmList SEMICOLON parmTypeList
                         {
                             $$ = $1;
                         }
+                        | parmList SEMICOLON error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 parmTypeList            : typeSpec parmIdList
@@ -199,6 +264,10 @@ parmTypeList            : typeSpec parmIdList
                             $$ = $2;
                             Parm *node = (Parm *)$$;
                             node->setType($1);
+                        }
+                        | typeSpec error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -213,10 +282,19 @@ parmIdList              : parmIdList COMMA parmId
                                 $$ = $1;
                                 $$->addSibling($3);
                             }
+                            yyerrok;
                         }
                         | parmId
                         {
                             $$ = $1;
+                        }
+                        | parmIdList COMMA error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -248,6 +326,16 @@ stmtUnmatched           : selectStmtUnmatched
                         {
                             $$ = $1;
                         }
+                        | IF error THEN stmt
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | IF error THEN stmtMatched ELSE stmtUnmatched
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
                         ;
 
 stmtMatched             : selectStmtMatched
@@ -274,6 +362,38 @@ stmtMatched             : selectStmtMatched
                         {
                             $$ = $1;
                         }
+                        | IF error
+                        {
+                            $$ = nullptr;
+                        }
+                        | IF error ELSE stmtMatched
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | IF error THEN stmtMatched ELSE stmtMatched
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | WHILE error DO stmtMatched
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | WHILE error
+                        {
+                            $$ = nullptr;
+                        }
+                        | FOR ID ASGN error DO stmtMatched
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | FOR error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 expStmt                 : exp SEMICOLON
@@ -284,6 +404,11 @@ expStmt                 : exp SEMICOLON
                         {
                             $$ = nullptr;
                         }
+                        | error SEMICOLON
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
                         ;
 
 compoundStmt            : LCURLY localDecls stmtList RCURLY
@@ -291,6 +416,7 @@ compoundStmt            : LCURLY localDecls stmtList RCURLY
                             $$ = new Compound($1->lineNum);
                             $$->addChild($2);
                             $$->addChild($3);
+                            yyerrok;
                         }
                         ;
 
@@ -401,6 +527,19 @@ iterRange               : simpleExp TO simpleExp
                             $$->addChild($3);
                             $$->addChild($5);
                         }
+                        | simpleExp TO error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error BY error
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | simpleExp TO simpleExp BY error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 returnStmt              : RETURN SEMICOLON
@@ -411,6 +550,12 @@ returnStmt              : RETURN SEMICOLON
                         {
                             $$ = new Return($1->lineNum);
                             $$->addChild($2);
+                            yyerrok;
+                        }
+                        | RETURN error SEMICOLON
+                        {
+                            $$ = nullptr;
+                            yyerrok;
                         }
                         ;
 
@@ -439,6 +584,25 @@ exp                     : mutable assignop exp
                         | simpleExp
                         {
                             $$ = $1;
+                        }
+                        | error assignop exp
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | mutable assignop error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error INC
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
+                        | error DEC
+                        {
+                            $$ = nullptr;
+                            yyerrok;
                         }
                         ;
 
@@ -474,6 +638,10 @@ simpleExp               : simpleExp OR andExp
                         {
                             $$ = $1;
                         }
+                        | simpleExp OR error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 andExp                  : andExp AND unaryRelExp
@@ -486,6 +654,10 @@ andExp                  : andExp AND unaryRelExp
                         {
                             $$ = $1;
                         }
+                        | andExp AND error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 unaryRelExp             : NOT unaryRelExp
@@ -496,6 +668,10 @@ unaryRelExp             : NOT unaryRelExp
                         | relExp
                         {
                             $$ = $1;
+                        }
+                        | NOT error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -547,6 +723,10 @@ sumExp                  : sumExp sumOp mulExp
                         {
                             $$ = $1;
                         }
+                        | sumExp sumOp error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 sumOp                   : ADD
@@ -568,6 +748,10 @@ mulExp                  : mulExp mulOp unaryExp
                         | unaryExp
                         {
                             $$ = $1;
+                        }
+                        | mulExp mulOp error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -593,6 +777,10 @@ unaryExp                : unaryOp unaryExp
                         | factor
                         {
                             $$ = $1;
+                        }
+                        | unaryOp error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -636,6 +824,7 @@ mutable                 : ID
 immutable               : LPAREN exp RPAREN
                         {
                             $$ = $2;
+                            yyerrok;
                         }
                         | call
                         {
@@ -644,6 +833,15 @@ immutable               : LPAREN exp RPAREN
                         | constant
                         {
                             $$ = $1;
+                        }
+                        | LPAREN error
+                        {
+                            $$ = nullptr;
+                        }
+                        | error LPAREN
+                        {
+                            $$ = nullptr;
+                            yyerrok;
                         }
                         ;
 
@@ -668,10 +866,15 @@ argList                 : argList COMMA exp
                         {
                             $$ = $1;
                             $$->addSibling($3);
+                            yyerrok;
                         }
                         | exp
                         {
                             $$ = $1;
+                        }
+                        | argList COMMA error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
