@@ -1,7 +1,7 @@
 CC = g++ -std=c++17 -g
 BIN = c-
 SRCS = $(BIN).y $(BIN).l
-CPPS = */*.cpp */*/*.cpp
+CPPS = *.cpp */*.cpp */*/*.cpp
 HPPS = *.hpp */*.hpp */*/*.hpp
 OBJS = lex.yy.o $(BIN).tab.o
 

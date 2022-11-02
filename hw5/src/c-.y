@@ -1,10 +1,11 @@
 %{
-// Based off CS445 - Calculator Example Program by Robert Heckendorn
+// Based on CS445 - Calculator Example Program by Robert Heckendorn and yyerror.h by Michael Wilder
+#include "Error.hpp"
+#include "TokenData.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "TokenData.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -19,6 +20,7 @@ extern FILE *yyin;
 // From c-.l scanner
 extern int lineCount;
 extern int errorCount;
+extern char *lastToken;
 
 // AST
 Node *root;
@@ -26,8 +28,42 @@ Node *root;
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
 {
-    std::cout << "ERROR(" << lineCount + 1 << "): " << msg << std::endl;
-    errorCount++;
+    char *space;
+    char *strs[100];
+    int numstrs;
+
+    // make a copy of msg string
+    space = strdup(msg);
+
+    // split out components
+    numstrs = Error::split(space, strs, ' ');
+    if (numstrs>4) Error::trim(strs[3]);
+
+    // translate components
+    for (int i=3; i<numstrs; i+=2) {
+        strs[i] = Error::niceTokenStr(strs[i]);
+    }
+
+    // print components
+    printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
+    if (Error::elaborate(strs[3])) {
+        if (lastToken[0]=='\'' || lastToken[0]=='"') printf(" %s", lastToken); 
+        else printf(" \"%s\"", lastToken);
+    }
+
+    if (numstrs>4) printf(",");
+
+    // print sorted list of expected
+    Error::tinySort(strs+5, numstrs-5, 2, true); 
+    for (int i=4; i<numstrs; i++) {
+        printf(" %s", strs[i]);
+    }
+    printf(".\n");
+    fflush(stdout);   // force a dump of the error
+
+    errorCount++;      // count the number of errors
+
+    free(space);
 }
 
 %}

@@ -1,11 +1,12 @@
 %{
-// Based off CS445 - Calculator Example Program by Robert Heckendorn
+// Based on CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
+#include "Error.hpp"
+#include "TokenData.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "TokenData.hpp"
 #include "Tree/Tree.hpp"
 
 #include <string>
@@ -15,6 +16,7 @@
 
 int lineCount = 1;
 int errorCount;
+char *lastToken;
 
 static int setValue(int lineNum, int tokenClass, char *sValue)
 {
@@ -25,6 +27,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
     yylval.tokenData->lineNum = lineNum;
     yylval.tokenData->tokenContent = std::string(sValue);
 
+    lastToken = sValue;
     return tokenClass;
 }
 
