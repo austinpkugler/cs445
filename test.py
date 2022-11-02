@@ -260,13 +260,13 @@ if __name__ == '__main__':
         diff_count += test.get_diff_count()
 
     if passed == len(tests):
-        Emit.success('=' * 30)
+        Emit.success('=' * 32)
         Emit.success(f'Passed {passed}/{len(tests)} tests with diff {diff_count}')
-        Emit.success('=' * 30)
+        Emit.success('=' * 32)
     else:
-        Emit.error('=' * 30)
+        Emit.error('=' * 32)
         Emit.error(f'Passed: {passed}/{len(tests)} tests with diff {diff_count}')
-        Emit.error('=' * 30)
+        Emit.error('=' * 32)
 
     make.clean()
 
