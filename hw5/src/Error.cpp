@@ -29,9 +29,9 @@ void Error::trim(char *s)
 
 void Error::initErrorProcessing()
 {
-    niceTokenNameMap["ADDASS"] = (char *)"\"+=\"";
+    niceTokenNameMap["ADDASGN"] = (char *)"\"+=\"";
     niceTokenNameMap["AND"] = (char *)"\"and\"";
-    niceTokenNameMap["ASGN"] = (char *)"\"<-\"";
+    niceTokenNameMap["ASGN"] = (char *)"'='";
     niceTokenNameMap["Begin"] = (char *)"\"begin\"";
     niceTokenNameMap["BOOL"] = (char *)"\"bool\"";
     niceTokenNameMap["BOOLCONST"] = (char *)"Boolean constant";
@@ -41,7 +41,7 @@ void Error::initErrorProcessing()
     niceTokenNameMap["CHARCONST"] = (char *)"character constant";
     niceTokenNameMap["CHSIGN"] = (char *)"-";
     niceTokenNameMap["DEC"] = (char *)"\"--\"";
-    niceTokenNameMap["DIVASS"] = (char *)"\"/=\"";
+    niceTokenNameMap["DIVASGN"] = (char *)"\"/=\"";
     niceTokenNameMap["DO"] = (char *)"\"do\"";
     niceTokenNameMap["ELSE"] = (char *)"\"else\"";
     niceTokenNameMap["End"] = (char *)"\"end\"";
@@ -52,7 +52,7 @@ void Error::initErrorProcessing()
     niceTokenNameMap["INC"] = (char *)"\"++\"";
     niceTokenNameMap["INT"] = (char *)"\"int\"";
     niceTokenNameMap["LEQ"] = (char *)"\"<=\"";
-    niceTokenNameMap["MULASS"] = (char *)"\"*=\"";
+    niceTokenNameMap["MULASGN"] = (char *)"\"*=\"";
     niceTokenNameMap["NEQ"] = (char *)"\"!=\"";
     niceTokenNameMap["NOT"] = (char *)"\"not\"";
     niceTokenNameMap["NUMCONST"] = (char *)"numeric constant";
@@ -61,10 +61,27 @@ void Error::initErrorProcessing()
     niceTokenNameMap["SIZEOF"] = (char *)"\"*\"";
     niceTokenNameMap["STATIC"] = (char *)"\"static\"";
     niceTokenNameMap["STRINGCONST"] = (char *)"string constant";
-    niceTokenNameMap["SUBASS"] = (char *)"\"-=\"";
+    niceTokenNameMap["SUBASGN"] = (char *)"\"-=\"";
     niceTokenNameMap["THEN"] = (char *)"\"then\"";
     niceTokenNameMap["TO"] = (char *)"\"to\"";
     niceTokenNameMap["WHILE"] = (char *)"\"while\"";
+    niceTokenNameMap["LPAREN"] = (char *)"'('";
+    niceTokenNameMap["RPAREN"] = (char *)"')'";
+    niceTokenNameMap["MOD"] = (char *)"'%'";
+    niceTokenNameMap["LCURLY"] = (char *)"'{'";
+    niceTokenNameMap["RCURLY"] = (char *)"'}'";
+    niceTokenNameMap["LBRACK"] = (char *)"'['";
+    niceTokenNameMap["RBRACK"] = (char *)"']'";
+    niceTokenNameMap["COLON"] = (char *)"':'";
+    niceTokenNameMap["SEMICOLON"] = (char *)"';'";
+    niceTokenNameMap["COMMA"] = (char *)"','";
+    niceTokenNameMap["GT"] = (char *)"'>'";
+    niceTokenNameMap["LT"] = (char *)"'<'";
+    niceTokenNameMap["EQ"] = (char *)"\"==\"";
+    niceTokenNameMap["MUL"] = (char *)"'*'";
+    niceTokenNameMap["DIV"] = (char *)"'/'";
+    niceTokenNameMap["ADD"] = (char *)"'+'";
+    niceTokenNameMap["SUB"] = (char *)"'-'";
     niceTokenNameMap["$end"] = (char *)"end of input";
 }
 
@@ -76,7 +93,7 @@ char * Error::niceTokenStr(char *tokenName)
     }
     if (niceTokenNameMap.find(tokenName) == niceTokenNameMap.end())
     {
-        printf("ERROR(SYSTEM): niceTokenStr fails to find string '%s'\n", tokenName); 
+        printf("ERROR(SYSTEM): niceTokenStr fails to find string '%s'\n", tokenName);
         fflush(stdout);
         exit(1);
     }

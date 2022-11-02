@@ -32,37 +32,50 @@ void yyerror(const char *msg)
     char *strs[100];
     int numstrs;
 
-    // make a copy of msg string
+    // Make a copy of msg string
     space = strdup(msg);
 
-    // split out components
+    // Split out components
     numstrs = Error::split(space, strs, ' ');
-    if (numstrs>4) Error::trim(strs[3]);
+    if (numstrs > 4)
+    {
+        Error::trim(strs[3]);
+    }
 
-    // translate components
-    for (int i=3; i<numstrs; i+=2) {
+    // Translate components
+    for (int i = 3; i < numstrs; i += 2)
+    {
         strs[i] = Error::niceTokenStr(strs[i]);
     }
 
-    // print components
+    // Print components
     printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
-    if (Error::elaborate(strs[3])) {
-        if (lastToken[0]=='\'' || lastToken[0]=='"') printf(" %s", lastToken); 
-        else printf(" \"%s\"", lastToken);
+    if (Error::elaborate(strs[3]))
+    {
+        if (lastToken[0]=='\'' || lastToken[0]=='"')
+        {
+            printf(" %s", lastToken);
+        }
+        else
+        {
+            printf(" \"%s\"", lastToken);
+        }
     }
 
-    if (numstrs>4) printf(",");
+    if (numstrs > 4)
+    {
+        printf(",");
+    }
 
-    // print sorted list of expected
-    Error::tinySort(strs+5, numstrs-5, 2, true); 
-    for (int i=4; i<numstrs; i++) {
+    // Print sorted list of expected
+    Error::tinySort(strs + 5, numstrs - 5, 2, true);
+    for (int i = 4; i < numstrs; i++)
+    {
         printf(" %s", strs[i]);
     }
     printf(".\n");
-    fflush(stdout);   // force a dump of the error
-
-    errorCount++;      // count the number of errors
-
+    fflush(stdout);
+    errorCount++;
     free(space);
 }
 
@@ -968,6 +981,8 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
+    Error::initErrorProcessing();
+
     Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
 
@@ -975,6 +990,7 @@ int main(int argc, char *argv[])
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
         Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
+        Emit::incErrorCount(errorCount);
         Emit::count();
         return EXIT_FAILURE;
     }
@@ -1005,6 +1021,7 @@ int main(int argc, char *argv[])
         root->printTree(true);
     }
 
+    Emit::incErrorCount(errorCount);
     Emit::count();
 
     delete root;
