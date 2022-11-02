@@ -97,7 +97,10 @@ varDecl                 : typeSpec varDeclList SEMICOLON
                         {
                             $$ = $2;
                             Var *node = (Var *)$$;
-                            node->setType($1);
+                            if (node)
+                            {
+                                node->setType($1);
+                            }
                             yyerrok;
                         }
                         | error varDeclList SEMICOLON
@@ -115,16 +118,22 @@ varDecl                 : typeSpec varDeclList SEMICOLON
 scopedVarDecl           : STATIC typeSpec varDeclList SEMICOLON
                         {
                             $$ = $3;
-                            Var *node = (Var *)$$;
-                            node->setType($2);
-                            node->makeStatic();
+                            Var *var = (Var *)$$;
+                            if (var)
+                            {
+                                var->setType($2);
+                                var->makeStatic();
+                            }
                             yyerrok;
                         }
                         | typeSpec varDeclList SEMICOLON
                         {
                             $$ = $2;
-                            Var *node = (Var *)$$;
-                            node->setType($1);
+                            Var *var = (Var *)$$;
+                            if (var)
+                            {
+                                var->setType($1);
+                            }
                             yyerrok;
                         }
                         ;
@@ -156,9 +165,15 @@ varDeclInit             : varDeclId
                         | varDeclId COLON simpleExp
                         {
                             Var *var = (Var *)($1);
-                            var->makeInitialized();
+                            if (var)
+                            {
+                                var->makeInitialized();
+                            }
                             $$ = var;
-                            $$->addChild($3);
+                            if ($$)
+                            {
+                                $$->addChild($3);
+                            }
                         }
                         | error COLON simpleExp
                         {
@@ -262,8 +277,11 @@ parmList                : parmList SEMICOLON parmTypeList
 parmTypeList            : typeSpec parmIdList
                         {
                             $$ = $2;
-                            Parm *node = (Parm *)$$;
-                            node->setType($1);
+                            Parm *parm = (Parm *)$$;
+                            if (parm)
+                            {
+                                parm->setType($1);
+                            }
                         }
                         | typeSpec error
                         {
@@ -630,9 +648,16 @@ assignop                : ASGN
 
 simpleExp               : simpleExp OR andExp
                         {
-                            $$ = new Binary($1->getLineNum(), Binary::Type::Or);
-                            $$->addChild($1);
-                            $$->addChild($3);
+                            if ($1)
+                            {
+                                $$ = new Binary($1->getLineNum(), Binary::Type::Or);
+                                $$->addChild($1);
+                                $$->addChild($3);
+                            }
+                            else
+                            {
+                                $$ = nullptr;
+                            }
                         }
                         | andExp
                         {
@@ -646,9 +671,16 @@ simpleExp               : simpleExp OR andExp
 
 andExp                  : andExp AND unaryRelExp
                         {
-                            $$ = new Binary($1->getLineNum(), Binary::Type::And);
-                            $$->addChild($1);
-                            $$->addChild($3);
+                            if ($1)
+                            {
+                                $$ = new Binary($1->getLineNum(), Binary::Type::And);
+                                $$->addChild($1);
+                                $$->addChild($3);
+                            }
+                            else
+                            {
+                                $$ = nullptr;
+                            }
                         }
                         | unaryRelExp
                         {

@@ -54,6 +54,10 @@ void Node::addChild(Node *node)
 
 void Node::addSibling(Node *node)
 {
+    if (this == nullptr)
+    {
+        return;
+    }
     if (node == nullptr)
     {
         return;
