@@ -675,14 +675,7 @@ exp                     : mutable assignop exp
 
 assignop                : ASGN
                         {
-                            if ($1)
-                            {
-                                $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
-                            }
-                            else
-                            {
-                                $$ = nullptr;
-                            }
+                            $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
                         }
                         | ADDASGN
                         {
