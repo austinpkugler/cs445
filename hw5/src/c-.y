@@ -766,6 +766,10 @@ relExp                  : sumExp relOp sumExp
                         {
                             $$ = $1;
                         }
+                        | sumExp relOp error
+                        {
+                            $$ = nullptr;
+                        }
                         ;
 
 relOp                   : LT
