@@ -231,7 +231,8 @@ void Semantics::analyzeBinary(const Binary *binary) const
     }
     if (!expOperandsExist((Exp *)binary))
     {
-        throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS Exp operands must exist");
+        // throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS Exp operands must exist");
+        return;
     }
 
     switch (binary->getType())
@@ -423,7 +424,8 @@ void Semantics::analyzeUnary(const Unary *unary) const
     }
     if (!lhsExists((Exp *)unary))
     {
-        throw std::runtime_error("Semantics::analyzeUnary() - LHS operand must exist");
+        return;
+        // throw std::runtime_error("Semantics::analyzeUnary() - LHS operand must exist");
     }
 
     Exp *lhs = (Exp *)(unary->getChild());
@@ -629,6 +631,11 @@ void Semantics::analyzeWhile(const While *whileN) const
     }
 
     Exp *testExp = (Exp *)(whileN->getChild());
+    if (!isExp(testExp))
+    {
+        return;
+    }
+
     Data *testData = testExp->getData();
     if (testData->getType() != Data::Type::Undefined)
     {

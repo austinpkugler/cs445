@@ -1,10 +1,11 @@
 %{
-// Based off CS445 - Calculator Example Program by Robert Heckendorn
+// Based on CS445 - Calculator Example Program by Robert Heckendorn and yyerror.h by Michael Wilder
+#include "Error.hpp"
+#include "TokenData.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "TokenData.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -19,6 +20,7 @@ extern FILE *yyin;
 // From c-.l scanner
 extern int lineCount;
 extern int errorCount;
+extern char *lastToken;
 
 // AST
 Node *root;
@@ -26,8 +28,55 @@ Node *root;
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
 {
-    std::cout << "ERROR(" << lineCount + 1 << "): " << msg << std::endl;
+    char *space;
+    char *strs[100];
+    int numstrs;
+
+    // Make a copy of msg string
+    space = strdup(msg);
+
+    // Split out components
+    numstrs = Error::split(space, strs, ' ');
+    if (numstrs > 4)
+    {
+        Error::trim(strs[3]);
+    }
+
+    // Translate components
+    for (int i = 3; i < numstrs; i += 2)
+    {
+        strs[i] = Error::niceTokenStr(strs[i]);
+    }
+
+    // Print components
+    printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
+    if (Error::elaborate(strs[3]))
+    {
+        if (lastToken[0]=='\'' || lastToken[0]=='"')
+        {
+            printf(" %s", lastToken);
+        }
+        else
+        {
+            printf(" \"%s\"", lastToken);
+        }
+    }
+
+    if (numstrs > 4)
+    {
+        printf(",");
+    }
+
+    // Print sorted list of expected
+    Error::tinySort(strs + 5, numstrs - 5, 2, true);
+    for (int i = 4; i < numstrs; i++)
+    {
+        printf(" %s", strs[i]);
+    }
+    printf(".\n");
+    fflush(stdout);
     errorCount++;
+    free(space);
 }
 
 %}
@@ -932,6 +981,8 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
+    Error::initErrorProcessing();
+
     Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
 
@@ -939,6 +990,7 @@ int main(int argc, char *argv[])
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
         Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
+        Emit::incErrorCount(errorCount);
         Emit::count();
         return EXIT_FAILURE;
     }
@@ -969,6 +1021,7 @@ int main(int argc, char *argv[])
         root->printTree(true);
     }
 
+    Emit::incErrorCount(errorCount);
     Emit::count();
 
     delete root;

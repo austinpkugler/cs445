@@ -12,6 +12,11 @@ void Emit::error(const int lineNum, const std::string msg)
     s_errorCount++;
 }
 
+void Emit::incErrorCount(unsigned count)
+{
+    s_errorCount += count;
+}
+
 void Emit::warn(const std::string type, const std::string msg)
 {
     std::cout << "WARNING(" << type << "): " << msg << std::endl;
@@ -22,6 +27,11 @@ void Emit::warn(const int lineNum, const std::string msg)
 {
     std::cout << "WARNING(" << lineNum << "): " << msg << std::endl;
     s_warnCount++;
+}
+
+void Emit::incWarnCount(unsigned count)
+{
+    s_warnCount += count;
 }
 
 void Emit::count()
