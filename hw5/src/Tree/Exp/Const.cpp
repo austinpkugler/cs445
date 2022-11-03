@@ -18,6 +18,7 @@ Const::Const(const int lineNum, const Const::Type type, const std::string constV
             m_charValue = parseFirstChar(chars);
             if (chars.length() > 1 && chars[0] != '\\')
             {
+                m_longConstValue = constValue;
                 m_charLengthWarning = true;
             }
             m_data->setType(Data::Type::Char);

@@ -675,14 +675,7 @@ exp                     : mutable assignop exp
 
 assignop                : ASGN
                         {
-                            if ($1)
-                            {
-                                $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
-                            }
-                            else
-                            {
-                                $$ = nullptr;
-                            }
+                            $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
                         }
                         | ADDASGN
                         {
@@ -1002,15 +995,21 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    std::cout << "====================================" << std::endl;
+    std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl;
+
     yyparse();
 
     if (flags.getPrintSyntaxTreeFlag())
     {
-        if (root == nullptr)
+        /* if (root == nullptr)
         {
             throw std::runtime_error("main() - Cannot print tree");
+        } */
+        if (root != nullptr)
+        {
+            root->printTree();
         }
-        root->printTree();
     }
 
     SymTable symTable = SymTable();
@@ -1021,11 +1020,14 @@ int main(int argc, char *argv[])
 
     if (flags.getPrintAnnotatedSyntaxTreeFlag() && !Emit::getErrorCount())
     {
-        if (root == nullptr)
+        /* if (root == nullptr)
         {
             throw std::runtime_error("main() - Cannot print tree");
+        } */
+        if (root != nullptr)
+        {
+            root->printTree(true);
         }
-        root->printTree(true);
     }
 
     Emit::incErrorCount(errorCount);
