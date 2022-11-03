@@ -145,10 +145,10 @@ decl                    : varDecl
 varDecl                 : typeSpec varDeclList SEMICOLON
                         {
                             $$ = $2;
-                            Var *node = (Var *)$$;
-                            if (node)
+                            Var *var = (Var *)$$;
+                            if (var)
                             {
-                                node->setType($1);
+                                var->setType($1);
                             }
                             yyerrok;
                         }
@@ -556,9 +556,9 @@ iterStmtUnmatched       : WHILE simpleExp DO stmtUnmatched
                         | FOR ID ASGN iterRange DO stmtUnmatched
                         {
                             $$ = new For($1->lineNum);
-                            Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
-                            node->makeInitialized();
-                            $$->addChild(node);
+                            Var *var = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
+                            var->makeInitialized();
+                            $$->addChild(var);
                             $$->addChild($4);
                             $$->addChild($6);
                         }
@@ -573,9 +573,9 @@ iterStmtMatched         : WHILE simpleExp DO stmtMatched
                         | FOR ID ASGN iterRange DO stmtMatched
                         {
                             $$ = new For($1->lineNum);
-                            Var *node = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
-                            node->makeInitialized();
-                            $$->addChild(node);
+                            Var *var = new Var($2->lineNum, $2->tokenContent, new Data(Data::Type::Int, false, false));
+                            var->makeInitialized();
+                            $$->addChild(var);
                             $$->addChild($4);
                             $$->addChild($6);
                         }
@@ -675,7 +675,14 @@ exp                     : mutable assignop exp
 
 assignop                : ASGN
                         {
-                            $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
+                            if ($1)
+                            {
+                                $$ = new Asgn($1->lineNum, Asgn::Type::Asgn);
+                            }
+                            else
+                            {
+                                $$ = nullptr;
+                            }
                         }
                         | ADDASGN
                         {
@@ -896,8 +903,8 @@ mutable                 : ID
                         | ID LBRACK exp RBRACK
                         {
                             $$ = new Binary($1->lineNum, Binary::Type::Index);
-                            Id *node = new Id($1->lineNum, $1->tokenContent);
-                            $$->addChild(node);
+                            Id *id = new Id($1->lineNum, $1->tokenContent);
+                            $$->addChild(id);
                             $$->addChild($3);
                         }
                         ;
