@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Exp.hpp"
-#include "../../Emit/Emit.hpp"
-
-#include <sstream>
 
 class Const : public Exp
 {
@@ -20,6 +17,7 @@ class Const : public Exp
         // Getters
         Const::Type getType() const { return m_type; }
         bool getCharLengthWarning() const { return m_charLengthWarning; }
+        std::string getLongConstValue() const { return m_longConstValue; }
 
     private:
         char parseFirstChar(const std::string &str) const;
@@ -32,4 +30,5 @@ class Const : public Exp
         bool m_boolValue;
         char m_charValue;
         std::string m_stringValue;
+        std::string m_longConstValue;
 };
