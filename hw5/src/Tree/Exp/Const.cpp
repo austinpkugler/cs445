@@ -19,6 +19,9 @@ Const::Const(const int lineNum, const Const::Type type, const std::string constV
             if (chars.length() > 1 && chars[0] != '\\')
             {
                 m_charLengthWarning = true;
+                std::stringstream msg;
+                msg << "character is " << constValue.length() - 2 << " characters long and not a single character: '" << constValue << "'.  The first char will be used.";
+                Emit::warn(getLineNum(), msg.str());
             }
             m_data->setType(Data::Type::Char);
             break;

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Exp.hpp"
+#include "../../Emit/Emit.hpp"
+
+#include <sstream>
 
 class Const : public Exp
 {
