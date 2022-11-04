@@ -9,6 +9,7 @@
 #include "Tree/Tree.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <stdio.h>
 
@@ -19,11 +20,11 @@ extern FILE *yyin;
 
 // From c-.l scanner
 extern int lineCount;
-extern int errorCount;
 extern char *lastToken;
 
 // AST
 Node *root;
+bool hasSyntaxError = false;
 
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
@@ -45,37 +46,60 @@ void yyerror(const char *msg)
     // Translate components
     for (int i = 3; i < numstrs; i += 2)
     {
-        strs[i] = Error::niceTokenStr(strs[i]);
-    }
-
-    // Print components
-    printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
-    if (Error::elaborate(strs[3]))
-    {
-        if (lastToken[0]=='\'' || lastToken[0]=='"')
+        if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
         {
-            printf(" %s", lastToken);
+            Emit::error(lineCount, "Empty character ''.  Characters ignored.");
         }
         else
         {
-            printf(" \"%s\"", lastToken);
+            strs[i] = Error::niceTokenStr(strs[i]);
         }
     }
 
-    if (numstrs > 4)
+    // Print components
+    std::string typeStr = std::string(strs[3]);
+    if (typeStr != "CHARCONST")
     {
-        printf(",");
-    }
+        hasSyntaxError = true;
+        printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
+        if (Error::elaborate(strs[3]))
+        {
+            if (lastToken[0]=='\'' || lastToken[0]=='"')
+            {
+                printf(" %s", lastToken);
+            }
+            else
+            {
+                printf(" \"%s\"", lastToken);
+            }
+        }
 
-    // Print sorted list of expected
-    Error::tinySort(strs + 5, numstrs - 5, 2, true);
-    for (int i = 4; i < numstrs; i++)
-    {
-        printf(" %s", strs[i]);
+        if (numstrs > 4)
+        {
+            printf(",");
+        }
+
+        // Print sorted list of expected
+        Error::tinySort(strs + 5, numstrs - 5, 2, true);
+        for (int i = 4; i < numstrs; i++)
+        {
+            printf(" %s", strs[i]);
+        }
+        printf(".\n");
+        fflush(stdout);
+        Emit::incErrorCount();
+
+        if (typeStr == "character constant")
+        {
+            std::string chars = Const::removeFirstAndLastChar(lastToken);
+            if (chars.length() > 1 && chars[0] != '\\')
+            {
+                std::stringstream msg;
+                msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
+                Emit::warn(lineCount, msg.str());
+            }
+        }
     }
-    printf(".\n");
-    fflush(stdout);
-    errorCount++;
     free(space);
 }
 
@@ -630,6 +654,11 @@ breakStmt               : BREAK SEMICOLON
                         {
                             $$ = new Break($1->lineNum);
                         }
+                        | BREAK error SEMICOLON
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
                         ;
 
 exp                     : mutable assignop exp
@@ -765,6 +794,10 @@ relExp                  : sumExp relOp sumExp
                         | sumExp
                         {
                             $$ = $1;
+                        }
+                        | sumExp relOp error
+                        {
+                            $$ = nullptr;
                         }
                         ;
 
@@ -969,7 +1002,14 @@ constant                : NUMCONST
                         }
                         | CHARCONST
                         {
-                            $$ = new Const($1->lineNum, Const::Type::Char, $1->tokenContent);
+                            Const *constN = new Const($1->lineNum, Const::Type::Char, $1->tokenContent);
+                            if (constN->getCharLengthWarning())
+                            {
+                                std::stringstream msg;
+                                msg << "character is " << constN->getLongConstValue().length() - 2 << " characters long and not a single character: '" << constN->getLongConstValue() << "'.  The first char will be used.";
+                                Emit::warn(constN->getLineNum(), msg.str());
+                            }
+                            $$ = constN;
                         }
                         | STRINGCONST
                         {
@@ -990,7 +1030,6 @@ int main(int argc, char *argv[])
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
         Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
-        Emit::incErrorCount(errorCount);
         Emit::count();
         return EXIT_FAILURE;
     }
@@ -1000,37 +1039,25 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag())
+    if (flags.getPrintSyntaxTreeFlag() && root != nullptr)
     {
-        /* if (root == nullptr)
-        {
-            throw std::runtime_error("main() - Cannot print tree");
-        } */
-        if (root != nullptr)
-        {
-            root->printTree();
-        }
+        root->printTree();
     }
 
     SymTable symTable = SymTable();
     symTable.debug(flags.getSymTableDebugFlag());
 
     Semantics analyzer = Semantics(&symTable);
-    analyzer.analyze(root);
-
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && !Emit::getErrorCount())
+    if (!hasSyntaxError)
     {
-        /* if (root == nullptr)
-        {
-            throw std::runtime_error("main() - Cannot print tree");
-        } */
-        if (root != nullptr)
-        {
-            root->printTree(true);
-        }
+        analyzer.analyze(root);
     }
 
-    Emit::incErrorCount(errorCount);
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !hasSyntaxError)
+    {
+        root->printTree(true);
+    }
+
     Emit::count();
 
     delete root;
