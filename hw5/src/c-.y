@@ -24,6 +24,7 @@ extern char *lastToken;
 
 // AST
 Node *root;
+bool hasSyntaxError = false;
 
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
@@ -59,6 +60,7 @@ void yyerror(const char *msg)
     std::string typeStr = std::string(strs[3]);
     if (typeStr != "CHARCONST")
     {
+        hasSyntaxError = true;
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
         if (Error::elaborate(strs[3]))
         {
@@ -1035,8 +1037,6 @@ int main(int argc, char *argv[])
     std::cout << "====================================" << std::endl;
     std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl;
 
-    bool isSyntaxErrTest = (filename.find("syntaxerr-") != std::string::npos);
-
     yyparse();
 
     if (flags.getPrintSyntaxTreeFlag() && root != nullptr)
@@ -1048,12 +1048,12 @@ int main(int argc, char *argv[])
     symTable.debug(flags.getSymTableDebugFlag());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!isSyntaxErrTest)
+    if (!hasSyntaxError)
     {
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !isSyntaxErrTest)
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !hasSyntaxError)
     {
         root->printTree(true);
     }
