@@ -57,8 +57,8 @@ void yyerror(const char *msg)
     }
 
     // Print components
-    std::string typeStr = std::string(strs[3]);
-    if (typeStr != "CHARCONST")
+    // std::string typeStr = std::string(strs[3]);
+    if (std::string(strs[3]) != "CHARCONST")
     {
         hasSyntaxError = true;
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
@@ -89,16 +89,16 @@ void yyerror(const char *msg)
         fflush(stdout);
         Emit::incErrorCount();
 
-        if (typeStr == "character constant")
-        {
-            std::string chars = Const::removeFirstAndLastChar(lastToken);
-            if (chars.length() > 1 && chars[0] != '\\')
-            {
-                std::stringstream msg;
-                msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
-                Emit::warn(lineCount, msg.str());
-            }
-        }
+        // if (typeStr == "character constant")
+        // {
+        //     std::string chars = Const::removeFirstAndLastChar(lastToken);
+        //     if (chars.length() > 1 && chars[0] != '\\')
+        //     {
+        //         std::stringstream msg;
+        //         msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
+        //         Emit::warn(lineCount, msg.str());
+        //     }
+        // }
     }
     free(space);
 }
@@ -1003,12 +1003,12 @@ constant                : NUMCONST
                         | CHARCONST
                         {
                             Const *constN = new Const($1->lineNum, Const::Type::Char, $1->tokenContent);
-                            if (constN->getCharLengthWarning())
-                            {
-                                std::stringstream msg;
-                                msg << "character is " << constN->getLongConstValue().length() - 2 << " characters long and not a single character: '" << constN->getLongConstValue() << "'.  The first char will be used.";
-                                Emit::warn(constN->getLineNum(), msg.str());
-                            }
+                            // if (constN->getCharLengthWarning())
+                            // {
+                            //     std::stringstream msg;
+                            //     msg << "character is " << constN->getLongConstValue().length() - 2 << " characters long and not a single character: '" << constN->getLongConstValue() << "'.  The first char will be used.";
+                            //     Emit::warn(constN->getLineNum(), msg.str());
+                            // }
                             $$ = constN;
                         }
                         | STRINGCONST

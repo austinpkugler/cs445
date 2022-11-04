@@ -15,6 +15,9 @@
 
 #include "c-.tab.h"
 
+// From c-.y parser
+extern bool hasSyntaxError;
+
 int lineCount = 1;
 char *lastToken;
 
@@ -28,6 +31,19 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
     yylval.tokenData->tokenContent = std::string(sValue);
 
     lastToken = sValue;
+
+    if (tokenClass == 260)
+    {
+        std::string chars = Const::removeFirstAndLastChar(lastToken);
+        if (chars.length() > 1 && chars[0] != '\\')
+        {
+            hasSyntaxError = true;
+            std::stringstream msg;
+            msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
+            Emit::warn(lineCount, msg.str());
+        }
+    }
+
     return tokenClass;
 }
 
