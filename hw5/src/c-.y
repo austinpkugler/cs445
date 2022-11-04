@@ -630,6 +630,11 @@ breakStmt               : BREAK SEMICOLON
                         {
                             $$ = new Break($1->lineNum);
                         }
+                        | BREAK error SEMICOLON
+                        {
+                            $$ = nullptr;
+                            yyerrok;
+                        }
                         ;
 
 exp                     : mutable assignop exp
@@ -1006,10 +1011,6 @@ int main(int argc, char *argv[])
 
     if (flags.getPrintSyntaxTreeFlag())
     {
-        /* if (root == nullptr)
-        {
-            throw std::runtime_error("main() - Cannot print tree");
-        } */
         if (root != nullptr)
         {
             root->printTree();
@@ -1022,12 +1023,8 @@ int main(int argc, char *argv[])
     Semantics analyzer = Semantics(&symTable);
     analyzer.analyze(root);
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && !Emit::getErrorCount())
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && !Emit::getErrorCount()) //  && !Emit::getErrorCount()
     {
-        /* if (root == nullptr)
-        {
-            throw std::runtime_error("main() - Cannot print tree");
-        } */
         if (root != nullptr)
         {
             root->printTree(true);
