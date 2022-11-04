@@ -56,7 +56,8 @@ void yyerror(const char *msg)
     }
 
     // Print components
-    if (std::string(strs[3]) != "CHARCONST")
+    std::string typeStr = std::string(strs[3]);
+    if (typeStr != "CHARCONST")
     {
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
         if (Error::elaborate(strs[3]))
@@ -85,6 +86,17 @@ void yyerror(const char *msg)
         printf(".\n");
         fflush(stdout);
         Emit::incErrorCount();
+
+        if (typeStr == "character constant")
+        {
+            std::string chars = Const::removeFirstAndLastChar(lastToken);
+            if (chars.length() > 1 && chars[0] != '\\')
+            {
+                std::stringstream msg;
+                msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
+                Emit::warn(lineCount, msg.str());
+            }
+        }
     }
     free(space);
 }

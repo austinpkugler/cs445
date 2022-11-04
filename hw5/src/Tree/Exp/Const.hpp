@@ -9,6 +9,9 @@ class Const : public Exp
 
         Const(const int lineNum, const Const::Type type, const std::string value);
 
+        // Static
+        static std::string removeFirstAndLastChar(const std::string &str);
+
         // Overridden
         Node::Kind getNodeKind() const override { return Node::Kind::Const; }
         std::string stringify() const override;
@@ -21,7 +24,6 @@ class Const : public Exp
 
     private:
         char parseFirstChar(const std::string &str) const;
-        std::string removeFirstAndLastChar(const std::string &str) const;
         std::string parseChars(const std::string &str) const;
 
         const Const::Type m_type;

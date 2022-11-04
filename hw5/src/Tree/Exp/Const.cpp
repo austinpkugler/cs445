@@ -102,7 +102,7 @@ char Const::parseFirstChar(const std::string &str) const
     return str[0];
 }
 
-std::string Const::removeFirstAndLastChar(const std::string &str) const
+std::string Const::removeFirstAndLastChar(const std::string &str)
 {
     return str.substr(1, str.length() - 2);
 }
