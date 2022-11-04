@@ -1,12 +1,12 @@
 %{
 // Based on CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
-#include "Error.hpp"
 #include "TokenData.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
+#include "Syntax/Error.hpp"
 #include "Tree/Tree.hpp"
 
 #include <sstream>
@@ -14,9 +14,6 @@
 #include <iostream>
 
 #include "c-.tab.h"
-
-// From c-.y parser
-extern bool hasSyntaxError;
 
 int lineCount = 1;
 char *lastToken;
@@ -37,7 +34,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
         std::string chars = Const::removeFirstAndLastChar(lastToken);
         if (chars.length() > 1 && chars[0] != '\\')
         {
-            hasSyntaxError = true;
+            Error::setHasError(true);
             std::stringstream msg;
             msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
             Emit::warn(lineCount, msg.str());

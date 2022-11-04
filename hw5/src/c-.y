@@ -1,11 +1,11 @@
 %{
 // Based on CS445 - Calculator Example Program by Robert Heckendorn and yyerror.h by Michael Wilder
-#include "Error.hpp"
 #include "TokenData.hpp"
 #include "Emit/Emit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
+#include "Syntax/Error.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -24,7 +24,6 @@ extern char *lastToken;
 
 // AST
 Node *root;
-bool hasSyntaxError = false;
 
 #define YYERROR_VERBOSE
 void yyerror(const char *msg)
@@ -57,10 +56,9 @@ void yyerror(const char *msg)
     }
 
     // Print components
-    // std::string typeStr = std::string(strs[3]);
     if (std::string(strs[3]) != "CHARCONST")
     {
-        hasSyntaxError = true;
+        Error::setHasError(true);
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
         if (Error::elaborate(strs[3]))
         {
@@ -88,17 +86,6 @@ void yyerror(const char *msg)
         printf(".\n");
         fflush(stdout);
         Emit::incErrorCount();
-
-        // if (typeStr == "character constant")
-        // {
-        //     std::string chars = Const::removeFirstAndLastChar(lastToken);
-        //     if (chars.length() > 1 && chars[0] != '\\')
-        //     {
-        //         std::stringstream msg;
-        //         msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
-        //         Emit::warn(lineCount, msg.str());
-        //     }
-        // }
     }
     free(space);
 }
@@ -1002,14 +989,7 @@ constant                : NUMCONST
                         }
                         | CHARCONST
                         {
-                            Const *constN = new Const($1->lineNum, Const::Type::Char, $1->tokenContent);
-                            // if (constN->getCharLengthWarning())
-                            // {
-                            //     std::stringstream msg;
-                            //     msg << "character is " << constN->getLongConstValue().length() - 2 << " characters long and not a single character: '" << constN->getLongConstValue() << "'.  The first char will be used.";
-                            //     Emit::warn(constN->getLineNum(), msg.str());
-                            // }
-                            $$ = constN;
+                            $$ = new Const($1->lineNum, Const::Type::Char, $1->tokenContent);
                         }
                         | STRINGCONST
                         {
@@ -1048,12 +1028,12 @@ int main(int argc, char *argv[])
     symTable.debug(flags.getSymTableDebugFlag());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!hasSyntaxError)
+    if (!Error::getHasError())
     {
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !hasSyntaxError)
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !Error::getHasError())
     {
         root->printTree(true);
     }

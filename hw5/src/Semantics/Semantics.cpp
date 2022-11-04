@@ -50,7 +50,7 @@ void Semantics::analyzeTree(Node *node)
             analyzeCall((Call *)node);
             break;
         case Node::Kind::Const:
-            analyzeConst((Const *)node);
+            // Not analyzed
             break;
         case Node::Kind::Id:
             analyzeId((Id *)node);
@@ -376,21 +376,6 @@ void Semantics::analyzeCall(const Call *call) const
     }
 
     decl->makeUsed();
-}
-
-void Semantics::analyzeConst(const Const *constN) const
-{
-    if (!isConst(constN))
-    {
-        throw std::runtime_error("Semantics::analyzeConst() - Invalid Const");
-    }
-
-    // if (constN->getCharLengthWarning())
-    // {
-    //     std::stringstream msg;
-    //     msg << "character is " << constN->getLongConstValue().length() - 2 << "characters long and not a single character: '" << constN->getLongConstValue() << "'.  The first char will be used.";
-    //     Emit::warn(constN->getLineNum(), msg.str());
-    // }
 }
 
 void Semantics::analyzeId(const Id *id) const
