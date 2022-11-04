@@ -1,9 +1,9 @@
 // Based on yyerror.cpp by Michael Wilder (see materials directory)
-#include "Error.hpp"
+#include "SyntaxEmit.hpp"
 
 static std::map<std::string , char *> niceTokenNameMap;
 
-int Error::split(char *s, char *strs[], char breakchar)
+int SyntaxEmit::split(char *s, char *strs[], char breakchar)
 {
     int num;
 
@@ -22,12 +22,12 @@ int Error::split(char *s, char *strs[], char breakchar)
     return num;
 }
 
-void Error::trim(char *s)
+void SyntaxEmit::trim(char *s)
 {
     s[strlen(s)-1] = '\0';
 }
 
-void Error::initErrorProcessing()
+void SyntaxEmit::initErrorProcessing()
 {
     niceTokenNameMap["ADDASGN"] = (char *)"\"+=\"";
     niceTokenNameMap["AND"] = (char *)"\"and\"";
@@ -85,7 +85,7 @@ void Error::initErrorProcessing()
     niceTokenNameMap["$end"] = (char *)"end of input";
 }
 
-char * Error::niceTokenStr(char *tokenName)
+char * SyntaxEmit::niceTokenStr(char *tokenName)
 {
     if (tokenName[0] == '\'')
     {
@@ -100,12 +100,12 @@ char * Error::niceTokenStr(char *tokenName)
     return niceTokenNameMap[tokenName];
 }
 
-bool Error::elaborate(char *s)
+bool SyntaxEmit::elaborate(char *s)
 {
     return (strstr(s, "constant") || strstr(s, "identifier"));
 }
 
-void Error::tinySort(char *base[], int num, int step, bool up)
+void SyntaxEmit::tinySort(char *base[], int num, int step, bool up)
 {
     for (int i = step; i < num; i += step)
     {

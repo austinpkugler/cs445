@@ -1,11 +1,11 @@
 %{
 // Based on CS445 - Calculator Example Program by Robert Heckendorn and yyerror.h by Michael Wilder
 #include "TokenData.hpp"
-#include "Emit/Emit.hpp"
+#include "SemanticEmit/SemanticEmit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "Syntax/Error.hpp"
+#include "SyntaxEmit/SyntaxEmit.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -36,10 +36,10 @@ void yyerror(const char *msg)
     space = strdup(msg);
 
     // Split out components
-    numstrs = Error::split(space, strs, ' ');
+    numstrs = SyntaxEmit::split(space, strs, ' ');
     if (numstrs > 4)
     {
-        Error::trim(strs[3]);
+        SyntaxEmit::trim(strs[3]);
     }
 
     // Translate components
@@ -47,20 +47,20 @@ void yyerror(const char *msg)
     {
         if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
         {
-            Emit::error(lineCount, "Empty character ''.  Characters ignored.");
+            SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored.");
         }
         else
         {
-            strs[i] = Error::niceTokenStr(strs[i]);
+            strs[i] = SyntaxEmit::niceTokenStr(strs[i]);
         }
     }
 
     // Print components
     if (std::string(strs[3]) != "CHARCONST")
     {
-        Error::setHasError(true);
+        SyntaxEmit::setHasError(true);
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
-        if (Error::elaborate(strs[3]))
+        if (SyntaxEmit::elaborate(strs[3]))
         {
             if (lastToken[0] == '\'' || lastToken[0] == '"')
             {
@@ -78,14 +78,14 @@ void yyerror(const char *msg)
         }
 
         // Print sorted list of expected
-        Error::tinySort(strs + 5, numstrs - 5, 2, true);
+        SyntaxEmit::tinySort(strs + 5, numstrs - 5, 2, true);
         for (int i = 4; i < numstrs; i++)
         {
             printf(" %s", strs[i]);
         }
         printf(".\n");
         fflush(stdout);
-        Emit::incErrorCount();
+        SemanticEmit::incErrorCount();
     }
     free(space);
 }
@@ -1001,7 +1001,7 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
-    Error::initErrorProcessing();
+    SyntaxEmit::initErrorProcessing();
 
     Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
@@ -1009,8 +1009,8 @@ int main(int argc, char *argv[])
     std::string filename = flags.getFilename();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
-        Emit::count();
+        SemanticEmit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
+        SemanticEmit::count();
         return EXIT_FAILURE;
     }
 
@@ -1019,7 +1019,7 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag() && root != nullptr)
+    if (flags.getPrintSyntaxTreeFlag() && root != nullptr && !SyntaxEmit::getHasError())
     {
         root->printTree();
     }
@@ -1028,17 +1028,17 @@ int main(int argc, char *argv[])
     symTable.debug(flags.getSymTableDebugFlag());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!Error::getHasError())
+    if (!SyntaxEmit::getHasError())
     {
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !Error::getHasError())
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !SemanticEmit::getErrorCount() && !SyntaxEmit::getHasError())
     {
         root->printTree(true);
     }
 
-    Emit::count();
+    SemanticEmit::count();
 
     delete root;
     fclose(yyin);

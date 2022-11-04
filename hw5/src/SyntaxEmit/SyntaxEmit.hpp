@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-class Error
+class SyntaxEmit
 {
     public:
         static void initErrorProcessing();

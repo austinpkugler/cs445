@@ -2,7 +2,7 @@
 
 #include "Is.hpp"
 #include "SymTable.hpp"
-#include "../Emit/Emit.hpp"
+#include "../SemanticEmit/SemanticEmit.hpp"
 #include "../Tree/Tree.hpp"
 
 #include <algorithm>
