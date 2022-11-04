@@ -261,11 +261,11 @@ if __name__ == '__main__':
 
     if passed == len(tests):
         Emit.success('=' * 32)
-        Emit.success(f'Passed {passed}/{len(tests)} tests with diff {diff_count}')
+        Emit.success(f'Passing {passed}/{len(tests)}, diff {diff_count}')
         Emit.success('=' * 32)
     else:
         Emit.error('=' * 32)
-        Emit.error(f'Passed: {passed}/{len(tests)} tests with diff {diff_count}')
+        Emit.error(f'Passing {passed}/{len(tests)}, diff {diff_count}')
         Emit.error('=' * 32)
 
     make.clean()

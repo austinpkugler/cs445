@@ -9,13 +9,13 @@
 #include "Semantics/SymTable.hpp"
 #include "Tree/Tree.hpp"
 
+#include <sstream>
 #include <string>
 #include <iostream>
 
 #include "c-.tab.h"
 
 int lineCount = 1;
-int errorCount;
 char *lastToken;
 
 static int setValue(int lineNum, int tokenClass, char *sValue)
@@ -102,6 +102,10 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 \"((\\\")|([^\n\"]))*\"     { return setValue(lineCount, STRINGCONST, yytext); }    // String literals
 \'((\\\')|([^\n\']))*\'     { return setValue(lineCount, CHARCONST, yytext); }      // Char literals
 
-. { std::cout << "ERROR(" << lineCount << "): Invalid or misplaced input character: '" << yytext[0] << "'. Character Ignored." << std::endl; errorCount++; }  // Any error-causing inputs
+. {
+    std::stringstream msg;
+    msg << "Invalid or misplaced input character: '" << yytext[0] << "'. Character Ignored.";
+    Emit::error(lineCount, msg.str());
+}
 
 %%

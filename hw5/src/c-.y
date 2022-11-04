@@ -9,6 +9,7 @@
 #include "Tree/Tree.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <stdio.h>
 
@@ -19,7 +20,6 @@ extern FILE *yyin;
 
 // From c-.l scanner
 extern int lineCount;
-extern int errorCount;
 extern char *lastToken;
 
 // AST
@@ -75,7 +75,7 @@ void yyerror(const char *msg)
     }
     printf(".\n");
     fflush(stdout);
-    errorCount++;
+    Emit::incErrorCount();
     free(space);
 }
 
@@ -999,7 +999,6 @@ int main(int argc, char *argv[])
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
         Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
-        Emit::incErrorCount(errorCount);
         Emit::count();
         return EXIT_FAILURE;
     }
@@ -1031,7 +1030,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    Emit::incErrorCount(errorCount);
     Emit::count();
 
     delete root;
