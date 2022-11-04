@@ -2,7 +2,7 @@
 
 #include "Is.hpp"
 #include "SymTable.hpp"
-#include "../Emit/Emit.hpp"
+#include "../SemanticEmit/SemanticEmit.hpp"
 #include "../Tree/Tree.hpp"
 
 #include <algorithm>
@@ -25,7 +25,6 @@ class Semantics
         void analyzeAsgn(const Asgn *asgn);
         void analyzeBinary(const Binary *binary) const;
         void analyzeCall(const Call *call) const;
-        void analyzeConst(const Const *constN) const;
         void analyzeId(const Id *id) const;
         void analyzeUnary(const Unary *unary) const;
         void analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const;

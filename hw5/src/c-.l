@@ -1,12 +1,12 @@
 %{
 // Based on CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
-#include "Error.hpp"
 #include "TokenData.hpp"
-#include "Emit/Emit.hpp"
+#include "SemanticEmit/SemanticEmit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
+#include "SyntaxEmit/SyntaxEmit.hpp"
 #include "Tree/Tree.hpp"
 
 #include <sstream>
@@ -28,6 +28,18 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
     yylval.tokenData->tokenContent = std::string(sValue);
 
     lastToken = sValue;
+
+    if (tokenClass == 260)
+    {
+        std::string chars = Const::removeFirstAndLastChar(lastToken);
+        if (chars.length() > 1 && chars[0] != '\\')
+        {
+            std::stringstream msg;
+            msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
+            SemanticEmit::warn(lineCount, msg.str());
+        }
+    }
+
     return tokenClass;
 }
 
@@ -105,7 +117,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 . {
     std::stringstream msg;
     msg << "Invalid or misplaced input character: '" << yytext[0] << "'. Character Ignored.";
-    Emit::error(lineCount, msg.str());
+    SemanticEmit::error(lineCount, msg.str());
 }
 
 %%

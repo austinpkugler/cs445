@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-class Error
+class SyntaxEmit
 {
     public:
         static void initErrorProcessing();
@@ -16,4 +16,9 @@ class Error
         static char * niceTokenStr(char *tokenName);
         static bool elaborate(char *s);
         static void tinySort(char *base[], int num, int step, bool up);
+        static bool getHasError() { return m_hasError; }
+        static void setHasError(const bool hasError) { m_hasError = hasError; }
+
+    private:
+        inline static bool m_hasError = false;
 };
