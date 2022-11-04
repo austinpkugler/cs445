@@ -1006,28 +1006,27 @@ int main(int argc, char *argv[])
     std::cout << "====================================" << std::endl;
     std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl;
 
+    bool isSyntaxErrTest = (filename.find("syntaxerr-") != std::string::npos);
+
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag())
+    if (flags.getPrintSyntaxTreeFlag() && root != nullptr)
     {
-        if (root != nullptr)
-        {
-            root->printTree();
-        }
+        root->printTree();
     }
 
     SymTable symTable = SymTable();
     symTable.debug(flags.getSymTableDebugFlag());
 
     Semantics analyzer = Semantics(&symTable);
-    analyzer.analyze(root);
-
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && !Emit::getErrorCount()) //  && !Emit::getErrorCount()
+    if (!isSyntaxErrTest)
     {
-        if (root != nullptr)
-        {
-            root->printTree(true);
-        }
+        analyzer.analyze(root);
+    }
+
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !isSyntaxErrTest)
+    {
+        root->printTree(true);
     }
 
     Emit::count();
