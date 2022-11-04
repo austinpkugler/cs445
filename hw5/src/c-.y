@@ -64,7 +64,7 @@ void yyerror(const char *msg)
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
         if (Error::elaborate(strs[3]))
         {
-            if (lastToken[0]=='\'' || lastToken[0]=='"')
+            if (lastToken[0] == '\'' || lastToken[0] == '"')
             {
                 printf(" %s", lastToken);
             }

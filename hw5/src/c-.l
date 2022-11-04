@@ -99,7 +99,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 
 [a-zA-Z][a-zA-Z0-9]*        { return setValue(lineCount, ID, yytext); }             // Variable names (the id)
 [0-9]+                      { return setValue(lineCount, NUMCONST, yytext); }       // Number literals
-\"((\\\")|([^\n\"]))*\"     { return setValue(lineCount, STRINGCONST, yytext); }    // String literals
+\"([^\\"\n]|\\.)*\"         { return setValue(lineCount, STRINGCONST, yytext); }    // String literals
 \'((\\\')|([^\n\']))*\'     { return setValue(lineCount, CHARCONST, yytext); }      // Char literals
 
 . {
