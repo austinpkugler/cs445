@@ -109,6 +109,8 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 
 "true"|"false"              { return setValue(lineCount, BOOLCONST, yytext); }
 
+"''" { SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored."); }
+
 [a-zA-Z][a-zA-Z0-9]*        { return setValue(lineCount, ID, yytext); }             // Variable names (the id)
 [0-9]+                      { return setValue(lineCount, NUMCONST, yytext); }       // Number literals
 \"([^\\"\n]|\\.)*\"         { return setValue(lineCount, STRINGCONST, yytext); }    // String literals
