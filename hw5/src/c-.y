@@ -1014,6 +1014,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    // Remove for submission
     std::cout << "====================================" << std::endl;
     std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl;
 
