@@ -45,14 +45,14 @@ void yyerror(const char *msg)
     // Translate components
     for (int i = 3; i < numstrs; i += 2)
     {
-        if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
-        {
-            SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored.");
-        }
-        else
-        {
-            strs[i] = SyntaxEmit::niceTokenStr(strs[i]);
-        }
+        // if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
+        // {
+        //     SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored.");
+        // }
+        // else
+        // {
+        strs[i] = SyntaxEmit::niceTokenStr(strs[i]);
+        // }
     }
 
     // Print components
