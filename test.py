@@ -197,8 +197,12 @@ if __name__ == '__main__':
         print('-p: \t Displays the AST.')
         print('-h \t Displays a help menu')
         print('For this project:')
-        print('$ python3 test.py hw1/ hw1/test')
-        print('$ python3 test.py hw2/ hw2/test -p')
+        print('$ python3 test.py hw1/src/ hw1/test/ hw1/tmp/')
+        print('$ python3 test.py hw2/src/ hw2/test/ hw2/tmp/ -p')
+        print('$ python3 test.py hw3/src/ hw3/test/ hw3/tmp/ -p --sort')
+        print('$ python3 test.py hw4/src/ hw4/test/ hw4/tmp/ -P --sort')
+        print('$ python3 test.py hw5/src/ hw5/test/ hw5/tmp/ -P --sort')
+
     elif argc == 4:
         src_dir = sys.argv[1]
         tst_dir = sys.argv[2]
