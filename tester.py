@@ -27,19 +27,19 @@ class Tester:
             diff_count = self.run(test, flags=flags, clean=False)
             if not diff_count:
                 passed += 1
-                self.success_msg(f'[ PASSED (diff {diff_count}) ]')
+                self.success_msg(f'[ PASSED ({diff_count} diff) ]')
             else:
-                self.error_msg(f'[ FAILED (diff {diff_count}) ]')
+                self.error_msg(f'[ FAILED ({diff_count} diff) ]')
             total_diff_count += diff_count
 
         if passed == len(tests):
             self.remove_tmp()
             self.success_msg('=' * 32)
-            self.success_msg(f'PASSED {passed}/{len(tests)} (diff {total_diff_count})')
+            self.success_msg(f'PASSED ({passed}/{len(tests)} tests; {total_diff_count} diff)')
             self.success_msg('=' * 32)
         else:
             self.error_msg('=' * 32)
-            self.error_msg(f'FALIED {passed}/{len(tests)} (diff {total_diff_count})')
+            self.error_msg(f'FAILED ({passed}/{len(tests)} tests; {total_diff_count} diff)')
             self.error_msg('=' * 32)
 
         self.execute(self._src_dir, 'make clean')
