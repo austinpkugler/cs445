@@ -39,7 +39,7 @@ class Tester:
             self.success_msg('=' * 32)
         else:
             self.error_msg('=' * 32)
-            self.error_msg(f'FALIED {passed}/{len(tests)} (diff {total_diff_count})')
+            self.error_msg(f'PASSED {passed}/{len(tests)} (diff {total_diff_count})')
             self.error_msg('=' * 32)
 
         self.execute(self._src_dir, 'make clean')
