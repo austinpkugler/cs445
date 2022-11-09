@@ -5,7 +5,7 @@
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "SyntaxEmit/SyntaxEmit.hpp"
+#include "SyntaxError/SyntaxError.hpp"
 #include "Tree/Tree.hpp"
 
 #include <sstream>

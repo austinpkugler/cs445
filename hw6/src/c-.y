@@ -4,7 +4,7 @@
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "SyntaxEmit/SyntaxEmit.hpp"
+#include "SyntaxError/SyntaxError.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -35,10 +35,10 @@ void yyerror(const char *msg)
     space = strdup(msg);
 
     // Split out components
-    numstrs = SyntaxEmit::split(space, strs, ' ');
+    numstrs = SyntaxError::split(space, strs, ' ');
     if (numstrs > 4)
     {
-        SyntaxEmit::trim(strs[3]);
+        SyntaxError::trim(strs[3]);
     }
 
     // Translate components
@@ -50,16 +50,16 @@ void yyerror(const char *msg)
         // }
         // else
         // {
-        strs[i] = SyntaxEmit::niceTokenStr(strs[i]);
+        strs[i] = SyntaxError::niceTokenStr(strs[i]);
         // }
     }
 
     // Print components
     if (std::string(strs[3]) != "CHARCONST")
     {
-        SyntaxEmit::setHasError(true);
+        SyntaxError::setHasError(true);
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
-        if (SyntaxEmit::elaborate(strs[3]))
+        if (SyntaxError::elaborate(strs[3]))
         {
             if (lastToken[0] == '\'' || lastToken[0] == '"')
             {
@@ -77,7 +77,7 @@ void yyerror(const char *msg)
         }
 
         // Print sorted list of expected
-        SyntaxEmit::tinySort(strs + 5, numstrs - 5, 2, true);
+        SyntaxError::tinySort(strs + 5, numstrs - 5, 2, true);
         for (int i = 4; i < numstrs; i++)
         {
             printf(" %s", strs[i]);
@@ -1000,7 +1000,7 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
-    SyntaxEmit::initErrorProcessing();
+    SyntaxError::initErrorProcessing();
 
     Flags flags(argc, argv);
     yydebug = flags.getDebugFlag();
@@ -1019,7 +1019,7 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag() && root != nullptr && !SyntaxEmit::getHasError())
+    if (flags.getPrintSyntaxTreeFlag() && root != nullptr && !SyntaxError::getHasError())
     {
         root->printTree();
     }
@@ -1028,12 +1028,12 @@ int main(int argc, char *argv[])
     symTable.debug(flags.getSymTableDebugFlag());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!SyntaxEmit::getHasError())
+    if (!SyntaxError::getHasError())
     {
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !SyntaxEmit::getHasError())
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
     {
         root->printTree(true);
     }
