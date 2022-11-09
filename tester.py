@@ -19,6 +19,7 @@ class Tester:
 
     def run_all(self, flags=''):
         tests = [f[:-3] for f in os.listdir(self._test_dir) if f.endswith('.c-')]
+        tests.sort()
 
         passed = 0
         total_diff_count = 0
@@ -82,6 +83,8 @@ class Tester:
         if not diff_count:
             os.remove(expected)
             os.remove(actual)
+            os.remove(diff)
+            os.remove(src_cp)
         else:
             if self.showdiff:
                 os.system(f'diff {expected} {actual}')
