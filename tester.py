@@ -43,7 +43,7 @@ class Tester:
             self.error_msg('=' * 32)
 
         self.execute(self._src_dir, 'make clean')
-        return passed, tests, total_diff_count
+        return passed, len(tests), total_diff_count
 
     def run(self, test, flags='', clean=True):
         src = os.path.join(self._test_dir, test + '.c-')
