@@ -2,7 +2,6 @@
 // Based on CS445 - Calculator Example Program by Robert Heckendorn
 // The order of includes is mandatory
 #include "TokenData.hpp"
-#include "SemanticEmit/SemanticEmit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
@@ -36,7 +35,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
         {
             std::stringstream msg;
             msg << "character is " << chars.length() << " characters long and not a single character: '" << lastToken << "'.  The first char will be used.";
-            SemanticEmit::warn(lineCount, msg.str());
+            Emit::warn(lineCount, msg.str());
         }
     }
 
@@ -109,7 +108,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 
 "true"|"false"              { return setValue(lineCount, BOOLCONST, yytext); }
 
-"''" { SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored."); }
+"''" { Emit::error(lineCount, "Empty character ''.  Characters ignored."); }
 
 [a-zA-Z][a-zA-Z0-9]*        { return setValue(lineCount, ID, yytext); }             // Variable names (the id)
 [0-9]+                      { return setValue(lineCount, NUMCONST, yytext); }       // Number literals
@@ -119,7 +118,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 . {
     std::stringstream msg;
     msg << "Invalid or misplaced input character: '" << yytext[0] << "'. Character Ignored.";
-    SemanticEmit::error(lineCount, msg.str());
+    Emit::error(lineCount, msg.str());
 }
 
 %%

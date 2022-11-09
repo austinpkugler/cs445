@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-class SemanticEmit
+class Emit
 {
     public:
         static unsigned getErrorCount() { return s_errorCount; }

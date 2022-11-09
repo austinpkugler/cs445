@@ -17,7 +17,7 @@ void Semantics::analyze(Node *node)
 
     if (node && !m_mainExists)
     {
-        SemanticEmit::error("LINKER", "A function named 'main' with no parameters must be defined.");
+        Emit::error("LINKER", "A function named 'main' with no parameters must be defined.");
     }
 }
 
@@ -148,7 +148,7 @@ void Semantics::analyzeVar(Var *var)
         {
             if (varType != expType)
             {
-                SemanticEmit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' of type " + Data::typeToString(varType) + " is of type " + Data::typeToString(expType));
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' of type " + Data::typeToString(varType) + " is of type " + Data::typeToString(expType));
             }
         }
 
@@ -156,17 +156,17 @@ void Semantics::analyzeVar(Var *var)
         {
             if (varData->getIsArray())
             {
-                SemanticEmit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is an array and rhs is not an array.");
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is an array and rhs is not an array.");
             }
             else if (expData->getIsArray())
             {
-                SemanticEmit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is not an array and rhs is an array.");
+                Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' requires both operands be arrays or not but variable is not an array and rhs is an array.");
             }
         }
 
         if (hasNonConstantRelative(exp)) // if not a constant exp
         {
-            SemanticEmit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' is not a constant expression.");
+            Emit::error(var->getLineNum(), "Initializer for variable '" + var->getName() + "' is not a constant expression.");
         }
     }
 
@@ -277,14 +277,14 @@ void Semantics::analyzeCall(const Call *call) const
     // If the function name is not in the symbol table
     if (decl == nullptr)
     {
-        SemanticEmit::error(call->getLineNum(), "Symbol '" + call->getName() + "' is not declared.");
+        Emit::error(call->getLineNum(), "Symbol '" + call->getName() + "' is not declared.");
         return;
     }
 
     // If the function name is not associated with a function
     if (!isFunc(decl))
     {
-        SemanticEmit::error(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
+        Emit::error(call->getLineNum(), "'" + call->getName() + "' is a simple variable and cannot be called.");
     }
     else
     {
@@ -295,13 +295,13 @@ void Semantics::analyzeCall(const Call *call) const
         {
             std::stringstream msg;
             msg << "Too few parameters passed for function '" << func->getName() << "' declared on line " << func->getLineNum() << ".";
-            SemanticEmit::error(call->getLineNum(), msg.str());
+            Emit::error(call->getLineNum(), msg.str());
         }
         else if (callParmCount > funcParmCount)
         {
             std::stringstream msg;
             msg << "Too many parameters passed for function '" << func->getName() << "' declared on line " << func->getLineNum() << ".";
-            SemanticEmit::error(call->getLineNum(), msg.str());
+            Emit::error(call->getLineNum(), msg.str());
         }
 
         // Somehow some of the parms don't have values?
@@ -333,7 +333,7 @@ void Semantics::analyzeCall(const Call *call) const
                 // {
                 //     std::stringstream msg;
                 //     msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << i + 1 << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
-                //     SemanticEmit::error(call->getLineNum(), msg.str());
+                //     Emit::error(call->getLineNum(), msg.str());
                 // }
             // }
         // }
@@ -350,7 +350,7 @@ void Semantics::analyzeCall(const Call *call) const
             {
                 std::stringstream msg;
                 msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << parmCount << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
-                SemanticEmit::error(call->getLineNum(), msg.str());
+                Emit::error(call->getLineNum(), msg.str());
             }
 
             if (callParmData->getIsArray() != funcParmData->getIsArray())
@@ -359,13 +359,13 @@ void Semantics::analyzeCall(const Call *call) const
                 {
                     std::stringstream msg;
                     msg << "Not expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
-                    SemanticEmit::error(call->getLineNum(), msg.str());
+                    Emit::error(call->getLineNum(), msg.str());
                 }
                 else if (funcParmData->getIsArray())
                 {
                     std::stringstream msg;
                     msg << "Expecting array in parameter " << parmCount << " of call to '" << call->getName() << "' declared on line " << func->getLineNum() << ".";
-                    SemanticEmit::error(call->getLineNum(), msg.str());
+                    Emit::error(call->getLineNum(), msg.str());
                 }
             }
 
@@ -388,13 +388,13 @@ void Semantics::analyzeId(const Id *id) const
     Decl *idDecl = (Decl *)(symTableGet(id->getName()));
     if (idDecl == nullptr)
     {
-        SemanticEmit::error(id->getLineNum(), "Symbol '" + id->getName() + "' is not declared.");
+        Emit::error(id->getLineNum(), "Symbol '" + id->getName() + "' is not declared.");
         return;
     }
 
     if (isFunc(idDecl))
     {
-        SemanticEmit::error(id->getLineNum(), "Cannot use function '" + id->getName() + "' as a variable.");
+        Emit::error(id->getLineNum(), "Cannot use function '" + id->getName() + "' as a variable.");
     }
     else if (isVar(idDecl))
     {
@@ -407,7 +407,7 @@ void Semantics::analyzeId(const Id *id) const
             // {
                 if (!hasAsgnRelative((Exp *)id))
                 {
-                    SemanticEmit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
+                    Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
                     varDecl->setShowErrors(false);
                 }
             // }
@@ -440,27 +440,27 @@ void Semantics::analyzeUnary(const Unary *unary) const
         case Unary::Type::Question:
             if (lhs->getData()->getIsArray())
             {
-                SemanticEmit::error(unary->getLineNum(), "The operation '" + unary->getSym() + "' does not work with arrays.");
+                Emit::error(unary->getLineNum(), "The operation '" + unary->getSym() + "' does not work with arrays.");
             }
             if (lhs->getData()->getType() != Data::Type::Int)
             {
-                SemanticEmit::error(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type int but was given type " + lhs->getData()->stringify() + ".");
+                Emit::error(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type int but was given type " + lhs->getData()->stringify() + ".");
             }
             break;
         case Unary::Type::Sizeof:
             if (!lhs->getData()->getIsArray())
             {
-                SemanticEmit::error(unary->getLineNum(), "The operation 'sizeof' only works with arrays.");
+                Emit::error(unary->getLineNum(), "The operation 'sizeof' only works with arrays.");
             }
             break;
         case Unary::Type::Not:
             if (lhs->getData()->getType() != Data::Type::Bool)
             {
-                SemanticEmit::error(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type bool but was given type " + lhs->getData()->stringify() + ".");
+                Emit::error(unary->getLineNum(), "Unary '" + unary->getSym() + "' requires an operand of type bool but was given type " + lhs->getData()->stringify() + ".");
             }
             if (lhs->getData()->getIsArray())
             {
-                SemanticEmit::error(unary->getLineNum(), "The operation 'not' does not work with arrays.");
+                Emit::error(unary->getLineNum(), "The operation 'not' does not work with arrays.");
             }
             break;
         default:
@@ -492,11 +492,11 @@ void Semantics::analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const
         case UnaryAsgn::Type::Dec:
             if (lhs->getData()->getIsArray())
             {
-                SemanticEmit::error(unaryAsgn->getLineNum(), "The operation '" + unaryAsgn->getSym() + "' does not work with arrays.");
+                Emit::error(unaryAsgn->getLineNum(), "The operation '" + unaryAsgn->getSym() + "' does not work with arrays.");
             }
             if (lhs->getData()->getType() != Data::Type::Int)
             {
-                SemanticEmit::error(unaryAsgn->getLineNum(), "Unary '" + unaryAsgn->getSym() + "' requires an operand of type int but was given type " + lhs->getData()->stringify() + ".");
+                Emit::error(unaryAsgn->getLineNum(), "Unary '" + unaryAsgn->getSym() + "' requires an operand of type int but was given type " + lhs->getData()->stringify() + ".");
             }
             break;
         default:
@@ -516,7 +516,7 @@ void Semantics::analyzeBreak(const Break *breakN) const
     bool inWhileLoop = breakN->hasRelative(Node::Kind::While);
     if (!inForLoop && !inWhileLoop)
     {
-        SemanticEmit::error(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
+        Emit::error(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
     }
 }
 
@@ -530,12 +530,12 @@ void Semantics::analyzeIf(const If *ifN) const
     Exp *lhs = (Exp *)(ifN->getChild());
     if (lhs->getData()->getIsArray())
     {
-        SemanticEmit::error(ifN->getLineNum(), "Cannot use array as test condition in if statement.");
+        Emit::error(ifN->getLineNum(), "Cannot use array as test condition in if statement.");
     }
 
     if (lhs->getData()->getType() != Data::Type::Bool && lhs->getData()->getType() != Data::Type::Undefined)
     {
-        SemanticEmit::error(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhs->getData()->stringify() + ".");
+        Emit::error(ifN->getLineNum(), "Expecting Boolean test condition in if statement but got type " + lhs->getData()->stringify() + ".");
     }
 }
 
@@ -567,7 +567,7 @@ void Semantics::analyzeRange(const Range *range) const
         {
             std::stringstream msg;
             msg << "Cannot use array in position " << i + 1 << " in range of for statement.";
-            SemanticEmit::error(children[i]->getLineNum(), msg.str());
+            Emit::error(children[i]->getLineNum(), msg.str());
         }
 
         Exp *exp = (Exp *)(children[i]);
@@ -575,7 +575,7 @@ void Semantics::analyzeRange(const Range *range) const
         {
             std::stringstream msg;
             msg << "Expecting type int in position " << i + 1 << " in range of for statement but got type " << exp->getData()->stringify() << ".";
-            SemanticEmit::error(range->getLineNum(), msg.str());
+            Emit::error(range->getLineNum(), msg.str());
         }
     }
 }
@@ -595,7 +595,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
         {
             std::stringstream msg;
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but return has no value.";
-            SemanticEmit::error(returnN->getLineNum(), msg.str());
+            Emit::error(returnN->getLineNum(), msg.str());
         }
         return;
     }
@@ -603,7 +603,7 @@ void Semantics::analyzeReturn(const Return *returnN) const
     Exp *returnExp = (Exp *)(returnN->getChild());
     if (returnExp->getData()->getIsArray())
     {
-        SemanticEmit::error(returnN->getLineNum(), "Cannot return an array.");
+        Emit::error(returnN->getLineNum(), "Cannot return an array.");
     }
 
     if (func->getData()->getType() != returnExp->getData()->getType())
@@ -612,13 +612,13 @@ void Semantics::analyzeReturn(const Return *returnN) const
         {
             std::stringstream msg;
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting no return value, but return has a value.";
-            SemanticEmit::error(returnN->getLineNum(), msg.str());
+            Emit::error(returnN->getLineNum(), msg.str());
         }
         else if (returnExp->getData()->getType() != Data::Type::Undefined)
         {
             std::stringstream msg;
             msg << "Function '" << func->getName() << "' at line " << func->getLineNum() << " is expecting to return type " << func->getData()->stringify() << " but returns type " << returnExp->getData()->stringify() << ".";
-            SemanticEmit::error(returnN->getLineNum(), msg.str());
+            Emit::error(returnN->getLineNum(), msg.str());
         }
     }
 }
@@ -641,12 +641,12 @@ void Semantics::analyzeWhile(const While *whileN) const
     {
         if (testData->getType() != Data::Type::Bool)
         {
-            SemanticEmit::error(whileN->getLineNum(), "Expecting Boolean test condition in while statement but got type " + testExp->getData()->stringify() + ".");
+            Emit::error(whileN->getLineNum(), "Expecting Boolean test condition in while statement but got type " + testExp->getData()->stringify() + ".");
         }
 
         if (testData->getIsArray())
         {
-            SemanticEmit::error(whileN->getLineNum(), "Cannot use array as test condition in while statement.");
+            Emit::error(whileN->getLineNum(), "Cannot use array as test condition in while statement.");
         }
     }
 }
@@ -675,17 +675,17 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     // Both sides must be the same type
     if (lhs->getData()->getType() != rhs->getData()->getType())
     {
-        SemanticEmit::error(exp->getLineNum(), "'" + sym + "' requires operands of the same type but lhs is type " + lhs->getData()->stringify() + " and rhs is type " + rhs->getData()->stringify() + ".");
+        Emit::error(exp->getLineNum(), "'" + sym + "' requires operands of the same type but lhs is type " + lhs->getData()->stringify() + " and rhs is type " + rhs->getData()->stringify() + ".");
     }
 
     // Both sides must be arrays or both must not be arrays
     if (lhs->getData()->getIsArray() && !rhs->getData()->getIsArray())
     {
-        SemanticEmit::error(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
+        Emit::error(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is an array and rhs is not an array.");
     }
     else if (!lhs->getData()->getIsArray() && rhs->getData()->getIsArray())
     {
-        SemanticEmit::error(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
+        Emit::error(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
     }
 
     // if (isId(lhs) && isId(rhs))
@@ -726,12 +726,12 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type, const bool 
     // Ignore cases where the LHS is undefined
     if (lhs->getData()->getType() != type && lhs->getData()->getType() != Data::Type::Undefined)
     {
-        SemanticEmit::error(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but lhs is of type " + lhs->getData()->stringify() + ".");
+        Emit::error(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but lhs is of type " + lhs->getData()->stringify() + ".");
     }
     // Ignore cases where the RHS is undefined
     if (rhs->getData()->getType() != type && rhs->getData()->getType() != Data::Type::Undefined)
     {
-        SemanticEmit::error(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but rhs is of type " + rhs->getData()->stringify() + ".");
+        Emit::error(exp->getLineNum(), "'" + sym + "' requires operands of type " + typeString + " but rhs is of type " + rhs->getData()->stringify() + ".");
     }
 
     // If it is a binary operation, we want the operands to be only the passed type (not an array of that type)
@@ -744,7 +744,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type, const bool 
             Decl *prevDecl = symTableGet(lhsId->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()))
             {
-                SemanticEmit::error(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+                Emit::error(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
                 return;
             }
         }
@@ -754,7 +754,7 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type, const bool 
             Decl *prevDecl = symTableGet(rhsId->getName());
             if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()))
             {
-                SemanticEmit::error(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
+                Emit::error(binary->getLineNum(), "The operation '" + binary->getSym() + "' does not work with arrays.");
                 return;
             }
         }
@@ -774,12 +774,12 @@ void Semantics::checkIndex(const Binary *binary) const
     Decl *arrayDecl = (Decl *)(symTableGet(arrayId->getName()));
     if (arrayDecl == nullptr || !arrayDecl->getData()->getIsArray())
     {
-        SemanticEmit::error(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
+        Emit::error(binary->getLineNum(), "Cannot index nonarray '" + arrayId->getName() + "'.");
     }
 
     if (indexExp->getData()->getType() != Data::Type::Undefined && indexExp->getData()->getType() != Data::Type::Int)
     {
-        SemanticEmit::error(binary->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexExp->getData()->stringify() + ".");
+        Emit::error(binary->getLineNum(), "Array '" + arrayId->getName() + "' should be indexed by type int but got type " + indexExp->getData()->stringify() + ".");
     }
 
     if (isId(indexExp))
@@ -788,13 +788,13 @@ void Semantics::checkIndex(const Binary *binary) const
         Decl *indexDecl = (Decl *)(symTableGet(indexId->getName()));
         if (isDecl(indexDecl) && indexDecl->getData()->getIsArray())
         {
-            SemanticEmit::error(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
+            Emit::error(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
         }
         // if (arrayDecl != nullptr && arrayDecl->getData()->getIsArray())
         // {
         //     if (indexId->getName() == arrayId->getName())
         //     {
-        //         SemanticEmit::error(binary->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
+        //         Emit::error(binary->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
         //     }
         // }
         // else if (arrayDecl != nullptr)
@@ -802,7 +802,7 @@ void Semantics::checkIndex(const Binary *binary) const
         //     Var *arrayVar = (Var *)arrayDecl;
         //     if (indexId->getName() == arrayVar->getData()->getCopyOf())
         //     {
-        //         SemanticEmit::error(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
+        //         Emit::error(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
         //     }
         // }
     }
@@ -816,25 +816,25 @@ void Semantics::checkUnusedWarns() const
         Decl *decl = (Decl *)currNode;
         if (isVar(decl) && !decl->getIsUsed())
         {
-            SemanticEmit::warn(decl->getLineNum(), "The variable '" + decl->getName() + "' seems not to be used.");
+            Emit::warn(decl->getLineNum(), "The variable '" + decl->getName() + "' seems not to be used.");
         }
         else if (isParm(decl) && !decl->getIsUsed())
         {
-            SemanticEmit::warn(decl->getLineNum(), "The parameter '" + decl->getName() + "' seems not to be used.");
+            Emit::warn(decl->getLineNum(), "The parameter '" + decl->getName() + "' seems not to be used.");
         }
         else if (isFunc(decl) && !decl->getIsUsed() && decl->getName() != "main")
         {
-            SemanticEmit::warn(decl->getLineNum(), "The function '" + decl->getName() + "' seems not to be used.");
+            Emit::warn(decl->getLineNum(), "The function '" + decl->getName() + "' seems not to be used.");
         }
 
         // if (isFunc(decl))
         // {
         //     Func *func = (Func *)decl;
-        //     // SemanticEmit::warn(func->getLineNum(), "Checking func: " + func->getName());
-        //     // SemanticEmit::warn(func->getLineNum(), "Has return: " + func->getHasReturn());
+        //     // Emit::warn(func->getLineNum(), "Checking func: " + func->getName());
+        //     // Emit::warn(func->getLineNum(), "Has return: " + func->getHasReturn());
         //     if (func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void && !func->getHasReturn())
         //     {
-        //         SemanticEmit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
+        //         Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
         //     }
         // }
     }
@@ -866,7 +866,7 @@ bool Semantics::symTableInsert(const Decl *decl, const bool global, const bool s
         }
         std::stringstream msg;
         msg << "Symbol '" << decl->getName() << "' is already declared at line " << prevDecl->getLineNum() << ".";
-        SemanticEmit::error(decl->getLineNum(), msg.str());
+        Emit::error(decl->getLineNum(), msg.str());
     }
 
     return inserted;
@@ -1033,7 +1033,7 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
         Func *func = (Func *)node;
         if (showWarns && func->getData()->getType() != Data::Type::Undefined && func->getData()->getType() != Data::Type::Void && !func->getHasReturn())
         {
-            SemanticEmit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
+            Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
         }
         symTableSimpleLeaveScope(showWarns);
         return;
@@ -1047,7 +1047,7 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
             // Func *func = (Func *)node;
             // if (showWarns && isFunc(func) && !func->getHasReturn())
             // {
-            //     SemanticEmit::error(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
+            //     Emit::error(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
             // }
             symTableSimpleLeaveScope(showWarns);
         }
@@ -1302,7 +1302,7 @@ bool Semantics::hasNonConstantRelative(const Exp *exp) const
     // Node *child = (Node *)exp;
     // while (child != nullptr)
     // {
-    //     SemanticEmit::error(child->getLineNum(), child->stringifyWithType());
+    //     Emit::error(child->getLineNum(), child->stringifyWithType());
     //     if (isUnary(child))
     //     {
     //         Unary *unary = (Unary *)child;

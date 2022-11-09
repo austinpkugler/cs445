@@ -1,7 +1,6 @@
 %{
 // Based on CS445 - Calculator Example Program by Robert Heckendorn and yyerror.h by Michael Wilder
 #include "TokenData.hpp"
-#include "SemanticEmit/SemanticEmit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
@@ -47,7 +46,7 @@ void yyerror(const char *msg)
     {
         // if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
         // {
-        //     SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored.");
+        //     Emit::error(lineCount, "Empty character ''.  Characters ignored.");
         // }
         // else
         // {
@@ -85,7 +84,7 @@ void yyerror(const char *msg)
         }
         printf(".\n");
         fflush(stdout);
-        SemanticEmit::incErrorCount();
+        Emit::incErrorCount();
     }
     free(space);
 }
@@ -1009,8 +1008,8 @@ int main(int argc, char *argv[])
     std::string filename = flags.getFilename();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        SemanticEmit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
-        SemanticEmit::count();
+        Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
+        Emit::count();
         return EXIT_FAILURE;
     }
 
@@ -1034,12 +1033,12 @@ int main(int argc, char *argv[])
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !SemanticEmit::getErrorCount() && !SyntaxEmit::getHasError())
+    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !SyntaxEmit::getHasError())
     {
         root->printTree(true);
     }
 
-    SemanticEmit::count();
+    Emit::count();
 
     delete root;
     fclose(yyin);
