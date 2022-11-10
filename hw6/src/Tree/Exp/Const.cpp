@@ -22,17 +22,13 @@ Const::Const(const int lineNum, const Const::Type type, const std::string constV
                 m_charLengthWarning = true;
             }
             m_data->setType(Data::Type::Char);
-
-            if (getData()->getIsArray())
-            {
-                setHasMem(true);
-            }
             break;
         }
         case Const::Type::String:
             m_stringValue = parseChars(removeFirstAndLastChar(constValue));
             m_data->setType(Data::Type::Char);
             m_data->setIsArray(true);
+            setHasMem(true);
             break;
         default:
             throw std::runtime_error("Const::Const() - Unknown type");
