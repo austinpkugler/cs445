@@ -146,6 +146,7 @@ void Semantics::analyzeVar(Var *var)
     if (m_symTable->depth() != 1 && var->getData()->getIsStatic())
     {
         var->setMemScope("LocalStatic");
+        var->setMemLoc(Node::getGoffset());
         Node::decGoffset(var->getMemSize());
     }
     else if (m_symTable->depth() == 1)
@@ -544,10 +545,17 @@ void Semantics::analyzeCompound(Compound *compound) const
         throw std::runtime_error("Semantics::analyzeCompound() - Invalid Compound");
     }
 
+    int parmCount;
+    Node *node = compound->getRelative(Node::Kind::Func);
+    if (isFunc(node))
+    {
+        Func *func = (Func *)node;
+        parmCount = func->getParmCount();
+    }
+
     compound->setHasMem(true);
     compound->setMemScope("None");
-    compound->setMemSize(-2 - compound->getDeclCount());
-    // compound->setMemLoc(Node::getFoffset());
+    compound->setMemSize(-2 - compound->getDeclCount() - parmCount);
 }
 
 void Semantics::analyzeFor(For *forN) const
