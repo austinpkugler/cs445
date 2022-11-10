@@ -108,6 +108,8 @@ void Semantics::analyzeFunc(Func *func)
     func->setHasMem(true);
     func->setMemScope("Global");
     func->setMemSize(-2 - func->getParmCount());
+    Node::decFoffset(func->getMemSize());
+    // func->setMemLoc(Node::getFoffset());
     symTableInsert(func);
 
     if (isMainFunc(func))
@@ -124,6 +126,8 @@ void Semantics::analyzeParm(Parm *parm)
     }
     parm->setHasMem(true);
     parm->setMemScope("Parameter");
+    Node::decFoffset(parm->getMemSize());
+    // parm->setMemLoc(Node::getFoffset());
     symTableInsert(parm);
 }
 
@@ -135,6 +139,11 @@ void Semantics::analyzeVar(Var *var)
     }
 
     var->setHasMem(true);
+    if (var->getData()->getIsArray())
+    {
+        var->setMemSize(1 + var->getData()->getArraySize());
+    }
+
     if (m_symTable->depth() != 1 && var->getData()->getIsStatic())
     {
         var->setMemScope("LocalStatic");
@@ -148,11 +157,8 @@ void Semantics::analyzeVar(Var *var)
     else
     {
         var->setMemScope("Local");
-    }
-
-    if (var->getData()->getIsArray())
-    {
-        var->setMemSize(1 + var->getData()->getArraySize());
+        Node::decFoffset(var->getMemSize());
+        // var->setMemLoc(Node::getFoffset());
     }
 
     // Global vars are always initialized
@@ -423,6 +429,8 @@ void Semantics::analyzeId(Id *id) const
     id->setHasMem(true);
     id->setMemScope(idDecl->getMemScope());
     id->setMemSize(idDecl->getMemSize());
+    Node::decFoffset(id->getMemSize());
+    // id->setMemLoc(Node::getFoffset());
     idDecl->makeUsed();
 }
 
@@ -540,6 +548,8 @@ void Semantics::analyzeCompound(Compound *compound) const
     compound->setHasMem(true);
     compound->setMemScope("None");
     compound->setMemSize(-2 - compound->getDeclCount());
+    Node::decFoffset(compound->getMemSize());
+    // compound->setMemLoc(Node::getFoffset());
 }
 
 void Semantics::analyzeFor(For *forN) const
@@ -551,6 +561,8 @@ void Semantics::analyzeFor(For *forN) const
 
     forN->setHasMem(true);
     forN->setMemSize(-2 - forN->getDeclCount());
+    Node::decFoffset(forN->getMemSize());
+    // forN->setMemLoc(Node::getFoffset());
 }
 
 void Semantics::analyzeIf(const If *ifN) const

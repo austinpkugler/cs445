@@ -15,6 +15,8 @@ class Node
         // Static
         static int getFoffset() { return s_foffset; }
         static int getGoffset() { return s_goffset; }
+        static void saveFoffset() { s_prevFoffset = s_foffset; s_foffset = 0; }
+        static void resetFoffset() { s_foffset = s_prevFoffset; s_prevFoffset = 0; }
         static void decFoffset(const int dec) { s_foffset -= dec; }
         static void decGoffset(const int dec) { s_goffset -= dec; }
         static void printGoffset();
@@ -67,8 +69,9 @@ class Node
         void printTabs(const unsigned tabCount) const;
 
         // Static
-        inline static int s_foffset = 0;
-        inline static int s_goffset = 0;
+        inline static int s_prevFoffset;
+        inline static int s_foffset;
+        inline static int s_goffset;
 
         // Tree
         Node *m_parent;

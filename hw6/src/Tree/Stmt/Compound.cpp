@@ -12,14 +12,18 @@ unsigned Compound::getDeclCount() const
     return getDecls().size();
 }
 
-std::vector<Node *> Compound::getDecls() const
+std::vector<Decl *> Compound::getDecls() const
 {
-    std::vector<Node *> decls;
-    Node *currDecl = getChild();
-    while (currDecl != nullptr)
+    std::vector<Decl *> decls;
+    Node *currNode = getChild();
+    while (currNode != nullptr)
     {
-        decls.push_back(currDecl);
-        currDecl = currDecl->getSibling();
+        Decl *currDecl = (Decl *)currNode;
+        if (!currDecl->getData()->getIsStatic())
+        {
+            decls.push_back(currDecl);
+        }
+        currNode = currNode->getSibling();
     }
     return decls;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Stmt.hpp"
+#include "../Decl/Decl.hpp"
 
 class Compound : public Stmt
 {
@@ -13,5 +14,5 @@ class Compound : public Stmt
 
         // Getters
         unsigned getDeclCount() const;
-        std::vector<Node *> getDecls() const;
+        std::vector<Decl *> getDecls() const;
 };
