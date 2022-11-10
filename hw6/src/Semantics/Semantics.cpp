@@ -65,9 +65,7 @@ void Semantics::analyzeTree(Node *node)
             analyzeBreak((Break *)node);
             break;
         case Node::Kind::Compound:
-            node->setHasMem(true);
-            node->setMemScope("None");
-            node->setMemSize(-2);
+            analyzeCompound((Compound *)node);
             break;
         case Node::Kind::For:
             break;
@@ -108,8 +106,7 @@ void Semantics::analyzeFunc(Func *func)
     }
     func->setHasMem(true);
     func->setMemScope("Global");
-    func->setMemSize(-2);
-    // Node::decGoffset(func->getMemSize());
+    func->setMemSize(-2 - func->getParmCount());
     symTableInsert(func);
 
     if (isMainFunc(func))
@@ -255,7 +252,6 @@ void Semantics::analyzeBinary(const Binary *binary) const
     }
     if (!expOperandsExist((Exp *)binary))
     {
-        // throw std::runtime_error("Semantics::analyzeBinary() - LHS and RHS Exp operands must exist");
         return;
     }
 
@@ -328,39 +324,6 @@ void Semantics::analyzeCall(const Call *call) const
             Emit::error(call->getLineNum(), msg.str());
         }
 
-        // Somehow some of the parms don't have values?
-        // std::vector<Node *> callParms = call->getParms();
-        // std::vector<Node *> funcParms = func->getParms();
-
-        // std::cout << call->getLineNum() << " Expecting: ";
-        // for (int i = 0; i < funcParms.size(); i++)
-        // {
-        //     std::cout << "_" << funcParms[i]->stringifyWithType() << " ";
-        // }
-        // std::cout << " but got: ";
-        // for (int i = 0; i < callParms.size(); i++)
-        // {
-        //     std::cout << "_" << callParms[i]->stringifyWithType() << " ";
-        // }
-        // std::cout << "\n";
-
-        // std::vector<Node *> callParms = call->getParms();
-        // std::vector<Node *> funcParms = func->getParms();
-        // unsigned minSize = std::min(callParms.size(), funcParms.size());
-        // for (int i = 0; i < minSize; i++)
-        // {
-            // if (isExp(callParms[i]) && isExp(funcParms[i]))
-            // {
-                // Data::Type callParmType = ((Exp *)callParms[i])->getData()->getType();
-                // Data::Type funcParmType = ((Exp *)funcParms[i])->getData()->getType();
-                // if (callParmType != funcParmType)
-                // {
-                //     std::stringstream msg;
-                //     msg << "Expecting type " << Data::typeToString(funcParmType) << " in parameter " << i + 1 << " of call to '" << func->getName() << "' declared on line " << func->getLineNum() <<" but got type " << Data::typeToString(callParmType) << ".";
-                //     Emit::error(call->getLineNum(), msg.str());
-                // }
-            // }
-        // }
         Exp *callParm = (Exp *)(call->getChild());
         Var *funcParm = (Var *)(func->getChild());
         unsigned parmCount = 1;
@@ -559,6 +522,19 @@ void Semantics::analyzeBreak(const Break *breakN) const
     {
         Emit::error(breakN->getLineNum(), "Cannot have a break statement outside of loop.");
     }
+}
+
+void Semantics::analyzeCompound(Compound *compound) const
+{
+    if (!isCompound(compound))
+    {
+        throw std::runtime_error("Semantics::analyzeCompound() - Invalid Compound");
+    }
+
+    compound->setHasMem(true);
+    compound->setMemScope("None");
+    compound->setMemSize(-2);
+    // sum of size of getChild(0) and siblings
 }
 
 void Semantics::analyzeIf(const If *ifN) const

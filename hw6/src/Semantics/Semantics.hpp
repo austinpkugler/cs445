@@ -30,6 +30,7 @@ class Semantics
         void analyzeUnary(const Unary *unary) const;
         void analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const;
         void analyzeBreak(const Break *breakN) const;
+        void analyzeCompound(Compound *compound) const;
         void analyzeIf(const If *ifN) const;
         void analyzeRange(const Range *range) const;
         void analyzeReturn(const Return *returnN) const;
