@@ -20,7 +20,14 @@ Asgn::Asgn(const int lineNum, const Asgn::Type type) : Exp::Exp(lineNum, new Dat
 
 std::string Asgn::stringify() const
 {
-    return "Assign: " + getSym();
+    if (m_data->getIsArray())
+    {
+        return "Assign: " + getSym() + " of array";
+    }
+    else
+    {
+        return "Assign: " + getSym();
+    }
 }
 
 std::string Asgn::getSym() const

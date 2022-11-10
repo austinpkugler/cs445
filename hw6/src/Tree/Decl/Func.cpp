@@ -1,6 +1,10 @@
 #include "Func.hpp"
 
-Func::Func(const int lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, funcName, data), m_hasReturn(false) {}
+Func::Func(const int lineNum, const std::string funcName, Data *data) : Decl::Decl(lineNum, funcName, data), m_hasReturn(false)
+{
+    setHasMem(true);
+    setMem("Global");
+}
 
 std::string Func::stringify() const
 {

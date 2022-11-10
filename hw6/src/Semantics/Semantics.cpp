@@ -687,24 +687,6 @@ void Semantics::checkOperandsOfSameType(Exp *exp) const
     {
         Emit::error(exp->getLineNum(), "'" + sym + "' requires both operands be arrays or not but lhs is not an array and rhs is an array.");
     }
-
-    // if (isId(lhs) && isId(rhs))
-    // {
-    //     Id *lhsId = (Id *)lhs;
-    //     Id *rhsId = (Id *)rhs;
-    //     if (lhsId->getName() != rhsId->getName())
-    //     {
-    //         Decl *prevLhsDecl = symTableGet(lhsId->getName());
-    //         Decl *prevRhsDecl = symTableGet(rhsId->getName());
-    //         if ((prevLhsDecl != nullptr && isVar(prevLhsDecl)) && (prevRhsDecl != nullptr && isVar(prevRhsDecl)))
-    //         {
-    //             if (rhs->getData()->getCopyOf() != lhsId->getName())
-    //             {
-    //                 rhs->getData()->setCopyOf(rhsId->getName());
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type, const bool isMath) const
@@ -790,21 +772,6 @@ void Semantics::checkIndex(const Binary *binary) const
         {
             Emit::error(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
         }
-        // if (arrayDecl != nullptr && arrayDecl->getData()->getIsArray())
-        // {
-        //     if (indexId->getName() == arrayId->getName())
-        //     {
-        //         Emit::error(binary->getLineNum(), "Array index is the unindexed array '" + arrayId->getName() + "'.");
-        //     }
-        // }
-        // else if (arrayDecl != nullptr)
-        // {
-        //     Var *arrayVar = (Var *)arrayDecl;
-        //     if (indexId->getName() == arrayVar->getData()->getCopyOf())
-        //     {
-        //         Emit::error(binary->getLineNum(), "Array index is the unindexed array '" + indexId->getName() + "'.");
-        //     }
-        // }
     }
 }
 

@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-Node::Node(const int lineNum) : m_lineNum(lineNum), m_isAnalyzed(false), m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1) {}
+Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_hasMem(false), m_mem("None"), m_loc(0), m_size(1) {}
 
 Node::~Node()
 {
@@ -41,6 +41,71 @@ Node * Node::getRelative(const Node::Kind nodeKind) const
     return m_parent->getRelative(nodeKind);
 }
 
+std::string Node::getMemStr() const
+{
+    std::stringstream msg;
+    msg << "[mem: " << m_mem << " loc: " << m_loc << " size: " << m_size << "]";
+    return msg.str();
+}
+
+void Node::printTree(const bool showTypes, const bool showMem) const
+{
+    static unsigned siblingCount = 0, tabCount = 0;
+
+    printNode(showTypes);
+    if (showMem && m_hasMem)
+    {
+        std::cout << " " << getMemStr() << " [line: " << m_lineNum << "]" << std::endl;
+    }
+    else
+    {
+        std::cout << " [line: " << m_lineNum << "]" << std::endl;
+    }
+
+    tabCount++;
+
+    // Print the children
+    for (int i = 0; i < m_children.size(); i++)
+    {
+        Node *child = m_children[i];
+        if (child != nullptr)
+        {
+            printTabs(tabCount);
+            std::cout << "Child: " << i << "  ";
+
+            int tmp = siblingCount;
+            siblingCount = 0;
+            child->printTree(showTypes, showMem);
+            siblingCount = tmp;
+        }
+    }
+
+    tabCount--;
+    siblingCount++;
+
+    // Print the siblings
+    if (m_sibling != nullptr)
+    {
+        printTabs(tabCount);
+        std::cout << "Sibling: " + std::to_string(siblingCount) << "  ";
+        m_sibling->printTree(showTypes, showMem);
+    }
+
+    siblingCount--;
+}
+
+void Node::printNode(const bool showTypes) const
+{
+    if (showTypes)
+    {
+        std::cout << stringifyWithType();
+    }
+    else
+    {
+        std::cout << stringify();
+    }
+}
+
 void Node::addChild(Node *node)
 {
     m_children.push_back(node);
@@ -74,57 +139,6 @@ void Node::addSibling(Node *node)
     m_siblingCount++;
 }
 
-void Node::printTree(const bool showTypes) const
-{
-    static unsigned siblingCount = 0, tabCount = 0;
-
-    printNode(showTypes);
-    std::cout << " [line: " << m_lineNum << "]" << std::endl;
-
-    tabCount++;
-
-    // Print the children
-    for (int i = 0; i < m_children.size(); i++)
-    {
-        Node *child = m_children[i];
-        if (child != nullptr)
-        {
-            printTabs(tabCount);
-            std::cout << "Child: " << i << "  ";
-
-            int tmp = siblingCount;
-            siblingCount = 0;
-            child->printTree(showTypes);
-            siblingCount = tmp;
-        }
-    }
-
-    tabCount--;
-    siblingCount++;
-
-    // Print the siblings
-    if (m_sibling != nullptr)
-    {
-        printTabs(tabCount);
-        std::cout << "Sibling: " + std::to_string(siblingCount) << "  ";
-        m_sibling->printTree(showTypes);
-    }
-
-    siblingCount--;
-}
-
-void Node::printNode(const bool showTypes) const
-{
-    if (showTypes)
-    {
-        std::cout << stringifyWithType();
-    }
-    else
-    {
-        std::cout << stringify();
-    }
-}
-
 bool Node::hasRelative(const Node *node) const
 {
     if (this == node)
@@ -143,17 +157,14 @@ bool Node::hasRelative(const Node::Kind nodeKind) const
     return (getRelative(nodeKind) != nullptr);
 }
 
+bool Node::parentExists() const
+{
+    return (m_parent != nullptr);
+}
+
 std::string Node::stringify() const
 {
     return " [line: " + std::to_string(m_lineNum) + "]";
-}
-
-void Node::printTabs(const unsigned tabCount) const
-{
-    for (int i = 0; i < tabCount; i++)
-    {
-        std::cout << ".   ";
-    }
 }
 
 void Node::setSiblingParents(Node *node)
@@ -169,7 +180,10 @@ void Node::setSiblingParents(Node *node)
     }
 }
 
-bool Node::parentExists() const
+void Node::printTabs(const unsigned tabCount) const
 {
-    return (m_parent != nullptr);
+    for (int i = 0; i < tabCount; i++)
+    {
+        std::cout << ".   ";
+    }
 }

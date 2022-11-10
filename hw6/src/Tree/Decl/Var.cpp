@@ -1,6 +1,9 @@
 #include "Var.hpp"
 
-Var::Var(const int lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, isVarame, data), m_isInitialized(false) {}
+Var::Var(const int lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, isVarame, data), m_isInitialized(false)
+{
+    setHasMem(true);
+}
 
 std::string Var::stringify() const
 {
@@ -9,19 +12,21 @@ std::string Var::stringify() const
         throw std::runtime_error("Var::stringify() - Data must exist");
     }
 
-    if (m_data->getIsArray() && m_data->getIsStatic())
+    std::string stringWithType = "Var: " + m_name + " of ";
+    if (m_data->getIsStatic() && m_data->getIsArray())
     {
-        return "Var: " + m_name + " is array of type " + m_data->stringify();
-    }
-    else if (m_data->getIsArray())
-    {
-        return "Var: " + m_name + " is array of type " + m_data->stringify();
+        stringWithType += "static array of ";
     }
     else if (m_data->getIsStatic())
     {
-        return "Var: " + m_name + " of type " + m_data->stringify();
+        stringWithType += "static ";
     }
-    return "Var: " + m_name + " of type " + m_data->stringify();
+    else if (m_data->getIsArray())
+    {
+        stringWithType += "array of ";
+    }
+
+    return stringWithType + "type " + m_data->stringify();
 }
 
 void Var::makeStatic()

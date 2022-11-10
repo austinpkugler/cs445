@@ -18,6 +18,8 @@ class Tester:
             os.mkdir(self._tmp_dir)
 
     def run_all(self, flags=''):
+        self.execute(self._src_dir, 'make clean')
+
         tests = [f[:-3] for f in os.listdir(self._test_dir) if f.endswith('.c-')]
         tests.sort()
 
@@ -55,6 +57,9 @@ class Tester:
 
         if not os.path.exists(compiler):
             self.execute(self._src_dir, 'make')
+
+        if not os.path.exists(compiler):
+            raise Exception('Compilation failed')
 
         src_cp = os.path.join(self._tmp_dir, test + '.c-')
         os.system(f'cp {src} {src_cp}')
@@ -141,25 +146,26 @@ def help():
     print('Usage: python3 tester.py hw_dir -flag --flag')
 
     print('Test Flags:')
-    print('--help \t Displays this help menu.')
-    print('--sort \t Sort the output files before diff.')
-    print('--showdiff \t Shows test diffs in the terminal.')
-    print('--notree \t Remove all AST output before diffing.')
-    print('--rmtmp \t Remove the \'tmp/\' directory after testing.')
+    print('--help \t\t Displays this help menu.')
+    print('--sort \t\t Sort the output files before diff.')
+    print('--showdiff \t\t Shows test diffs in the terminal.')
+    print('--notree \t\t Remove all AST output before diffing.')
+    print('--rmtmp \t\t Remove the \'tmp/\' directory after testing.')
 
     print('Compiler Flags:')
-    print('-d: \t Turn on parser debugging.')
-    print('-D: \t Turn on symbol table debugging.')
-    print('-h: \t Print compiler usage message')
-    print('-p: \t Print the abstract syntax tree.')
-    print('-P: \t Print the abstract syntax tree plus type information.')
+    print('-h: \t\t Print compiler usage message')
+    print('-d: \t\t Turn on parser debugging.')
+    print('-D: \t\t Turn on symbol table debugging.')
+    print('-p: \t\t Print the abstract syntax tree.')
+    print('-P: \t\t Print the abstract syntax tree plus type information.')
+    print('-M: \t\t Print the abstract syntax tree plus type and memory information.')
 
     print('For this project:')
     print('$ python3 tester.py hw1/')
     print('$ python3 tester.py hw2/ -p')
     print('$ python3 tester.py hw3/ -p --sort')
     print('$ python3 tester.py hw4/ -P --sort')
-    print('$ python3 tester.py hw5/ -P --sort')
+    print('$ python3 tester.py hw5/ -M --sort')
 
 
 if __name__ == '__main__':

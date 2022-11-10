@@ -22,6 +22,11 @@ Const::Const(const int lineNum, const Const::Type type, const std::string constV
                 m_charLengthWarning = true;
             }
             m_data->setType(Data::Type::Char);
+
+            if (getData()->getIsArray())
+            {
+                setHasMem(true);
+            }
             break;
         }
         case Const::Type::String:
@@ -57,7 +62,7 @@ std::string Const::stringify() const
             stringy += "'" + std::string(1, m_charValue) + "'";
             break;
         case Const::Type::String:
-            stringy += "is array \"" + m_stringValue + "\"";
+            stringy += "\"" + m_stringValue + "\"";
             break;
     }
     return stringy;
@@ -65,15 +70,22 @@ std::string Const::stringify() const
 
 std::string Const::stringifyWithType() const
 {
+    std::string stringWithType = stringify();
+    if (m_data->getIsArray())
+    {
+        stringWithType += " of array";
+    }
+
     std::string typeString = Data::typeToString(m_data->getNextType());
     if (typeString != "undefined")
     {
-        return stringify() + " of type " + typeString;
+        stringWithType += " of type " + typeString;
     }
     else
     {
-        return stringify() + " of undefined type";
+        stringWithType += " of undefined type";
     }
+    return stringWithType;
 }
 
 char Const::parseFirstChar(const std::string &str) const

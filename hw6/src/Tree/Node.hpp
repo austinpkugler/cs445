@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 class Node
 {
@@ -21,17 +22,22 @@ class Node
         Node * getChild(const unsigned index=0) const;
         unsigned getChildCount() const;
         Node * getRelative(const Node::Kind nodeKind) const;
+        std::string getMemStr() const;
 
         // Setters
         void makeAnalyzed() { m_isAnalyzed = true; }
-        void addChild(Node *node);
-        void addSibling(Node *node);
+        void setHasMem(const bool hasMem) { m_hasMem = hasMem; }
+        void setMem(const std::string mem) { m_mem = mem; }
+        void setLoc(const int loc) { m_loc = loc; }
+        void setSize(const int size) { m_size = size; }
 
         // Print
-        void printTree(const bool showTypes=false) const;
+        void printTree(const bool showTypes=false, const bool showMem=false) const;
         void printNode(const bool showTypes=false) const;
 
         // Helpers
+        void addChild(Node *node);
+        void addSibling(Node *node);
         bool hasRelative(const Node *node) const;
         bool hasRelative(const Node::Kind nodeKind) const;
         bool parentExists() const;
@@ -48,9 +54,18 @@ class Node
         void setSiblingParents(Node *node);
         void printTabs(const unsigned tabCount) const;
 
+        // Tree
+        Node *m_parent;
+        std::vector<Node *> m_children;
+        unsigned m_siblingCount;
+
+        // Analysis
         const int m_lineNum;
         bool m_isAnalyzed;
-        Node *m_parent;
-        unsigned m_siblingCount;
-        std::vector<Node *> m_children;
+
+        // Memory
+        bool m_hasMem;
+        std::string m_mem;
+        int m_loc;
+        int m_size;
 };

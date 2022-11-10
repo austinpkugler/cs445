@@ -1003,7 +1003,7 @@ int main(int argc, char *argv[])
     SyntaxError::initErrorProcessing();
 
     Flags flags(argc, argv);
-    yydebug = flags.getDebugFlag();
+    yydebug = flags.getDebug();
 
     std::string filename = flags.getFilename();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
@@ -1019,13 +1019,13 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag() && root != nullptr && !SyntaxError::getHasError())
+    if (flags.getPrintSyntaxTree() && root != nullptr && !SyntaxError::getHasError())
     {
-        root->printTree();
+        root->printTree(false, false);
     }
 
     SymTable symTable = SymTable();
-    symTable.debug(flags.getSymTableDebugFlag());
+    symTable.debug(flags.getSymTableDebug());
 
     Semantics analyzer = Semantics(&symTable);
     if (!SyntaxError::getHasError())
@@ -1033,9 +1033,14 @@ int main(int argc, char *argv[])
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
+    if (flags.getPrintSyntaxTreeWithTypes() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
     {
-        root->printTree(true);
+        root->printTree(true, false);
+    }
+
+    if (flags.getPrintSyntaxTreeWithMem() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
+    {
+        root->printTree(true, true);
     }
 
     Emit::count();
