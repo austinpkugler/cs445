@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_hasMem(false), m_memScope("None"), m_loc(0), m_memSize(1) {}
+Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_hasMem(false), m_memScope("None"), m_memLoc(0), m_memSize(1) {}
 
 Node::~Node()
 {
@@ -49,7 +49,7 @@ Node * Node::getRelative(const Node::Kind nodeKind) const
 std::string Node::getMemStr() const
 {
     std::stringstream msg;
-    msg << "[mem: " << m_memScope << " loc: " << m_loc << " size: " << m_memSize << "]";
+    msg << "[mem: " << m_memScope << " loc: " << m_memLoc << " size: " << m_memSize << "]";
     return msg.str();
 }
 

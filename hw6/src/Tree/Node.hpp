@@ -13,6 +13,8 @@ class Node
         ~Node();
 
         // Static
+        static int getFoffset() { return s_foffset; }
+        static int getGoffset() { return s_goffset; }
         static void decFoffset(const int dec) { s_foffset -= dec; }
         static void decGoffset(const int dec) { s_goffset -= dec; }
         static void printGoffset();
@@ -34,8 +36,8 @@ class Node
         // Setters
         void makeAnalyzed() { m_isAnalyzed = true; }
         void setHasMem(const bool hasMem) { m_hasMem = hasMem; }
-        void setMemScope(const std::string mem) { m_memScope = mem; }
-        void setLoc(const int loc) { m_loc = loc; }
+        void setMemScope(const std::string scope) { m_memScope = scope; }
+        void setMemLoc(const int loc) { m_memLoc = loc; }
         void setMemSize(const int size) { m_memSize = size; }
 
         // Print
@@ -80,6 +82,6 @@ class Node
         // Memory
         bool m_hasMem;
         std::string m_memScope;
-        int m_loc;
+        int m_memLoc;
         int m_memSize;
 };

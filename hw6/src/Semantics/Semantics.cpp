@@ -68,6 +68,7 @@ void Semantics::analyzeTree(Node *node)
             analyzeCompound((Compound *)node);
             break;
         case Node::Kind::For:
+            analyzeFor((For *)node);
             break;
         case Node::Kind::If:
             analyzeIf((If *)node);
@@ -539,6 +540,17 @@ void Semantics::analyzeCompound(Compound *compound) const
     compound->setHasMem(true);
     compound->setMemScope("None");
     compound->setMemSize(-2 - compound->getDeclCount());
+}
+
+void Semantics::analyzeFor(For *forN) const
+{
+    if (!isFor(forN))
+    {
+        throw std::runtime_error("Semantics::analyzeFor() - Invalid For");
+    }
+
+    forN->setHasMem(true);
+    forN->setMemSize(-2 - forN->getDeclCount());
 }
 
 void Semantics::analyzeIf(const If *ifN) const
