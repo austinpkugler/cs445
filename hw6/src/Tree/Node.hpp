@@ -19,6 +19,8 @@ class Node
         Node * getSibling() const { return m_sibling; }
         unsigned getSiblingCount() const { return m_siblingCount; }
         std::vector<Node *> getChildren() const { return m_children; }
+        std::string getMem() const { return m_mem; }
+        int getSize() const { return m_size; }
         Node * getChild(const unsigned index=0) const;
         unsigned getChildCount() const;
         Node * getRelative(const Node::Kind nodeKind) const;

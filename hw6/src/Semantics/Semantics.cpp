@@ -50,7 +50,7 @@ void Semantics::analyzeTree(Node *node)
             analyzeCall((Call *)node);
             break;
         case Node::Kind::Const:
-            // Not analyzed
+            analyzeConst((Const *)node);
             break;
         case Node::Kind::Id:
             analyzeId((Id *)node);
@@ -65,6 +65,8 @@ void Semantics::analyzeTree(Node *node)
             analyzeBreak((Break *)node);
             break;
         case Node::Kind::Compound:
+            node->setMem("None");
+            break;
         case Node::Kind::For:
             break;
         case Node::Kind::If:
@@ -96,13 +98,13 @@ void Semantics::analyzeTree(Node *node)
     analyzeTree(node->getSibling());
 }
 
-void Semantics::analyzeFunc(const Func *func)
+void Semantics::analyzeFunc(Func *func)
 {
     if (!isFunc(func))
     {
         throw std::runtime_error("Semantics::analyzeFunc() - Invalid Func");
     }
-
+    func->setMem("Global");
     symTableInsert(func);
 
     if (isMainFunc(func))
@@ -111,13 +113,13 @@ void Semantics::analyzeFunc(const Func *func)
     }
 }
 
-void Semantics::analyzeParm(const Parm *parm)
+void Semantics::analyzeParm(Parm *parm)
 {
     if (!isParm(parm))
     {
         throw std::runtime_error("Semantics::analyzeParm() - Invalid Parm");
     }
-
+    parm->setMem("Parameter");
     symTableInsert(parm);
 }
 
@@ -126,6 +128,19 @@ void Semantics::analyzeVar(Var *var)
     if (!isVar(var))
     {
         throw std::runtime_error("Semantics::analyzeVar() - Invalid Var");
+    }
+
+    if (m_symTable->depth() != 1 && var->getData()->getIsStatic())
+    {
+        var->setMem("LocalStatic");
+    }
+    else if (m_symTable->depth() == 1)
+    {
+        var->setMem("Global");
+    }
+    else
+    {
+        var->setMem("Local");
     }
 
     // Global vars are always initialized
@@ -378,7 +393,20 @@ void Semantics::analyzeCall(const Call *call) const
     decl->makeUsed();
 }
 
-void Semantics::analyzeId(const Id *id) const
+void Semantics::analyzeConst(Const *constN) const
+{
+    if (!isConst(constN))
+    {
+        throw std::runtime_error("Semantics::analyzeConst() - Invalid Const");
+    }
+
+    if (constN->getType() == Const::Type::String)
+    {
+        constN->setMem("Global");
+    }
+}
+
+void Semantics::analyzeId(Id *id) const
 {
     if (!isId(id))
     {
@@ -403,16 +431,16 @@ void Semantics::analyzeId(const Id *id) const
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         if (!varDecl->getIsInitialized() && varDecl->getShowErrors())
         {
-            // if (!hasIndexRelative((Exp *)id) || idDecl->getData()->getIsArray())
-            // {
-                if (!hasAsgnRelative((Exp *)id))
-                {
-                    Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
-                    varDecl->setShowErrors(false);
-                }
-            // }
+            if (!hasAsgnRelative((Exp *)id))
+            {
+                Emit::warn(id->getLineNum(), "Variable '" + id->getName() + "' may be uninitialized when used here.");
+                varDecl->setShowErrors(false);
+            }
         }
     }
+
+    id->setMem(idDecl->getMem());
+    id->setSize(idDecl->getSize());
     idDecl->makeUsed();
 }
 

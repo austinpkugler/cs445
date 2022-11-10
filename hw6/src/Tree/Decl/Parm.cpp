@@ -3,7 +3,6 @@
 Parm::Parm(const int lineNum, const std::string parmName, Data *data) : Decl::Decl(lineNum, parmName, data)
 {
     setHasMem(true);
-    setMem("Parameter");
 }
 
 std::string Parm::stringify() const

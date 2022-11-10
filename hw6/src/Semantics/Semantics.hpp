@@ -19,13 +19,14 @@ class Semantics
     private:
         // Analyze
         void analyzeTree(Node *node);
-        void analyzeFunc(const Func *func);
-        void analyzeParm(const Parm *parm);
+        void analyzeFunc(Func *func);
+        void analyzeParm(Parm *parm);
         void analyzeVar(Var *var);
         void analyzeAsgn(const Asgn *asgn);
         void analyzeBinary(const Binary *binary) const;
         void analyzeCall(const Call *call) const;
-        void analyzeId(const Id *id) const;
+        void analyzeConst(Const *constN) const;
+        void analyzeId(Id *id) const;
         void analyzeUnary(const Unary *unary) const;
         void analyzeUnaryAsgn(const UnaryAsgn *unaryAsgn) const;
         void analyzeBreak(const Break *breakN) const;

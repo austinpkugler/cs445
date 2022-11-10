@@ -104,7 +104,7 @@ class Tester:
         diff_count = 0
         with open(diff, 'r') as file:
             for line in file.readlines():
-                if not line.startswith('>') and not line.startswith('<'):
+                if line.startswith('>') or line.startswith('<'):
                     diff_count += 1
         return diff_count
 
