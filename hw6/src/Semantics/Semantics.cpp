@@ -149,6 +149,11 @@ void Semantics::analyzeVar(Var *var)
         var->setMemScope("Local");
     }
 
+    if (var->getData()->getIsArray())
+    {
+        var->setMemSize(1 + var->getData()->getArraySize());
+    }
+
     // Global vars are always initialized
     if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
     {
@@ -533,8 +538,7 @@ void Semantics::analyzeCompound(Compound *compound) const
 
     compound->setHasMem(true);
     compound->setMemScope("None");
-    compound->setMemSize(-2);
-    // sum of size of getChild(0) and siblings
+    compound->setMemSize(-2 - compound->getDeclCount());
 }
 
 void Semantics::analyzeIf(const If *ifN) const

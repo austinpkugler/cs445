@@ -10,4 +10,8 @@ class Compound : public Stmt
         // Overridden
         Node::Kind getNodeKind() const override { return Node::Kind::Compound; }
         std::string stringify() const override;
+
+        // Getters
+        unsigned getDeclCount() const;
+        std::vector<Node *> getDecls() const;
 };

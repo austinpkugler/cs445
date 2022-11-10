@@ -1,6 +1,6 @@
 #include "Data.hpp"
 
-Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic), m_arraySize(0)
+Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic), m_arraySize(-1)
 {
     m_next = nullptr;
     if (isArray)

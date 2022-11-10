@@ -38,11 +38,11 @@ class Tester:
         if passed == len(tests):
             self.remove_tmp()
             self.success_msg('=' * 32)
-            self.success_msg(f'PASSED ({passed}/{len(tests)} tests; {total_diff_count} diff)')
+            self.success_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
             self.success_msg('=' * 32)
         else:
             self.error_msg('=' * 32)
-            self.error_msg(f'FAILED ({passed}/{len(tests)} tests; {total_diff_count} diff)')
+            self.error_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
             self.error_msg('=' * 32)
 
         self.execute(self._src_dir, 'make clean')

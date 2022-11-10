@@ -247,7 +247,9 @@ varDeclId               : ID
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
+                            Var *var = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
+                            var->getData()->setArraySize(std::stoi($3->tokenContent));
+                            $$ = var;
                         }
                         | ID LBRACK error
                         {
