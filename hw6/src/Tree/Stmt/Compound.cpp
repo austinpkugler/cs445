@@ -1,6 +1,9 @@
 #include "Compound.hpp"
 
-Compound::Compound(const int lineNum) : Stmt::Stmt(lineNum) {}
+Compound::Compound(const int lineNum) : Stmt::Stmt(lineNum)
+{
+    setHasMem(true);
+}
 
 std::string Compound::stringify() const
 {

@@ -1,6 +1,6 @@
 #include "Data.hpp"
 
-Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic)
+Data::Data(Data::Type type, bool isArray, bool isStatic) : m_isArray(isArray), m_isStatic(isStatic), m_arraySize(0)
 {
     m_next = nullptr;
     if (isArray)
@@ -71,17 +71,7 @@ void Data::setType(const Data::Type type)
     }
 }
 
-void Data::setCopyOf(const std::string copyOf)
-{
-    m_copyOf = copyOf;
-}
-
 std::string Data::stringify() const
 {
     return typeToString(m_type);
 }
-
-// std::string Data::stringifyWithType() const
-// {
-//     return typeToString(m_type);
-// }

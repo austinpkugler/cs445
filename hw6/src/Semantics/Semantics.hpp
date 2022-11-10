@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Emit.hpp"
 #include "Is.hpp"
 #include "SymTable.hpp"
-#include "../SemanticEmit/SemanticEmit.hpp"
 #include "../Tree/Tree.hpp"
 
 #include <algorithm>

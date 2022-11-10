@@ -1,11 +1,10 @@
 %{
 // Based on CS445 - Calculator Example Program by Robert Heckendorn and yyerror.h by Michael Wilder
 #include "TokenData.hpp"
-#include "SemanticEmit/SemanticEmit.hpp"
 #include "Flags/Flags.hpp"
 #include "Semantics/Semantics.hpp"
 #include "Semantics/SymTable.hpp"
-#include "SyntaxEmit/SyntaxEmit.hpp"
+#include "SyntaxError/SyntaxError.hpp"
 #include "Tree/Tree.hpp"
 
 #include <iostream>
@@ -36,10 +35,10 @@ void yyerror(const char *msg)
     space = strdup(msg);
 
     // Split out components
-    numstrs = SyntaxEmit::split(space, strs, ' ');
+    numstrs = SyntaxError::split(space, strs, ' ');
     if (numstrs > 4)
     {
-        SyntaxEmit::trim(strs[3]);
+        SyntaxError::trim(strs[3]);
     }
 
     // Translate components
@@ -47,20 +46,20 @@ void yyerror(const char *msg)
     {
         // if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
         // {
-        //     SemanticEmit::error(lineCount, "Empty character ''.  Characters ignored.");
+        //     Emit::error(lineCount, "Empty character ''.  Characters ignored.");
         // }
         // else
         // {
-        strs[i] = SyntaxEmit::niceTokenStr(strs[i]);
+        strs[i] = SyntaxError::niceTokenStr(strs[i]);
         // }
     }
 
     // Print components
     if (std::string(strs[3]) != "CHARCONST")
     {
-        SyntaxEmit::setHasError(true);
+        SyntaxError::setHasError(true);
         printf("ERROR(%d): Syntax error, unexpected %s", lineCount, strs[3]);
-        if (SyntaxEmit::elaborate(strs[3]))
+        if (SyntaxError::elaborate(strs[3]))
         {
             if (lastToken[0] == '\'' || lastToken[0] == '"')
             {
@@ -78,14 +77,14 @@ void yyerror(const char *msg)
         }
 
         // Print sorted list of expected
-        SyntaxEmit::tinySort(strs + 5, numstrs - 5, 2, true);
+        SyntaxError::tinySort(strs + 5, numstrs - 5, 2, true);
         for (int i = 4; i < numstrs; i++)
         {
             printf(" %s", strs[i]);
         }
         printf(".\n");
         fflush(stdout);
-        SemanticEmit::incErrorCount();
+        Emit::incErrorCount();
     }
     free(space);
 }
@@ -1001,16 +1000,16 @@ constant                : NUMCONST
 
 int main(int argc, char *argv[])
 {
-    SyntaxEmit::initErrorProcessing();
+    SyntaxError::initErrorProcessing();
 
     Flags flags(argc, argv);
-    yydebug = flags.getDebugFlag();
+    yydebug = flags.getDebug();
 
     std::string filename = flags.getFilename();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
-        SemanticEmit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
-        SemanticEmit::count();
+        Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
+        Emit::count();
         return EXIT_FAILURE;
     }
 
@@ -1020,26 +1019,31 @@ int main(int argc, char *argv[])
 
     yyparse();
 
-    if (flags.getPrintSyntaxTreeFlag() && root != nullptr && !SyntaxEmit::getHasError())
+    if (flags.getPrintSyntaxTree() && root != nullptr && !SyntaxError::getHasError())
     {
-        root->printTree();
+        root->printTree(false, false);
     }
 
     SymTable symTable = SymTable();
-    symTable.debug(flags.getSymTableDebugFlag());
+    symTable.debug(flags.getSymTableDebug());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!SyntaxEmit::getHasError())
+    if (!SyntaxError::getHasError())
     {
         analyzer.analyze(root);
     }
 
-    if (flags.getPrintAnnotatedSyntaxTreeFlag() && root != nullptr && !SemanticEmit::getErrorCount() && !SyntaxEmit::getHasError())
+    if (flags.getPrintSyntaxTreeWithTypes() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
     {
-        root->printTree(true);
+        root->printTree(true, false);
     }
 
-    SemanticEmit::count();
+    if (flags.getPrintSyntaxTreeWithMem() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
+    {
+        root->printTree(true, true);
+    }
+
+    Emit::count();
 
     delete root;
     fclose(yyin);
