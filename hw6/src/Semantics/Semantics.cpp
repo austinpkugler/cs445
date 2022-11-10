@@ -125,6 +125,8 @@ void Semantics::analyzeParm(Parm *parm)
     }
     parm->setHasMem(true);
     parm->setMemScope("Parameter");
+    Node::decFoffset(parm->getMemSize());
+    parm->setMemLoc(Node::getFoffset());
     symTableInsert(parm);
 }
 
@@ -149,6 +151,7 @@ void Semantics::analyzeVar(Var *var)
     else if (m_symTable->depth() == 1)
     {
         var->setMemScope("Global");
+        var->setMemLoc(Node::getGoffset());
         Node::decGoffset(var->getMemSize());
     }
     else
@@ -426,6 +429,7 @@ void Semantics::analyzeId(Id *id) const
     id->setHasMem(true);
     id->setMemScope(idDecl->getMemScope());
     id->setMemSize(idDecl->getMemSize());
+    id->setMemLoc(idDecl->getMemLoc());
     idDecl->makeUsed();
 }
 
@@ -543,6 +547,7 @@ void Semantics::analyzeCompound(Compound *compound) const
     compound->setHasMem(true);
     compound->setMemScope("None");
     compound->setMemSize(-2 - compound->getDeclCount());
+    // compound->setMemLoc(Node::getFoffset());
 }
 
 void Semantics::analyzeFor(For *forN) const

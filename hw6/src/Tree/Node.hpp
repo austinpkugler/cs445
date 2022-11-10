@@ -29,6 +29,7 @@ class Node
         unsigned getSiblingCount() const { return m_siblingCount; }
         std::vector<Node *> getChildren() const { return m_children; }
         std::string getMemScope() const { return m_memScope; }
+        int getMemLoc() const { return m_memLoc; }
         int getMemSize() const { return m_memSize; }
         Node * getChild(const unsigned index=0) const;
         unsigned getChildCount() const;
