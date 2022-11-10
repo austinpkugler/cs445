@@ -13,6 +13,8 @@ class Node
         ~Node();
 
         // Static
+        static void decFoffset(const int dec) { s_foffset -= dec; }
+        static void decGoffset(const int dec) { s_goffset -= dec; }
         static void printGoffset();
 
         // Getters
@@ -22,8 +24,8 @@ class Node
         Node * getSibling() const { return m_sibling; }
         unsigned getSiblingCount() const { return m_siblingCount; }
         std::vector<Node *> getChildren() const { return m_children; }
-        std::string getMem() const { return m_mem; }
-        int getSize() const { return m_size; }
+        std::string getMemScope() const { return m_memScope; }
+        int getMemSize() const { return m_memSize; }
         Node * getChild(const unsigned index=0) const;
         unsigned getChildCount() const;
         Node * getRelative(const Node::Kind nodeKind) const;
@@ -32,9 +34,9 @@ class Node
         // Setters
         void makeAnalyzed() { m_isAnalyzed = true; }
         void setHasMem(const bool hasMem) { m_hasMem = hasMem; }
-        void setMem(const std::string mem) { m_mem = mem; }
+        void setMemScope(const std::string mem) { m_memScope = mem; }
         void setLoc(const int loc) { m_loc = loc; }
-        void setSize(const int size) { m_size = size; }
+        void setMemSize(const int size) { m_memSize = size; }
 
         // Print
         void printTree(const bool showTypes=false, const bool showMem=false) const;
@@ -77,7 +79,7 @@ class Node
 
         // Memory
         bool m_hasMem;
-        std::string m_mem;
+        std::string m_memScope;
         int m_loc;
-        int m_size;
+        int m_memSize;
 };

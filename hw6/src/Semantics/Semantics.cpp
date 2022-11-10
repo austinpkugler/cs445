@@ -66,8 +66,8 @@ void Semantics::analyzeTree(Node *node)
             break;
         case Node::Kind::Compound:
             node->setHasMem(true);
-            node->setMem("None");
-            node->setSize(-2);
+            node->setMemScope("None");
+            node->setMemSize(-2);
             break;
         case Node::Kind::For:
             break;
@@ -107,8 +107,9 @@ void Semantics::analyzeFunc(Func *func)
         throw std::runtime_error("Semantics::analyzeFunc() - Invalid Func");
     }
     func->setHasMem(true);
-    func->setMem("Global");
-    func->setSize(-2);
+    func->setMemScope("Global");
+    func->setMemSize(-2);
+    // Node::decGoffset(func->getMemSize());
     symTableInsert(func);
 
     if (isMainFunc(func))
@@ -124,7 +125,7 @@ void Semantics::analyzeParm(Parm *parm)
         throw std::runtime_error("Semantics::analyzeParm() - Invalid Parm");
     }
     parm->setHasMem(true);
-    parm->setMem("Parameter");
+    parm->setMemScope("Parameter");
     symTableInsert(parm);
 }
 
@@ -138,15 +139,17 @@ void Semantics::analyzeVar(Var *var)
     var->setHasMem(true);
     if (m_symTable->depth() != 1 && var->getData()->getIsStatic())
     {
-        var->setMem("LocalStatic");
+        var->setMemScope("LocalStatic");
+        Node::decGoffset(var->getMemSize());
     }
     else if (m_symTable->depth() == 1)
     {
-        var->setMem("Global");
+        var->setMemScope("Global");
+        Node::decGoffset(var->getMemSize());
     }
     else
     {
-        var->setMem("Local");
+        var->setMemScope("Local");
     }
 
     // Global vars are always initialized
@@ -409,8 +412,9 @@ void Semantics::analyzeConst(Const *constN) const
     if (constN->getType() == Const::Type::String)
     {
         constN->setHasMem(true);
-        constN->setMem("Global");
-        constN->setSize(constN->getStringValue().length() + 1);
+        constN->setMemScope("Global");
+        constN->setMemSize(constN->getStringValue().length() + 1);
+        Node::decGoffset(constN->getMemSize());
     }
 }
 
@@ -448,8 +452,8 @@ void Semantics::analyzeId(Id *id) const
     }
 
     id->setHasMem(true);
-    id->setMem(idDecl->getMem());
-    id->setSize(idDecl->getSize());
+    id->setMemScope(idDecl->getMemScope());
+    id->setMemSize(idDecl->getMemSize());
     idDecl->makeUsed();
 }
 
