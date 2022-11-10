@@ -1,9 +1,6 @@
 #include "Var.hpp"
 
-Var::Var(const int lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, isVarame, data), m_isInitialized(false)
-{
-    setHasMem(true);
-}
+Var::Var(const int lineNum, const std::string isVarame, Data *data) : Decl::Decl(lineNum, isVarame, data), m_isInitialized(false) {}
 
 std::string Var::stringify() const
 {

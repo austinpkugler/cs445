@@ -21,6 +21,7 @@ class Const : public Exp
         Const::Type getType() const { return m_type; }
         bool getCharLengthWarning() const { return m_charLengthWarning; }
         std::string getLongConstValue() const { return m_longConstValue; }
+        std::string getStringValue() const { return m_stringValue; }
 
     private:
         char parseFirstChar(const std::string &str) const;

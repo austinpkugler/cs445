@@ -12,6 +12,9 @@ class Node
         Node(const int lineNum);
         ~Node();
 
+        // Static
+        static void printGoffset();
+
         // Getters
         int getLineNum() const { return m_lineNum; }
         bool getIsAnalyzed() { return m_isAnalyzed; }
@@ -53,8 +56,15 @@ class Node
         Node *m_sibling;
 
     private:
+        // Setters
         void setSiblingParents(Node *node);
+
+        // Print
         void printTabs(const unsigned tabCount) const;
+
+        // Static
+        inline static int s_foffset = 0;
+        inline static int s_goffset = 0;
 
         // Tree
         Node *m_parent;

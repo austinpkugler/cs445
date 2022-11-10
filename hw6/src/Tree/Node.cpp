@@ -14,6 +14,11 @@ Node::~Node()
     }
 }
 
+void Node::printGoffset()
+{
+    std::cout << "Offset for end of global space: " << s_goffset << std::endl;
+}
+
 Node * Node::getChild(const unsigned index) const
 {
     if (index > m_children.size() - 1 || m_children.size() == 0)

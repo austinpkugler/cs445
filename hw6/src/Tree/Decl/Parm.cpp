@@ -1,9 +1,6 @@
 #include "Parm.hpp"
 
-Parm::Parm(const int lineNum, const std::string parmName, Data *data) : Decl::Decl(lineNum, parmName, data)
-{
-    setHasMem(true);
-}
+Parm::Parm(const int lineNum, const std::string parmName, Data *data) : Decl::Decl(lineNum, parmName, data) {}
 
 std::string Parm::stringify() const
 {

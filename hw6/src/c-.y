@@ -1041,6 +1041,7 @@ int main(int argc, char *argv[])
     if (flags.getPrintSyntaxTreeWithMem() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
     {
         root->printTree(true, true);
+        Node::printGoffset();
     }
 
     Emit::count();

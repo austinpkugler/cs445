@@ -28,8 +28,6 @@ Const::Const(const int lineNum, const Const::Type type, const std::string constV
             m_stringValue = parseChars(removeFirstAndLastChar(constValue));
             m_data->setType(Data::Type::Char);
             m_data->setIsArray(true);
-            setHasMem(true);
-            setSize(m_stringValue.length() + 1);
             break;
         default:
             throw std::runtime_error("Const::Const() - Unknown type");
