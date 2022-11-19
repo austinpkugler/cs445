@@ -866,6 +866,11 @@ void Semantics::symTableInitialize(Node *node)
 
     if (isDecl(node))
     {
+        if (isVar(node))
+        {
+            symTableInitialize(node->getChild());
+        }
+
         symTableInsert((Decl *)node, false, false);
         if (isFunc(node))
         {
@@ -920,12 +925,12 @@ void Semantics::symTableInitialize(Node *node)
             if (constN->getType() == Const::Type::String)
             {
                 constN->setMemLoc(s_goffset - 1);
+                s_goffset -= node->getMemSize(); 
             }
             else
             {
                 constN->setMemLoc(s_goffset);
             }
-            s_goffset -= node->getMemSize();
         }
         else if (isVar(node))
         {
@@ -966,14 +971,14 @@ void Semantics::symTableInitialize(Node *node)
         }
     }
 
-    // if (!isVar(node))
-    // {
+    if (!isVar(node))
+    {
         std::vector<Node *> children = node->getChildren();
         for (int i = 0; i < children.size(); i++)
         {
             symTableInitialize(children[i]);
         }
-    // }
+    }
 
     switch (node->getNodeKind())
     {
