@@ -901,6 +901,10 @@ void Semantics::symTableInitialize(Node *node)
         {
             s_foffsets.push_back(-2);
         }
+        else
+        {
+            s_foffsets.push_back(s_foffsets.back());
+        }
     }
 
     if (node->getMemScope() == "Global" || node->getMemScope() == "LocalStatic")
@@ -983,15 +987,15 @@ void Semantics::symTableInitialize(Node *node)
             break;
     }
 
-    hasScope = symTableLeaveScope(node, false);
-    // if (hasScope)
-    // {
-    //     s_foffsets.pop_back();
-    //     if (isFor(node))
-    //     {
-    //         node->setMemSize(s_foffsets.back() - 1);
-    //     }
-    // }
+    symTableLeaveScope(node, false);
+    if (hasScope)
+    {
+        s_foffsets.pop_back();
+        if (isFor(node))
+        {
+            node->setMemSize(s_foffsets.back() - 1);
+        }
+    }
 
     symTableInitialize(node->getSibling());
 }
