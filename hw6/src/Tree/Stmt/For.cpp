@@ -2,7 +2,7 @@
 
 For::For(const int lineNum) : Stmt::Stmt(lineNum)
 {
-    setmemExists(true);
+    setMemExists(true);
 }
 
 std::string For::stringify() const

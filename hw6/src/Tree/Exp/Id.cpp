@@ -2,7 +2,7 @@
 
 Id::Id(const int lineNum, const std::string isIdame) : Exp::Exp(lineNum, new Data(Data::Type::Undefined, false, false)), m_name(isIdame)
 {
-    setmemExists(true);
+    setMemExists(true);
 }
 
 std::string Id::stringify() const

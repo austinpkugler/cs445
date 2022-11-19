@@ -19,6 +19,7 @@ class Node
         Node * getSibling() const { return m_sibling; }
         unsigned getSiblingCount() const { return m_siblingCount; }
         std::vector<Node *> getChildren() const { return m_children; }
+        bool getMemExists() const { return m_memExists; }
         std::string getMemScope() const { return m_memScope; }
         int getMemLoc() const { return m_memLoc; }
         int getMemSize() const { return m_memSize; }
@@ -29,7 +30,7 @@ class Node
 
         // Setters
         void makeAnalyzed() { m_isAnalyzed = true; }
-        void setmemExists(const bool memExists) { m_memExists = memExists; }
+        void setMemExists(const bool memExists) { m_memExists = memExists; }
         void setMemScope(const std::string scope) { m_memScope = scope; }
         void setMemLoc(const int loc) { m_memLoc = loc; }
         void setMemSize(const int size) { m_memSize = size; }

@@ -242,6 +242,7 @@ varDeclId               : ID
                         {
                             Var *var = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
                             var->getData()->setArraySize(std::stoi($3->tokenContent));
+                            var->setMemSize(std::stoi($3->tokenContent) + 1);
                             $$ = var;
                         }
                         | ID LBRACK error
@@ -987,7 +988,13 @@ constant                : NUMCONST
                         }
                         | STRINGCONST
                         {
-                            $$ = new Const($1->lineNum, Const::Type::String, $1->tokenContent);
+                            Const *constN = new Const($1->lineNum, Const::Type::String, $1->tokenContent);
+                            if (constN->getMemExists())
+                            {
+                                constN->setMemSize(constN->getStringValue().length() + 1);
+                                constN->setMemScope("Global");
+                            }
+                            $$ = constN;
                         }
                         ;
 

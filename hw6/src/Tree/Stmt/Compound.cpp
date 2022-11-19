@@ -2,7 +2,7 @@
 
 Compound::Compound(const int lineNum) : Stmt::Stmt(lineNum)
 {
-    setmemExists(true);
+    setMemExists(true);
 }
 
 std::string Compound::stringify() const

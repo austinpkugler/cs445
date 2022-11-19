@@ -353,6 +353,11 @@ void Semantics::analyzeConst(Const *constN) const
     {
         throw std::runtime_error("Semantics::analyzeConst() - Invalid Const");
     }
+
+    // if (constN->getType() == Const::Type::String)
+    // {
+    //     constN->setMemSize(constN->getStringValue().length() + 1);
+    // }
 }
 
 void Semantics::analyzeId(Id *id) const
@@ -954,7 +959,7 @@ void Semantics::symTableInitialize(Node *node)
     }
     else if (node->getMemScope() == "Parameter")
     {
-        if (isVar(node))
+        if (isParm(node))
         {
             node->setMemLoc(s_foffsets.back());
             s_foffsets.back() -= node->getMemSize();
@@ -975,7 +980,7 @@ void Semantics::symTableInitialize(Node *node)
         case Node::Kind::Func:
         {
             Func *func = (Func *)node;
-            node->setMemSize(func->getSize()); // need to get function size
+            node->setMemSize(-func->getParmCount() - 2); // need to get function size
             break;
         }
         case Node::Kind::Compound:

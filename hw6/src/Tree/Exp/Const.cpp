@@ -25,6 +25,7 @@ Const::Const(const int lineNum, const Const::Type type, const std::string constV
             break;
         }
         case Const::Type::String:
+            setMemExists(true);
             m_stringValue = parseChars(removeFirstAndLastChar(constValue));
             m_data->setType(Data::Type::Char);
             m_data->setIsArray(true);
