@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_hasMem(false), m_memScope("None"), m_memLoc(0), m_memSize(1) {}
+Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_memExists(false), m_memScope("None"), m_memLoc(0), m_memSize(1) {}
 
 Node::~Node()
 {
@@ -12,11 +12,6 @@ Node::~Node()
     {
         delete node;
     }
-}
-
-void Node::printGoffset()
-{
-    std::cout << "Offset for end of global space: " << s_goffset << std::endl;
 }
 
 Node * Node::getChild(const unsigned index) const
@@ -58,7 +53,7 @@ void Node::printTree(const bool showTypes, const bool showMem) const
     static unsigned siblingCount = 0, tabCount = 0;
 
     printNode(showTypes);
-    if (showMem && m_hasMem)
+    if (showMem && m_memExists)
     {
         std::cout << " " << getMemStr() << " [line: " << m_lineNum << "]" << std::endl;
     }

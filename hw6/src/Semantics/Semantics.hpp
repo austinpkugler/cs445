@@ -14,6 +14,9 @@ class Semantics
     public:
         Semantics(SymTable *symTable);
 
+        // Static
+        static void printGoffset() { std::cout << "Offset for end of global space: " << s_goffset << std::endl; }
+
         void analyze(Node *node);
 
     private:
@@ -50,8 +53,8 @@ class Semantics
         Data * symTableSetType(Node *node);
         void symTableSimpleEnterScope(const std::string name);
         void symTableSimpleLeaveScope(const bool showWarns=false);
-        void symTableEnterScope(const Node *node);
-        void symTableLeaveScope(const Node *node, const bool showWarns=true);
+        bool symTableEnterScope(const Node *node);
+        bool symTableLeaveScope(const Node *node, const bool showWarns=true);
         void symTableInitializeIOTree();
         void symTableInjectIOTree(Node *node);
 
@@ -63,6 +66,10 @@ class Semantics
         bool hasIndexRelative(const Exp *exp) const;
         bool hasAsgnRelative(const Exp *exp) const;
         bool hasNonConstantRelative(const Exp *exp) const;
+
+        // Static
+        inline static int s_goffset;
+        inline static std::vector<int> s_foffsets;
 
         SymTable *m_symTable;
         bool m_mainExists;

@@ -1,6 +1,9 @@
 #include "For.hpp"
 
-For::For(const int lineNum) : Stmt::Stmt(lineNum) {}
+For::For(const int lineNum) : Stmt::Stmt(lineNum)
+{
+    setmemExists(true);
+}
 
 std::string For::stringify() const
 {

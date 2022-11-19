@@ -15,6 +15,7 @@ class Func : public Decl
         unsigned getParmCount() const;
         std::vector<Node *> getParms() const;
         bool getHasReturn() const { return m_hasReturn; }
+        int getSize() const;
 
         // Setters
         void makeHasReturn() { m_hasReturn = true; }

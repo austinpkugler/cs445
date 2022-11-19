@@ -105,10 +105,7 @@ void Semantics::analyzeFunc(Func *func)
     {
         throw std::runtime_error("Semantics::analyzeFunc() - Invalid Func");
     }
-    func->setHasMem(true);
-    func->setMemScope("Global");
-    func->setMemSize(-2 - func->getParmCount());
-    Node::decFoffset(1);
+
     symTableInsert(func);
 
     if (isMainFunc(func))
@@ -123,10 +120,7 @@ void Semantics::analyzeParm(Parm *parm)
     {
         throw std::runtime_error("Semantics::analyzeParm() - Invalid Parm");
     }
-    parm->setHasMem(true);
-    parm->setMemScope("Parameter");
-    Node::decFoffset(parm->getMemSize());
-    parm->setMemLoc(Node::getFoffset());
+
     symTableInsert(parm);
 }
 
@@ -135,31 +129,6 @@ void Semantics::analyzeVar(Var *var)
     if (!isVar(var))
     {
         throw std::runtime_error("Semantics::analyzeVar() - Invalid Var");
-    }
-
-    var->setHasMem(true);
-    if (var->getData()->getIsArray())
-    {
-        var->setMemSize(1 + var->getData()->getArraySize());
-    }
-
-    if (m_symTable->depth() != 1 && var->getData()->getIsStatic())
-    {
-        var->setMemScope("LocalStatic");
-        var->setMemLoc(Node::getGoffset());
-        Node::decGoffset(var->getMemSize());
-    }
-    else if (m_symTable->depth() == 1)
-    {
-        var->setMemScope("Global");
-        var->setMemLoc(Node::getGoffset());
-        Node::decGoffset(var->getMemSize());
-    }
-    else
-    {
-        var->setMemScope("Local");
-        Node::decFoffset(var->getMemSize());
-        var->setMemLoc(Node::getFoffset());
     }
 
     // Global vars are always initialized
@@ -384,14 +353,6 @@ void Semantics::analyzeConst(Const *constN) const
     {
         throw std::runtime_error("Semantics::analyzeConst() - Invalid Const");
     }
-
-    if (constN->getType() == Const::Type::String)
-    {
-        constN->setHasMem(true);
-        constN->setMemScope("Global");
-        constN->setMemSize(constN->getStringValue().length() + 1);
-        Node::decGoffset(constN->getMemSize());
-    }
 }
 
 void Semantics::analyzeId(Id *id) const
@@ -427,7 +388,6 @@ void Semantics::analyzeId(Id *id) const
         }
     }
 
-    id->setHasMem(true);
     id->setMemScope(idDecl->getMemScope());
     id->setMemSize(idDecl->getMemSize());
     id->setMemLoc(idDecl->getMemLoc());
@@ -552,10 +512,6 @@ void Semantics::analyzeCompound(Compound *compound) const
         Func *func = (Func *)node;
         parmCount = func->getParmCount();
     }
-
-    compound->setHasMem(true);
-    compound->setMemScope("None");
-    compound->setMemSize(-2 - compound->getDeclCount() - parmCount);
 }
 
 void Semantics::analyzeFor(For *forN) const
@@ -564,9 +520,6 @@ void Semantics::analyzeFor(For *forN) const
     {
         throw std::runtime_error("Semantics::analyzeFor() - Invalid For");
     }
-
-    forN->setHasMem(true);
-    forN->setMemSize(-2 - forN->getDeclCount());
 }
 
 void Semantics::analyzeIf(const If *ifN) const
@@ -909,18 +862,137 @@ void Semantics::symTableInitialize(Node *node)
     if (isDecl(node))
     {
         symTableInsert((Decl *)node, false, false);
+        if (isFunc(node))
+        {
+            s_foffsets.push_back(-2);
+        }
     }
 
     symTableSetType(node);
-    symTableEnterScope(node);
 
-    std::vector<Node *> children = node->getChildren();
-    for (int i = 0; i < children.size(); i++)
+    if (m_symTable->depth() == 2)
     {
-        symTableInitialize(children[i]);
+        node->setMemScope("Global");
+    }
+    else
+    {
+        if (isVar(node))
+        {
+            Var *var = (Var *)node;
+            if (var->getData()->getIsStatic())
+            {
+                var->setMemScope("LocalStatic");
+            }
+            else
+            {
+                var->setMemScope("Local");
+            }
+        }
+        else if (isParm(node))
+        {
+            node->setMemScope("Parameter");
+        }
     }
 
-    symTableLeaveScope(node, false);
+    bool hasScope = symTableEnterScope(node);
+    if (hasScope)
+    {
+        if (isFunc(node))
+        {
+            s_foffsets.push_back(-2);
+        }
+    }
+
+    if (node->getMemScope() == "Global" || node->getMemScope() == "LocalStatic")
+    {
+        if (isConst(node))
+        {
+            Const *constN = (Const *)node;
+            if (constN->getType() == Const::Type::String)
+            {
+                constN->setMemLoc(s_goffset - 1);
+            }
+            else
+            {
+                constN->setMemLoc(s_goffset);
+            }
+            s_goffset -= node->getMemSize();
+        }
+        else if (isVar(node))
+        {
+            Var *var = (Var *)node;
+            if (var->getData()->getIsArray())
+            {
+                var->setMemLoc(s_goffset - 1);
+            }
+            else
+            {
+                var->setMemLoc(s_goffset);
+            }
+            s_goffset -= node->getMemSize();
+        }
+    }
+    else if (node->getMemScope() == "Local")
+    {
+        if (isVar(node))
+        {
+            Var *var = (Var *)node;
+            if (var->getData()->getIsArray())
+            {
+                var->setMemLoc(s_foffsets.back() - 1);
+            }
+            else
+            {
+                var->setMemLoc(s_foffsets.back());
+            }
+            s_foffsets.back() -= node->getMemSize();
+        }
+    }
+    else if (node->getMemScope() == "Parameter")
+    {
+        if (isVar(node))
+        {
+            node->setMemLoc(s_foffsets.back());
+            s_foffsets.back() -= node->getMemSize();
+        }
+    }
+
+    // if (!isVar(node))
+    // {
+        std::vector<Node *> children = node->getChildren();
+        for (int i = 0; i < children.size(); i++)
+        {
+            symTableInitialize(children[i]);
+        }
+    // }
+
+    switch (node->getNodeKind())
+    {
+        case Node::Kind::Func:
+        {
+            Func *func = (Func *)node;
+            node->setMemSize(func->getSize()); // need to get function size
+            break;
+        }
+        case Node::Kind::Compound:
+        case Node::Kind::For:
+            if (s_foffsets.size() > 0)
+            {
+                node->setMemSize(s_foffsets.back());
+            }
+            break;
+    }
+
+    hasScope = symTableLeaveScope(node, false);
+    // if (hasScope)
+    // {
+    //     s_foffsets.pop_back();
+    //     if (isFor(node))
+    //     {
+    //         node->setMemSize(s_foffsets.back() - 1);
+    //     }
+    // }
+
     symTableInitialize(node->getSibling());
 }
 
@@ -975,6 +1047,9 @@ Data * Semantics::symTableSetType(Node *node)
             {
                 exp->setData(decl->getData());
             }
+            // exp->setMemSize(decl->getMemSize());
+            // exp->setMemLoc(decl->getMemLoc());
+            // exp->setMemScope(decl->getMemScope());
             break;
         }
         case Node::Kind::Unary:
@@ -1009,7 +1084,7 @@ void Semantics::symTableSimpleLeaveScope(const bool showWarns)
     m_symTable->leave();
 }
 
-void Semantics::symTableEnterScope(const Node *node)
+bool Semantics::symTableEnterScope(const Node *node)
 {
     if (node->getNodeKind() == Node::Kind::Compound)
     {
@@ -1018,31 +1093,35 @@ void Semantics::symTableEnterScope(const Node *node)
             Node::Kind parentKind = node->getParent()->getNodeKind();
             if (parentKind == Node::Kind::For || parentKind == Node::Kind::Func)
             {
-                return;
+                return false;
             }
         }
         symTableSimpleEnterScope("Compound statement");
-        return;
+        return true;
     }
 
     switch (node->getNodeKind())
     {
         case Node::Kind::For:
             symTableSimpleEnterScope("For loop");
+            return true;
             break;
         case Node::Kind::Func:
             symTableSimpleEnterScope("Function body");
+            return true;
             break;
     }
+
+    return false;
 }
 
-void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
+bool Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
 {
     Node::Kind nodeKind = node->getNodeKind();
     if (nodeKind == Node::Kind::For)
     {
         symTableSimpleLeaveScope(showWarns);
-        return;
+        return true;
     }
     else if (nodeKind == Node::Kind::Func)
     {
@@ -1052,7 +1131,7 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
             Emit::warn(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
         }
         symTableSimpleLeaveScope(showWarns);
-        return;
+        return true;
     }
 
     if (node->getParent() != nullptr)
@@ -1066,6 +1145,7 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
             //     Emit::error(func->getLineNum(), "Expecting to return type " + func->getData()->stringify() + " but function '" + func->getName() + "' has no return statement.");
             // }
             symTableSimpleLeaveScope(showWarns);
+            return true;
         }
     }
     else
@@ -1073,8 +1153,11 @@ void Semantics::symTableLeaveScope(const Node *node, const bool showWarns)
         if (nodeKind == Node::Kind::Compound)
         {
             symTableSimpleLeaveScope(showWarns);
+            return true;
         }
     }
+
+    return false;
 }
 
 void Semantics::symTableInitializeIOTree()

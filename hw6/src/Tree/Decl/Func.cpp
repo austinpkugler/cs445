@@ -23,3 +23,26 @@ std::vector<Node *> Func::getParms() const
     }
     return parms;
 }
+
+int Func::getSize() const
+{
+    int size = -2;
+
+    std::vector<Node *> children = getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        if (children[i] == nullptr || children[i]->getNodeKind() != Node::Kind::Var)
+        {
+            continue;
+        }
+
+        Node *child = children[i];
+        while (child != nullptr)
+        {
+            size -= child->getMemSize();
+            child = child->getSibling();
+        }
+    }
+
+    return size;
+}

@@ -44,14 +44,7 @@ void yyerror(const char *msg)
     // Translate components
     for (int i = 3; i < numstrs; i += 2)
     {
-        // if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
-        // {
-        //     Emit::error(lineCount, "Empty character ''.  Characters ignored.");
-        // }
-        // else
-        // {
         strs[i] = SyntaxError::niceTokenStr(strs[i]);
-        // }
     }
 
     // Print components
@@ -1043,7 +1036,7 @@ int main(int argc, char *argv[])
     if (flags.getPrintSyntaxTreeWithMem() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
     {
         root->printTree(true, true);
-        Node::printGoffset();
+        Semantics::printGoffset();
     }
 
     Emit::count();

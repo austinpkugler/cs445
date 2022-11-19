@@ -12,15 +12,6 @@ class Node
         Node(const int lineNum);
         ~Node();
 
-        // Static
-        static int getFoffset() { return s_foffset; }
-        static int getGoffset() { return s_goffset; }
-        static void saveFoffset() { s_prevFoffset = s_foffset; s_foffset = 0; }
-        static void resetFoffset() { s_foffset = s_prevFoffset; s_prevFoffset = 0; }
-        static void decFoffset(const int dec) { s_foffset -= dec; }
-        static void decGoffset(const int dec) { s_goffset -= dec; }
-        static void printGoffset();
-
         // Getters
         int getLineNum() const { return m_lineNum; }
         bool getIsAnalyzed() { return m_isAnalyzed; }
@@ -38,7 +29,7 @@ class Node
 
         // Setters
         void makeAnalyzed() { m_isAnalyzed = true; }
-        void setHasMem(const bool hasMem) { m_hasMem = hasMem; }
+        void setmemExists(const bool memExists) { m_memExists = memExists; }
         void setMemScope(const std::string scope) { m_memScope = scope; }
         void setMemLoc(const int loc) { m_memLoc = loc; }
         void setMemSize(const int size) { m_memSize = size; }
@@ -69,11 +60,6 @@ class Node
         // Print
         void printTabs(const unsigned tabCount) const;
 
-        // Static
-        inline static int s_prevFoffset;
-        inline static int s_foffset;
-        inline static int s_goffset;
-
         // Tree
         Node *m_parent;
         std::vector<Node *> m_children;
@@ -84,7 +70,7 @@ class Node
         bool m_isAnalyzed;
 
         // Memory
-        bool m_hasMem;
+        bool m_memExists;
         std::string m_memScope;
         int m_memLoc;
         int m_memSize;
