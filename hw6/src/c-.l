@@ -118,7 +118,7 @@ static int setValue(int lineNum, int tokenClass, char *sValue)
 . {
     std::stringstream msg;
     msg << "Invalid or misplaced input character: '" << yytext[0] << "'. Character Ignored.";
-    Emit::error(lineCount, msg.str());
+    Emit::error(lineCount, msg.str(), true);
 }
 
 %%

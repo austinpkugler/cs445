@@ -6,8 +6,13 @@ void Emit::error(const std::string type, const std::string msg)
     s_errorCount++;
 }
 
-void Emit::error(const int lineNum, const std::string msg)
+void Emit::error(const int lineNum, const std::string msg, const bool isMisplaceChar)
 {
+    if (isMisplaceChar && !std::count(s_misplacedChars.begin(), s_misplacedChars.end(), lineNum))
+    {
+        s_misplacedChars.push_back(lineNum);
+    }
+
     std::cout << "ERROR(" << lineNum << "): " << msg << std::endl;
     s_errorCount++;
 }
@@ -25,8 +30,11 @@ void Emit::warn(const std::string type, const std::string msg)
 
 void Emit::warn(const int lineNum, const std::string msg)
 {
-    std::cout << "WARNING(" << lineNum << "): " << msg << std::endl;
-    s_warnCount++;
+    if (!std::count(s_misplacedChars.begin(), s_misplacedChars.end(), lineNum))
+    {
+        std::cout << "WARNING(" << lineNum << "): " << msg << std::endl;
+        s_warnCount++;
+    }
 }
 
 void Emit::incWarnCount(unsigned count)
