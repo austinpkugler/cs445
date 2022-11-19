@@ -748,6 +748,40 @@ void Semantics::checkOperandsOfType(Exp *exp, const Data::Type type, const bool 
             }
         }
     }
+    else if (isAsgn(exp))
+    {
+        Asgn *asgn = (Asgn *)exp;
+        switch (asgn->getType())
+        {
+            case Asgn::Type::AddAsgn:
+            case Asgn::Type::DivAsgn:
+            case Asgn::Type::MulAsgn:
+            case Asgn::Type::SubAsgn:
+            {
+                if (isId(lhs))
+                {
+                    Id *lhsId = (Id *)lhs;
+                    Decl *prevDecl = symTableGet(lhsId->getName());
+                    if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()))
+                    {
+                        Emit::error(asgn->getLineNum(), "The operation '" + asgn->getSym() + "' does not work with arrays.");
+                        return;
+                    }
+                }
+                if (isId(rhs))
+                {
+                    Id *rhsId = (Id *)rhs;
+                    Decl *prevDecl = symTableGet(rhsId->getName());
+                    if ((prevDecl != nullptr && prevDecl->getData()->getIsArray()))
+                    {
+                        Emit::error(asgn->getLineNum(), "The operation '" + asgn->getSym() + "' does not work with arrays.");
+                        return;
+                    }
+                }
+                break;
+            }
+        }
+    }
 }
 
 void Semantics::checkIndex(const Binary *binary) const
