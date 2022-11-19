@@ -166,6 +166,7 @@ def help():
     print('$ python3 tester.py hw3/ -p --sort')
     print('$ python3 tester.py hw4/ -P --sort')
     print('$ python3 tester.py hw5/ -M --sort')
+    print('$ python3 tester.py hw6/ -M --sort')
 
 
 if __name__ == '__main__':
