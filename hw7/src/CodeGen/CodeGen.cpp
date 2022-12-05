@@ -1,33 +1,37 @@
 #include "CodeGen.hpp"
 
-CodeGen::CodeGen(Node *root) : m_root(root) {}
+FILE *code = NULL;
+
+CodeGen::CodeGen(const Node *root, const std::string cMinusPath, const std::string tmPath) : m_root(root), m_cMinusPath(cMinusPath), m_tmPath(tmPath) {}
 
 CodeGen::~CodeGen()
 {
     fclose(code);
 }
 
-void CodeGen::generate(const std::string cMinusPath)
+void CodeGen::generate()
 {
     if (m_root == nullptr)
     {
         return;
     }
 
-    std::filesystem::path tmPath = cMinusPath;
-    tmPath = tmPath.replace_extension(".tm");
-    if (!(code = fopen(tmPath.c_str(), "w")))
+    if (!(code = fopen(m_tmPath.c_str(), "w")))
     {
-        throw std::runtime_error("CodeGen::generate() - Invalid filepath");
+        throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
 
     emitComment("C- compiler version F22");
-    emitComment(toChar("File compiled:  " + cMinusPath));
+    emitComment(toChar("File compiled:  " + m_cMinusPath));
     emitIO();
     emitAndTraverse(m_root);
+    emitComment("INIT");
+    emitComment("INIT GLOBALS AND STATICS");
+    emitComment("END INIT GLOBALS AND STATICS");
+    emitComment("END INIT");
 }
 
-void CodeGen::generateFuncDecl(Func *func)
+void CodeGen::generateFuncDecl(const Func *func)
 {
     if (func == nullptr)
     {
@@ -39,16 +43,31 @@ void CodeGen::generateFuncDecl(Func *func)
     emitComment(toChar("FUNCTION " + func->getName()));
 }
 
-void CodeGen::emitAndTraverse(Node *node)
+void CodeGen::generateCompoundStmt(const Compound *compound) 
+{
+    if (compound == nullptr)
+    {
+        return;
+    }
+
+    emitComment("COMPOUND");
+}
+
+void CodeGen::emitAndTraverse(const Node *node)
 {
     if (node == nullptr)
     {
         return;
     }
 
-    if (isFunc(node))
+    switch (node->getNodeKind())
     {
-        generateFuncDecl((Func *)node);
+        case Node::Kind::Compound:
+            generateCompoundStmt((Compound *)node);
+            break;
+        case Node::Kind::Func:
+            generateFuncDecl((Func *)node);
+            break;
     }
 
     std::vector<Node *> children = node->getChildren();
@@ -57,9 +76,14 @@ void CodeGen::emitAndTraverse(Node *node)
         emitAndTraverse(children[i]);
     }
 
-    if (isFunc(node))
+    switch (node->getNodeKind())
     {
-        emitComment(toChar("END FUNCTION " + ((Func *)node)->getName()));
+        case Node::Kind::Compound:
+            emitComment("END COMPOUND");
+            break;
+        case Node::Kind::Func:
+            emitComment(toChar("END FUNCTION " + ((Func *)node)->getName()));
+            break;
     }
 
     emitAndTraverse(node->getSibling());
@@ -136,7 +160,7 @@ void CodeGen::emitIO() const
 )""");
 }
 
-char * CodeGen::toChar(const std::string comment)
+char * CodeGen::toChar(const std::string comment) const
 {
     return const_cast<char *>((comment).c_str());
 }

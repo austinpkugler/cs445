@@ -47,3 +47,6 @@ test.history
 
 # Downloads
 *.Identifier
+
+# TM virtual machine
+src/*.tm

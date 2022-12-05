@@ -18,7 +18,7 @@ clean:
 	rm lex.yy.* $(BIN) $(BIN).tab.* $(BIN).output
 
 deepclean:
-	rm lex.yy.* $(BIN) $(BIN).tab.* $(BIN).output $(BIN).tar
+	rm lex.yy.* $(BIN) $(BIN).tab.* $(BIN).output $(BIN).tar *.tm
 
 tar:
 	tar -cvf $(BIN).tar $(CPPS) $(HPPS) makefile $(BIN).y $(BIN).l

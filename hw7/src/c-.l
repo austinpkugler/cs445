@@ -7,10 +7,13 @@
 #include "Semantics/SymTable.hpp"
 #include "SyntaxError/SyntaxError.hpp"
 #include "Tree/Tree.hpp"
+#include "CodeGen/CodeGen.hpp"
 
+#include <filesystem>
+#include <iostream>
 #include <sstream>
 #include <string>
-#include <iostream>
+#include <stdio.h>
 
 #include "c-.tab.h"
 

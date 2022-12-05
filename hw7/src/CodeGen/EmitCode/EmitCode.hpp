@@ -27,9 +27,9 @@ int emitWhereAmI();           // gives where the next instruction will be placed
 int emitSkip(int howMany);    // emitSkip(0) tells you where the next instruction will be placed
 void emitNewLoc(int loc);     // set the instruction counter back to loc
 
-void emitComment(char *c);
-void emitComment(char *c, char *cc);
-void emitComment(char *c, int n);
+void emitComment(const char *c);
+void emitComment(const char *c, const char *cc);
+void emitComment(const char *c, int n);
 
 void emitGoto(int d, long long int s, char *c);
 void emitGoto(int d, long long int s, char *c, char *cc);

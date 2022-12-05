@@ -6,7 +6,9 @@
 #include "Semantics/SymTable.hpp"
 #include "SyntaxError/SyntaxError.hpp"
 #include "Tree/Tree.hpp"
+#include "CodeGen/CodeGen.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -1016,10 +1018,12 @@ int main(int argc, char *argv[])
     }
 
     // Remove for submission
-    std::cout << "====================================" << std::endl;
-    std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl;
+    /* std::cout << "====================================" << std::endl;
+    std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl; */
 
     yyparse();
+
+    bool printTreeFlag = (flags.getPrintSyntaxTree() || flags.getPrintSyntaxTreeWithTypes() || flags.getPrintSyntaxTreeWithMem());
 
     if (flags.getPrintSyntaxTree() && root != nullptr && !SyntaxError::getHasError())
     {
@@ -1030,7 +1034,7 @@ int main(int argc, char *argv[])
     symTable.debug(flags.getSymTableDebug());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!SyntaxError::getHasError())
+    if (!SyntaxError::getHasError() && printTreeFlag)
     {
         analyzer.analyze(root);
     }
@@ -1046,7 +1050,21 @@ int main(int argc, char *argv[])
         Semantics::printGoffset();
     }
 
-    Emit::count();
+    if (printTreeFlag)
+    {
+        Emit::count();
+    }
+
+    if (!Emit::getErrorCount() && !SyntaxError::getHasError())
+    {
+        std::filesystem::path cMinusPath = flags.getFilename();
+        cMinusPath = cMinusPath.filename().generic_string();
+        std::filesystem::path tmPath = cMinusPath;
+        tmPath = tmPath.replace_extension(".tm").filename().generic_string();
+
+        CodeGen *generator = new CodeGen(root, cMinusPath, tmPath);
+        generator->generate();
+    }
 
     delete root;
     fclose(yyin);

@@ -25,13 +25,13 @@ static int litLoc = 1;    // next empty slot in Dmem growing to higher memory
 //  Procedure emitComment prints a comment line 
 // with a comment that is the concatenation of c and d
 // 
-void emitComment(char *c, char *cc)
+void emitComment(const char *c, const char *cc)
 {
     fprintf(code, "* %s %s\n", c, cc);
 }
 
 
-void emitComment(char *c, int n)
+void emitComment(const char *c, int n)
 {
     fprintf(code, "* %s %d\n", c, n);
 }
@@ -40,7 +40,7 @@ void emitComment(char *c, int n)
 //  Procedure emitComment prints a comment line 
 // with comment c in the code file
 // 
-void emitComment(char *c)
+void emitComment(const char *c)
 {
     fprintf(code, "* %s\n", c);
 }

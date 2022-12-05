@@ -5,25 +5,24 @@
 #include "../Tree/Tree.hpp"
 #include "../Semantics/Is.hpp"
 
-#include <filesystem>
-
-FILE *code = NULL;
-
 class CodeGen
 {
     public:
-        CodeGen(Node *root);
+        CodeGen(const Node *root, const std::string cMinusPath, const std::string tmPath);
         ~CodeGen();
 
         // Helpers
-        void generate(const std::string filepath);
+        void generate();
 
     private:
         // Helpers
-        void generateFuncDecl(Func *func);
-        void emitAndTraverse(Node *node);
+        void generateFuncDecl(const Func *func);
+        void generateCompoundStmt(const Compound *compound);
+        void emitAndTraverse(const Node *node);
         void emitIO() const;
-        char * toChar(const std::string comment);
+        char * toChar(const std::string comment) const;
 
-        Node *m_root;
+        const Node *m_root;
+        const std::string m_cMinusPath;
+        const std::string m_tmPath;
 };
