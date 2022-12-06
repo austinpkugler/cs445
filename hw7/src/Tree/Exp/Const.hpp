@@ -22,6 +22,7 @@ class Const : public Exp
         bool getCharLengthWarning() const { return m_charLengthWarning; }
         std::string getLongConstValue() const { return m_longConstValue; }
         int getIntValue() const { return m_intValue; }
+        bool getBoolValue() const { return m_boolValue; }
         std::string getStringValue() const { return m_stringValue; }
 
     private:

@@ -33,13 +33,6 @@ void CodeGen::generate()
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
 
-    m_funcs["input"] = 1;
-    m_funcs["output"] = 6;
-    m_funcs["inputb"] = 12;
-    m_funcs["outputb"] = 17;
-    m_funcs["inputc"] = 23;
-    m_funcs["outputc"] = 28;
-    m_funcs["outnl"] = 34;
     emitIO();
     emitAndTraverse(m_root);
     emitRM("LDA", 1, 0, 0, "set first frame at end of globals");
@@ -59,11 +52,13 @@ void CodeGen::generateDecl(const Decl *decl)
     switch (decl->getNodeKind())
     {
         case Node::Kind::Func:
+            m_toffset -= 2;
             emitRM("ST", 3, -1, 1, "Store return address");
             m_funcs[decl->getName()] = emitWhereAmI() - 1;
             break;
         case Node::Kind::Parm:
         case Node::Kind::Var:
+            m_toffset -= 1;
             break;
         default:
             throw std::runtime_error("CodeGen::generateDecl - Invalid Decl");
@@ -87,11 +82,23 @@ void CodeGen::generateExp(const Exp *exp)
         case Node::Kind::Call:
         {
             Call *call = (Call *)exp;
-            emitRM("ST", 1, -2, 1, "Store fp in ghost frame for", toChar(call->getName()));
+            emitRM("ST", 1, m_toffset, 1, "Store fp in ghost frame for", toChar(call->getName()));
             std::vector<Node *> parms = call->getParms();
             for (int i = 0; i < parms.size(); i++)
             {
-                emitRM("LDC", 3, 987, 6, "Load integer constant");
+                if (isConst(parms[i]))
+                {
+                    Const *constN = (Const *)parms[i];
+                    switch (constN->getType())
+                    {
+                        case Const::Type::Bool:
+                            emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+                            break;
+                        case Const::Type::Int:
+                            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                            break;
+                    }
+                }
                 emitRM("ST", 3, -4, 1, "Push parameter");
             }
             emitRM("LDA", 1, -2, 1, "Ghost frame becomes new active frame");
@@ -208,8 +215,15 @@ void CodeGen::emitEnd(const Node *node)
     }
 }
 
-void CodeGen::emitIO() const
+void CodeGen::emitIO()
 {
+    m_funcs["input"] = 1;
+    m_funcs["output"] = 6;
+    m_funcs["inputb"] = 12;
+    m_funcs["outputb"] = 17;
+    m_funcs["inputc"] = 23;
+    m_funcs["outputc"] = 28;
+    m_funcs["outnl"] = 34;
     fprintf(code, "%s", R"""(* ** ** ** ** ** ** ** ** ** ** ** **
 * IO Library
   1:     ST  3,-1(1)	Store return address 

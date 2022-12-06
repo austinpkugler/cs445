@@ -31,7 +31,7 @@ class CodeGen
         // Emit
         void emitAndTraverse(const Node *node);
         void emitEnd(const Node *node);
-        void emitIO() const;
+        void emitIO();
 
         // Helpers
         char * toChar(const std::string comment) const;
@@ -39,5 +39,6 @@ class CodeGen
         const Node *m_root;
         const std::string m_cMinusPath;
         const std::string m_tmPath;
+        int m_toffset;
         std::map<std::string, int> m_funcs;
 };
