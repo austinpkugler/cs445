@@ -44,14 +44,7 @@ void yyerror(const char *msg)
     // Translate components
     for (int i = 3; i < numstrs; i += 2)
     {
-        // if (std::string(strs[i]) == "CHARCONST" && lastToken[0] == '\'' && lastToken[1] == '\'')
-        // {
-        //     Emit::error(lineCount, "Empty character ''.  Characters ignored.");
-        // }
-        // else
-        // {
         strs[i] = SyntaxError::niceTokenStr(strs[i]);
-        // }
     }
 
     // Print components
@@ -247,7 +240,10 @@ varDeclId               : ID
                         }
                         | ID LBRACK NUMCONST RBRACK
                         {
-                            $$ = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
+                            Var *var = new Var($1->lineNum, $1->tokenContent, new Data(Data::Type::Undefined, true, false));
+                            var->getData()->setArraySize(std::stoi($3->tokenContent));
+                            var->setMemSize(std::stoi($3->tokenContent) + 1);
+                            $$ = var;
                         }
                         | ID LBRACK error
                         {
@@ -992,7 +988,13 @@ constant                : NUMCONST
                         }
                         | STRINGCONST
                         {
-                            $$ = new Const($1->lineNum, Const::Type::String, $1->tokenContent);
+                            Const *constN = new Const($1->lineNum, Const::Type::String, $1->tokenContent);
+                            if (constN->getMemExists())
+                            {
+                                constN->setMemSize(constN->getStringValue().length() + 1);
+                                constN->setMemScope("Global");
+                            }
+                            $$ = constN;
                         }
                         ;
 
@@ -1041,6 +1043,7 @@ int main(int argc, char *argv[])
     if (flags.getPrintSyntaxTreeWithMem() && root != nullptr && !Emit::getErrorCount() && !SyntaxError::getHasError())
     {
         root->printTree(true, true);
+        Semantics::printGoffset();
     }
 
     Emit::count();

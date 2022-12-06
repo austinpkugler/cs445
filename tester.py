@@ -6,28 +6,44 @@ import time
 
 class Tester:
 
-    def __init__(self, dir, sort=False, showdiff=False, notree=False):
+    def __init__(self, dir, sort=False, showdiff=False, notree=False, unit=False, broad=False, difftm=False, nocomments=False):
         self.sort = sort
         self.showdiff = showdiff
         self.notree = notree
-        self._src_dir = os.path.join(dir, 'src')
-        self._test_dir = os.path.join(dir, 'test')
-        self._tmp_dir = os.path.join(dir, 'tmp')
+        self.unit = unit
+        self.broad = broad
+        self.difftm = difftm
+        self.nocomments = nocomments
+        self.src_dir = os.path.join(dir, 'src')
+        self.test_dir = os.path.join(dir, 'test')
+        if broad:
+            self.test_dir = os.path.join(self.test_dir, 'BroadTests')
+        if unit:
+            self.test_dir = os.path.join(self.test_dir, 'UnitTests')
+        self.tmp_dir = os.path.join(dir, 'tmp')
 
-        if not os.path.exists(self._tmp_dir):
-            os.mkdir(self._tmp_dir)
+        if not os.path.exists(self.tmp_dir):
+            os.mkdir(self.tmp_dir)
 
     def run_all(self, flags=''):
-        self.execute(self._src_dir, 'make clean')
+        self.execute(self.src_dir, 'make clean')
+        compiler = os.path.join(self.src_dir, 'c-')
+        if not os.path.exists(compiler):
+            self.execute(self.src_dir, 'make')
 
-        tests = [f[:-3] for f in os.listdir(self._test_dir) if f.endswith('.c-')]
+        print(f'Running all tests in \'{self.test_dir}\'')
+        tests = [f[:-3] for f in os.listdir(self.test_dir) if f.endswith('.c-')]
         tests.sort()
 
         passed = 0
         total_diff_count = 0
         for i, test in enumerate(tests):
             print(f'Running {test} {i + 1}/{len(tests)}...', end='')
-            diff_count = self.run(test, flags=flags, clean=False)
+            diff_count = 0
+            if self.difftm:
+                diff_count = self.run_tm(test, flags=flags, clean=False)
+            else:
+                diff_count = self.run(test, flags=flags, clean=False)
             if not diff_count:
                 passed += 1
                 self.success_msg(f'[ PASSED ({diff_count} diff) ]')
@@ -38,35 +54,35 @@ class Tester:
         if passed == len(tests):
             self.remove_tmp()
             self.success_msg('=' * 32)
-            self.success_msg(f'PASSED ({passed}/{len(tests)} tests; {total_diff_count} diff)')
+            self.success_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
             self.success_msg('=' * 32)
         else:
             self.error_msg('=' * 32)
-            self.error_msg(f'FAILED ({passed}/{len(tests)} tests; {total_diff_count} diff)')
+            self.error_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
             self.error_msg('=' * 32)
 
-        self.execute(self._src_dir, 'make clean')
+        self.execute(self.src_dir, 'make clean')
         return passed, len(tests), total_diff_count
 
     def run(self, test, flags='', clean=True):
-        src = os.path.join(self._test_dir, test + '.c-')
-        out = os.path.join(self._test_dir, test + '.out')
-        actual = os.path.join(self._tmp_dir, test + '.actual')
-        expected = os.path.join(self._tmp_dir, test + '.expected')
-        compiler = os.path.join(self._src_dir, 'c-')
+        src = os.path.join(self.test_dir, test + '.c-')
+        out = os.path.join(self.test_dir, test + '.out')
+        actual = os.path.join(self.tmp_dir, test + '.actual')
+        expected = os.path.join(self.tmp_dir, test + '.expected')
+        compiler = os.path.join(self.src_dir, 'c-')
 
         if not os.path.exists(compiler):
-            self.execute(self._src_dir, 'make')
+            self.execute(self.src_dir, 'make')
 
         if not os.path.exists(compiler):
             raise Exception('Compilation failed')
 
-        src_cp = os.path.join(self._tmp_dir, test + '.c-')
+        src_cp = os.path.join(self.tmp_dir, test + '.c-')
         os.system(f'cp {src} {src_cp}')
 
         if self.sort:
             os.system(f'sort {out} > {expected}')
-            tmp_actual = os.path.join(self._tmp_dir, 'tmp.out')
+            tmp_actual = os.path.join(self.tmp_dir, 'tmp.out')
             os.system(f'{compiler} {src} {flags} > {tmp_actual}')
             os.system(f'sort {tmp_actual} > {actual}')
             os.remove(tmp_actual)
@@ -79,9 +95,9 @@ class Tester:
             self.remove_tree(actual)
 
         if clean:
-            self.execute(self._src_dir, 'make clean')
+            self.execute(self.src_dir, 'make clean')
 
-        diff = os.path.join(self._tmp_dir, test + '.diff')
+        diff = os.path.join(self.tmp_dir, test + '.diff')
         os.system(f'diff {expected} {actual} > {diff}')
 
         diff_count = self.count_diff(diff)
@@ -95,16 +111,70 @@ class Tester:
                 os.system(f'diff {expected} {actual}')
         return diff_count
 
+    def run_tm(self, test, flags='', clean=True):
+        src = os.path.join(self.test_dir, test + '.c-')
+        out = os.path.join(self.test_dir, test + '.tm')
+        actual = os.path.join(self.tmp_dir, test + '.actual')
+        expected = os.path.join(self.tmp_dir, test + '.expected')
+        compiler = os.path.join(self.src_dir, 'c-')
+
+        if not os.path.exists(compiler):
+            self.execute(self.src_dir, 'make')
+
+        if not os.path.exists(compiler):
+            raise Exception('Compilation failed')
+
+        src_cp = os.path.join(self.tmp_dir, test + '.c-')
+        os.system(f'cp {src} {src_cp}')
+
+        if self.sort:
+            os.system(f'sort {out} > {expected}')
+        else:
+            os.system(f'cp {out} {expected}')
+
+        os.system(f'{compiler} {src} {flags}')
+        tmp_actual = test + '.tm'
+        if self.sort:
+            os.system(f'sort {tmp_actual} > {actual}')
+            os.remove(tmp_actual)
+        else:
+            os.system(f'mv {tmp_actual} {actual}')
+
+        if self.notree:
+            self.remove_tree(expected)
+            self.remove_tree(actual)
+
+        if clean:
+            self.execute(self.src_dir, 'make clean')
+
+        diff = os.path.join(self.tmp_dir, test + '.diff')
+        os.system(f'diff {expected} {actual} > {diff}')
+
+        if self.nocomments:
+            self.remove_comments(diff)
+
+        diff_count = self.count_diff(diff)
+        if not diff_count:
+            os.remove(expected)
+            os.remove(actual)
+            os.remove(diff)
+            os.remove(src_cp)
+        else:
+            if self.showdiff:
+                os.system(f'diff {expected} {actual}')
+        return diff_count
+
     def remove_tmp(self):
-        if os.path.exists(self._tmp_dir):
-            shutil.rmtree(self._tmp_dir)
+        if os.path.exists(self.tmp_dir):
+            shutil.rmtree(self.tmp_dir)
 
     @staticmethod
     def count_diff(diff):
         diff_count = 0
         with open(diff, 'r') as file:
             for line in file.readlines():
-                if not line.startswith('>') and not line.startswith('<'):
+                if line.startswith('>') or line.startswith('<'):
+                    # if not line.startswith('> *') and not line.startswith('< *'):
                     diff_count += 1
         return diff_count
 
@@ -121,6 +191,16 @@ class Tester:
         with open(out, 'r') as file:
             for line in file:
                 if line.startswith('ERROR') or line.startswith('WARNING') or line.startswith('Number of '):
+                    lines.append(line)
+        with open(out, 'w') as file:
+            file.write(''.join(lines))
+
+    @staticmethod
+    def remove_comments(out):
+        lines = []
+        with open(out, 'r') as file:
+            for line in file:
+                if not line.startswith('> *') and not line.startswith('< *'):
                     lines.append(line)
         with open(out, 'w') as file:
             file.write(''.join(lines))
@@ -146,19 +226,23 @@ def help():
     print('Usage: python3 tester.py hw_dir -flag --flag')
 
     print('Test Flags:')
-    print('--help \t\t Displays this help menu.')
-    print('--sort \t\t Sort the output files before diff.')
-    print('--showdiff \t\t Shows test diffs in the terminal.')
-    print('--notree \t\t Remove all AST output before diffing.')
-    print('--rmtmp \t\t Remove the \'tmp/\' directory after testing.')
+    print('--help          Displays this help menu.')
+    print('--sort          Sort the output files before diff.')
+    print('--showdiff      Shows test diffs in the terminal.')
+    print('--notree        Remove all AST output before diffing.')
+    print('--rmtmp         Remove the \'tmp/\' directory after testing.')
+    print('--unit          Run tests in the \'UnitTests/\' directory.')
+    print('--broad         Run tests in the \'BroadTests/\' directory.')
+    print('--difftm        Use \'.tm\' files in diff comparison.')
+    print('--nocomments    Remove comments from \'.tm\' files before diffing.')
 
     print('Compiler Flags:')
-    print('-h: \t\t Print compiler usage message')
-    print('-d: \t\t Turn on parser debugging.')
-    print('-D: \t\t Turn on symbol table debugging.')
-    print('-p: \t\t Print the abstract syntax tree.')
-    print('-P: \t\t Print the abstract syntax tree plus type information.')
-    print('-M: \t\t Print the abstract syntax tree plus type and memory information.')
+    print('-h:    Print compiler usage message')
+    print('-d:    Turn on parser debugging.')
+    print('-D:    Turn on symbol table debugging.')
+    print('-p:    Print the abstract syntax tree.')
+    print('-P:    Print the abstract syntax tree plus type information.')
+    print('-M:    Print the abstract syntax tree plus type and memory information.')
 
     print('For this project:')
     print('$ python3 tester.py hw1/')
@@ -166,10 +250,13 @@ def help():
     print('$ python3 tester.py hw3/ -p --sort')
     print('$ python3 tester.py hw4/ -P --sort')
     print('$ python3 tester.py hw5/ -M --sort')
+    print('$ python3 tester.py hw6/ -M --sort')
+    print('$ python3 tester.py hw7/ --difftm --nocomments --unit ')
+    print('$ python3 tester.py hw7/ --difftm --nocomments --broad')
 
 
 if __name__ == '__main__':
-    test_flags = {'--help': False, '--sort': False, '--showdiff': False, '--notree': False, '--rmtmp': False}
+    test_flags = {'--help': False, '--sort': False, '--showdiff': False, '--notree': False, '--rmtmp': False, '--unit': False, '--broad': False, '--difftm': False, '--nocomments': False}
     compiler_flags = ''
 
     argc = len(sys.argv)
@@ -190,7 +277,10 @@ if __name__ == '__main__':
                 cmd_flags.remove(flag)
         compiler_flags = ' '.join(cmd_flags)
 
-    tester = Tester(sys.argv[1], sort=test_flags['--sort'], showdiff=test_flags['--showdiff'], notree=test_flags['--notree'])
+    if test_flags['--unit'] and test_flags['--broad']:
+        raise Exception('Run either unit or broad tests, not both')
+
+    tester = Tester(sys.argv[1], sort=test_flags['--sort'], showdiff=test_flags['--showdiff'], notree=test_flags['--notree'], unit=test_flags['--unit'], broad=test_flags['--broad'], difftm=test_flags['--difftm'], nocomments=test_flags['--nocomments'])
 
     passed, tests, diff_count = tester.run_all(compiler_flags)
     with open('test.history', 'a') as history:
