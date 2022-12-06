@@ -1034,7 +1034,7 @@ int main(int argc, char *argv[])
     symTable.debug(flags.getSymTableDebug());
 
     Semantics analyzer = Semantics(&symTable);
-    if (!SyntaxError::getHasError() && printTreeFlag)
+    if (!SyntaxError::getHasError()) //  && printTreeFlag
     {
         analyzer.analyze(root);
     }

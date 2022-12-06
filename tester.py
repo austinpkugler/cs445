@@ -6,13 +6,14 @@ import time
 
 class Tester:
 
-    def __init__(self, dir, sort=False, showdiff=False, notree=False, unit=False, broad=False, difftm=False):
+    def __init__(self, dir, sort=False, showdiff=False, notree=False, unit=False, broad=False, difftm=False, nocomments=False):
         self.sort = sort
         self.showdiff = showdiff
         self.notree = notree
         self.unit = unit
         self.broad = broad
         self.difftm = difftm
+        self.nocomments = nocomments
         self.src_dir = os.path.join(dir, 'src')
         self.test_dir = os.path.join(dir, 'test')
         if broad:
@@ -149,6 +150,9 @@ class Tester:
         diff = os.path.join(self.tmp_dir, test + '.diff')
         os.system(f'diff {expected} {actual} > {diff}')
 
+        if self.nocomments:
+            self.remove_comments(diff)
+
         diff_count = self.count_diff(diff)
         if not diff_count:
             os.remove(expected)
@@ -170,6 +174,7 @@ class Tester:
         with open(diff, 'r') as file:
             for line in file.readlines():
                 if line.startswith('>') or line.startswith('<'):
+                    # if not line.startswith('> *') and not line.startswith('< *'):
                     diff_count += 1
         return diff_count
 
@@ -186,6 +191,16 @@ class Tester:
         with open(out, 'r') as file:
             for line in file:
                 if line.startswith('ERROR') or line.startswith('WARNING') or line.startswith('Number of '):
+                    lines.append(line)
+        with open(out, 'w') as file:
+            file.write(''.join(lines))
+
+    @staticmethod
+    def remove_comments(out):
+        lines = []
+        with open(out, 'r') as file:
+            for line in file:
+                if not line.startswith('> *') and not line.startswith('< *'):
                     lines.append(line)
         with open(out, 'w') as file:
             file.write(''.join(lines))
@@ -211,14 +226,15 @@ def help():
     print('Usage: python3 tester.py hw_dir -flag --flag')
 
     print('Test Flags:')
-    print('--help        Displays this help menu.')
-    print('--sort        Sort the output files before diff.')
-    print('--showdiff    Shows test diffs in the terminal.')
-    print('--notree      Remove all AST output before diffing.')
-    print('--rmtmp       Remove the \'tmp/\' directory after testing.')
-    print('--unit        Run tests in the \'UnitTests/\' directory.')
-    print('--broad       Run tests in the \'BroadTests/\' directory.')
-    print('--difftm      Use \'.tm\' files in diff comparison.')
+    print('--help          Displays this help menu.')
+    print('--sort          Sort the output files before diff.')
+    print('--showdiff      Shows test diffs in the terminal.')
+    print('--notree        Remove all AST output before diffing.')
+    print('--rmtmp         Remove the \'tmp/\' directory after testing.')
+    print('--unit          Run tests in the \'UnitTests/\' directory.')
+    print('--broad         Run tests in the \'BroadTests/\' directory.')
+    print('--difftm        Use \'.tm\' files in diff comparison.')
+    print('--nocomments    Remove comments from \'.tm\' files before diffing.')
 
     print('Compiler Flags:')
     print('-h:    Print compiler usage message')
@@ -235,12 +251,12 @@ def help():
     print('$ python3 tester.py hw4/ -P --sort')
     print('$ python3 tester.py hw5/ -M --sort')
     print('$ python3 tester.py hw6/ -M --sort')
-    print('$ python3 tester.py hw7/ --unit --difftm')
-    print('$ python3 tester.py hw7/ --broad --difftm')
+    print('$ python3 tester.py hw7/ --difftm --nocomments --unit ')
+    print('$ python3 tester.py hw7/ --difftm --nocomments --broad')
 
 
 if __name__ == '__main__':
-    test_flags = {'--help': False, '--sort': False, '--showdiff': False, '--notree': False, '--rmtmp': False, '--unit': False, '--broad': False, '--difftm': False}
+    test_flags = {'--help': False, '--sort': False, '--showdiff': False, '--notree': False, '--rmtmp': False, '--unit': False, '--broad': False, '--difftm': False, '--nocomments': False}
     compiler_flags = ''
 
     argc = len(sys.argv)
@@ -264,7 +280,7 @@ if __name__ == '__main__':
     if test_flags['--unit'] and test_flags['--broad']:
         raise Exception('Run either unit or broad tests, not both')
 
-    tester = Tester(sys.argv[1], sort=test_flags['--sort'], showdiff=test_flags['--showdiff'], notree=test_flags['--notree'], unit=test_flags['--unit'], broad=test_flags['--broad'], difftm=test_flags['--difftm'])
+    tester = Tester(sys.argv[1], sort=test_flags['--sort'], showdiff=test_flags['--showdiff'], notree=test_flags['--notree'], unit=test_flags['--unit'], broad=test_flags['--broad'], difftm=test_flags['--difftm'], nocomments=test_flags['--nocomments'])
 
     passed, tests, diff_count = tester.run_all(compiler_flags)
     with open('test.history', 'a') as history:

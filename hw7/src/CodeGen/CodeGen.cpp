@@ -21,36 +21,89 @@ void CodeGen::generate()
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
 
-    emitComment("C- compiler version F22");
-    emitComment(toChar("File compiled:  " + m_cMinusPath));
+    // emitComment("C- compiler version F22");
+    // emitComment(toChar("File compiled:  " + m_cMinusPath));
     emitIO();
     emitAndTraverse(m_root);
-    emitComment("INIT");
-    emitComment("INIT GLOBALS AND STATICS");
-    emitComment("END INIT GLOBALS AND STATICS");
-    emitComment("END INIT");
+    // emitComment("INIT");
+    // emitRM("LDA", 1, 0, 0, "set first frame at end of globals");
+    // emitRM("ST", 1, 0, 1, "store old fp (point to self)");
+    // emitComment("INIT GLOBALS AND STATICS");
+    // emitComment("END INIT GLOBALS AND STATICS");
+    // emitRM("LDA", 3, 1, 7, "Return address in ac");
+    // emitRM("JMP", 7, -9, 7, "Jump to main");
+    // emitRO("HALT", 0, 0, 0, "DONE!");
+    // emitComment("END INIT");
 }
 
-void CodeGen::generateFuncDecl(const Func *func)
+void CodeGen::generateDecl(const Decl *decl)
 {
-    if (func == nullptr)
+    if (decl == nullptr)
     {
         return;
     }
 
-    emitComment("");
-    emitComment("** ** ** ** ** ** ** ** ** ** ** **");
-    emitComment(toChar("FUNCTION " + func->getName()));
+    switch (decl->getNodeKind())
+    {
+        case Node::Kind::Func:
+            m_toff += decl->getMemSize();
+            // emitComment("");
+            // emitComment("** ** ** ** ** ** ** ** ** ** ** **");
+            // emitComment(toChar("FUNCTION " + decl->getName()));
+            // emitComment("TOFF set:", m_toff);
+            emitRM("ST", 3, -1, 1, "Store return address");
+            break;
+        case Node::Kind::Parm:
+        case Node::Kind::Var:
+            break;
+        default:
+            throw std::runtime_error("CodeGen::generateDecl - Invalid Decl");
+            break;
+    }
 }
 
-void CodeGen::generateCompoundStmt(const Compound *compound) 
+void CodeGen::generateExp(const Exp *exp)
 {
-    if (compound == nullptr)
+    if (exp == nullptr)
     {
         return;
     }
 
-    emitComment("COMPOUND");
+    switch (exp->getNodeKind())
+    {
+        default:
+            throw std::runtime_error("CodeGen::generateExp - Invalid Exp");
+            break;
+    }
+}
+
+void CodeGen::generateStmt(const Stmt *stmt)
+{
+    if (stmt == nullptr)
+    {
+        return;
+    }
+
+    switch (stmt->getNodeKind())
+    {
+        case Node::Kind::Break:
+            break;
+        case Node::Kind::Compound:
+            // emitComment("COMPOUND");
+            // emitComment("TOFF set:", m_toff);
+            // emitComment("Compound Body");
+            // emitComment("TOFF set:", m_toff);
+            break;
+        case Node::Kind::For:
+        case Node::Kind::If:
+        case Node::Kind::Range:
+        case Node::Kind::Return:
+        case Node::Kind::While:
+            break;
+        default:
+            throw std::runtime_error("CodeGen::generateStmt - Invalid Stmt");
+            break;
+    }
 }
 
 void CodeGen::emitAndTraverse(const Node *node)
@@ -60,15 +113,18 @@ void CodeGen::emitAndTraverse(const Node *node)
         return;
     }
 
-    switch (node->getNodeKind())
+    if (isDecl(node))
     {
-        case Node::Kind::Compound:
-            generateCompoundStmt((Compound *)node);
-            break;
-        case Node::Kind::Func:
-            generateFuncDecl((Func *)node);
-            break;
+        generateDecl((Decl *)node);
     }
+    // else if (isExp(node))
+    // {
+    //     generateExp((Exp *)node);
+    // }
+    // else if (isStmt(node))
+    // {
+    //     generateStmt((Stmt *)node);
+    // }
 
     std::vector<Node *> children = node->getChildren();
     for (int i = 0; i < children.size(); i++)
@@ -76,17 +132,45 @@ void CodeGen::emitAndTraverse(const Node *node)
         emitAndTraverse(children[i]);
     }
 
+    emitEnd(node);
+    emitAndTraverse(node->getSibling());
+}
+
+void CodeGen::emitEnd(const Node *node)
+{
     switch (node->getNodeKind())
     {
+        // Func, Parm, Var, Asgn, Binary, Call, Const, Id, Unary, UnaryAsgn, Break, Compound, For, If, Range, Return, While
         case Node::Kind::Compound:
-            emitComment("END COMPOUND");
+            // emitComment("END COMPOUND");
+            // emitComment("Add standard closing in case there is no return statement");
+            emitRM("LDC", 2, 0, 6, "Set return value to 0");
+            emitRM("LD", 3, -1, 1, "Load return address");
+            emitRM("LD", 1, 0, 1, "Adjust fp");
+            emitRM("JMP", 7, 0, 3, "Return");
+            break;
+        case Node::Kind::Asgn:
+            break;
+        case Node::Kind::Binary:
+            break;
+        case Node::Kind::Call:
+            break;
+        case Node::Kind::Const:
+            break;
+        case Node::Kind::Id:
+            break;
+        case Node::Kind::Unary:
+            break;
+        case Node::Kind::UnaryAsgn:
             break;
         case Node::Kind::Func:
-            emitComment(toChar("END FUNCTION " + ((Func *)node)->getName()));
+            // emitComment(toChar("END FUNCTION " + ((Func *)node)->getName()));
+            int nextLoc = emitWhereAmI();
+            emitNewLoc(0);
+            emitRM("JMP", 7, 43, 7, "Jump to init [backpatch]");
+            emitNewLoc(nextLoc);
             break;
     }
-
-    emitAndTraverse(node->getSibling());
 }
 
 void CodeGen::emitIO() const
@@ -158,6 +242,7 @@ void CodeGen::emitIO() const
  38:    JMP  7,0(3)	Return 
 * END FUNCTION outnl
 )""");
+    emitNewLoc(39);
 }
 
 char * CodeGen::toChar(const std::string comment) const
