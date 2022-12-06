@@ -32,4 +32,5 @@ class CodeGen
         const std::string m_cMinusPath;
         const std::string m_tmPath;
         int m_toff;
+        int m_mainLoc;
 };

@@ -130,6 +130,7 @@ class Tester:
 
         if self.sort:
             os.system(f'sort {out} > {expected}')
+            raise Exception('Shouldnotsort')
         else:
             os.system(f'cp {out} {expected}')
         os.system(f'cp {out} {tm}')
@@ -156,15 +157,13 @@ class Tester:
         diff = os.path.join(self.tmp_dir, test + '.diff')
         os.system(f'diff {expected} {actual} > {diff}')
 
-        # if self.nocomments:
-        #     self.remove_comments(diff)
-
         diff_count = self.count_diff(diff)
         if not diff_count:
             os.remove(expected)
             os.remove(actual)
             os.remove(diff)
             os.remove(src_cp)
+            os.remove(tm)
         else:
             if self.showdiff:
                 os.system(f'diff {expected} {actual}')
@@ -180,7 +179,6 @@ class Tester:
         with open(diff, 'r') as file:
             for line in file.readlines():
                 if line.startswith('>') or line.startswith('<'):
-                    # if not line.startswith('> *') and not line.startswith('< *'):
                     diff_count += 1
         return diff_count
 
