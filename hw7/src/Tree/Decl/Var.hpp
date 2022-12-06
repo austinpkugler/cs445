@@ -13,11 +13,14 @@ class Var : public Decl
 
         // Getters
         bool getIsInitialized() const { return m_isInitialized; }
+        bool getIsGlobal() const { return m_isGlobal; }
 
         // Setters
         void makeInitialized() { m_isInitialized = true; }
         void makeStatic();
+        void makeGlobal() { m_isGlobal = true; }
 
     private:
         bool m_isInitialized;
+        bool m_isGlobal;
 };

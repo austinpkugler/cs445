@@ -35,6 +35,7 @@ class Tester:
         tests = [f[:-3] for f in os.listdir(self.test_dir) if f.endswith('.c-')]
         tests.sort()
 
+        diffs = {}
         passed = 0
         total_diff_count = 0
         for i, test in enumerate(tests):
@@ -49,6 +50,7 @@ class Tester:
                 self.success_msg(f'[ PASSED ({diff_count} diff) ]')
             else:
                 self.error_msg(f'[ FAILED ({diff_count} diff) ]')
+                diffs[test] = diff_count
             total_diff_count += diff_count
 
         if passed == len(tests):
@@ -59,6 +61,8 @@ class Tester:
         else:
             self.error_msg('=' * 32)
             self.error_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
+            min_diff = min(diffs, key=diffs.get)
+            self.error_msg(f'Min diff: {min_diff} ({diffs[min_diff]} diff)')
             self.error_msg('=' * 32)
 
         self.execute(self.src_dir, 'make clean')

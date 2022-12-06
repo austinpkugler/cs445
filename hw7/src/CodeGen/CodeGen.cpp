@@ -35,14 +35,49 @@ void CodeGen::generate()
 
     emitIO();
     emitAndTraverse(m_root);
-    emitRM("LDA", 1, 0, 0, "set first frame at end of globals");
+    emitRM("LDA", 1, m_goffset, 0, "set first frame at end of globals");
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
+
+    for (int i = 0; i < m_globals.size(); i++)
+    {
+        // switch (m_globals[i]->getData()->getType())
+        // {
+        //     case Data::Type::Bool:
+        //     case Data::Type::Int:
+        //     {
+                Node *rhs = m_globals[i]->getChild();
+                if (rhs != nullptr)
+                {
+                    switch (rhs->getNodeKind())
+                    {
+                        case Node::Kind::Const:
+                        {
+                            Const *constN = (Const *)rhs;
+                            switch (constN->getType())
+                            {
+                                case Const::Type::Bool:
+                                    emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+                                    break;
+                                case Const::Type::Int:
+                                    emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                                    break;
+                            }
+                            break;
+                        }
+                    }
+                }
+                // break;
+        //     }
+        // }
+        emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
+    }
+
     emitRM("LDA", 3, 1, 7, "Return address in ac");
     emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs["main"]), 7, "Jump to main");
     emitRO("HALT", 0, 0, 0, "DONE!");
 }
 
-void CodeGen::generateDecl(const Decl *decl)
+void CodeGen::generateDecl(Decl *decl)
 {
     if (decl == nullptr)
     {
@@ -58,8 +93,19 @@ void CodeGen::generateDecl(const Decl *decl)
             break;
         case Node::Kind::Parm:
         case Node::Kind::Var:
-            m_toffset -= decl->getMemSize();
+        {
+            Var *var = (Var *)decl;
+            if (!var->getIsGlobal())
+            {
+                m_toffset -= decl->getMemSize();
+            }
+            else
+            {
+                m_goffset -= decl->getMemSize();
+                m_globals.push_back(var);
+            }
             break;
+        }
         default:
             throw std::runtime_error("CodeGen::generateDecl - Invalid Decl");
             break;
@@ -87,19 +133,30 @@ void CodeGen::generateExp(const Exp *exp)
             std::vector<Node *> parms = call->getParms();
             for (int i = 0; i < parms.size(); i++)
             {
-                if (isConst(parms[i]))
+                switch (parms[i]->getNodeKind())
                 {
-                    Const *constN = (Const *)parms[i];
-                    switch (constN->getType())
+                    case Node::Kind::Const:
                     {
-                        case Const::Type::Bool:
-                            emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                            break;
-                        case Const::Type::Int:
-                            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                            break;
+                        Const *constN = (Const *)parms[i];
+                        switch (constN->getType())
+                        {
+                            case Const::Type::Bool:
+                                emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+                                break;
+                            case Const::Type::Int:
+                                emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                                break;
+                        }
+                        m_toffset -= constN->getMemSize();
+                        break;
                     }
-                    m_toffset -= constN->getMemSize();
+                    case Node::Kind::Id:
+                    {
+                        Id *id = (Id *)parms[i];
+                        emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
+                        m_toffset -= id->getMemSize();
+                        break;
+                    }
                 }
                 emitRM("ST", 3, m_toffset - 1, 1, "Push parameter");
             }
@@ -107,7 +164,6 @@ void CodeGen::generateExp(const Exp *exp)
             emitRM("LDA", 3, 1, 7, "Return address in ac");
             emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
             emitRM("LDA", 3, 0, 2, "Save the result in ac");
-            // m_toffset -= 2;
             m_toffset = prevToffset;
             break;
         }
@@ -116,8 +172,14 @@ void CodeGen::generateExp(const Exp *exp)
             Const *constN = (Const *)exp;
             switch (constN->getType())
             {
+                case Const::Type::Bool:
+                    if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
+                    {
+                        emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+                    }
+                    break;
                 case Const::Type::Int:
-                    if (!constN->hasRelative(Node::Kind::Call))
+                    if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
                     {
                         emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
                     }

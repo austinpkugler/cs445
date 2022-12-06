@@ -135,6 +135,7 @@ void Semantics::analyzeVar(Var *var)
     if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
     {
         var->makeInitialized();
+        var->makeGlobal();
     }
 
     // Check for initializer errors if there is a child

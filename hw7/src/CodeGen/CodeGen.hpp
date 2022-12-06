@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <vector>
 
 class CodeGen
 {
@@ -24,7 +25,7 @@ class CodeGen
         void printFuncs() const;
 
         // Generate
-        void generateDecl(const Decl *decl);
+        void generateDecl(Decl *decl);
         void generateExp(const Exp *exp);
         void generateStmt(const Stmt *stmt);
 
@@ -40,5 +41,7 @@ class CodeGen
         const std::string m_cMinusPath;
         const std::string m_tmPath;
         int m_toffset;
+        int m_goffset;
         std::map<std::string, int> m_funcs;
+        std::vector<Var *> m_globals;
 };
