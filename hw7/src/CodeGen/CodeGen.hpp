@@ -5,6 +5,11 @@
 #include "../Tree/Tree.hpp"
 #include "../Semantics/Is.hpp"
 
+#include <iostream>
+#include <map>
+#include <string>
+#include <sstream>
+
 class CodeGen
 {
     public:
@@ -15,6 +20,9 @@ class CodeGen
         void generate();
 
     private:
+        // Print
+        void printFuncs() const;
+
         // Generate
         void generateDecl(const Decl *decl);
         void generateExp(const Exp *exp);
@@ -31,6 +39,5 @@ class CodeGen
         const Node *m_root;
         const std::string m_cMinusPath;
         const std::string m_tmPath;
-        int m_toff;
-        int m_mainLoc;
+        std::map<std::string, int> m_funcs;
 };

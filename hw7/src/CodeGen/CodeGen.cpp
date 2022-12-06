@@ -9,6 +9,18 @@ CodeGen::~CodeGen()
     fclose(code);
 }
 
+void CodeGen::printFuncs() const
+{
+    std::stringstream funcs;
+    for (const auto &[k, v] : m_funcs)
+    {
+        funcs << "\"" << k << "\": " << v << ", ";
+    }
+    std::string mapping = funcs.str();
+    mapping.erase(mapping.length() - 2);
+    std::cout << "{" << mapping << "}" << std::endl;
+}
+
 void CodeGen::generate()
 {
     if (m_root == nullptr)
@@ -21,12 +33,19 @@ void CodeGen::generate()
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
 
+    m_funcs["input"] = 1;
+    m_funcs["output"] = 6;
+    m_funcs["inputb"] = 12;
+    m_funcs["outputb"] = 17;
+    m_funcs["inputc"] = 23;
+    m_funcs["outputc"] = 28;
+    m_funcs["outnl"] = 34;
     emitIO();
     emitAndTraverse(m_root);
     emitRM("LDA", 1, 0, 0, "set first frame at end of globals");
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
     emitRM("LDA", 3, 1, 7, "Return address in ac");
-    emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_mainLoc), 7, "Jump to main");
+    emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs["main"]), 7, "Jump to main");
     emitRO("HALT", 0, 0, 0, "DONE!");
 }
 
@@ -41,17 +60,7 @@ void CodeGen::generateDecl(const Decl *decl)
     {
         case Node::Kind::Func:
             emitRM("ST", 3, -1, 1, "Store return address");
-
-            // Func *func = (Func *)decl;
-            // if (!func->getHasReturn())
-            // {
-                // emitComment("Doing standard closing");
-                // emitRM("LDC", 2, 0, 6, "Set return value to 0");
-                // emitRM("LD", 3, -1, 1, "Load return address");
-                // emitRM("LD", 1, 0, 1, "Adjust fp");
-                // emitRM("JMP", 7, 0, 3, "Return");
-            // }
-            m_mainLoc = emitWhereAmI() - 1;
+            m_funcs[decl->getName()] = emitWhereAmI() - 1;
             break;
         case Node::Kind::Parm:
         case Node::Kind::Var:
@@ -76,14 +85,31 @@ void CodeGen::generateExp(const Exp *exp)
         case Node::Kind::Binary:
             break;
         case Node::Kind::Call:
+        {
+            Call *call = (Call *)exp;
+            emitRM("ST", 1, -2, 1, "Store fp in ghost frame for", toChar(call->getName()));
+            std::vector<Node *> parms = call->getParms();
+            for (int i = 0; i < parms.size(); i++)
+            {
+                emitRM("LDC", 3, 987, 6, "Load integer constant");
+                emitRM("ST", 3, -4, 1, "Push parameter");
+            }
+            emitRM("LDA", 1, -2, 1, "Ghost frame becomes new active frame");
+            emitRM("LDA", 3, 1, 7, "Return address in ac");
+            emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
+            emitRM("LDA", 3, 0, 2, "Save the result in ac");
             break;
+        }
         case Node::Kind::Const:
         {
             Const *constN = (Const *)exp;
             switch (constN->getType())
             {
                 case Const::Type::Int:
-                    emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                    if (!constN->hasRelative(Node::Kind::Call))
+                    {
+                        emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                    }
                     break;
             }
             break;
