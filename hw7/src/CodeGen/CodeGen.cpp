@@ -58,7 +58,7 @@ void CodeGen::generateDecl(const Decl *decl)
             break;
         case Node::Kind::Parm:
         case Node::Kind::Var:
-            m_toffset -= 1;
+            m_toffset -= decl->getMemSize();
             break;
         default:
             throw std::runtime_error("CodeGen::generateDecl - Invalid Decl");
@@ -81,6 +81,7 @@ void CodeGen::generateExp(const Exp *exp)
             break;
         case Node::Kind::Call:
         {
+            int prevToffset = m_toffset;
             Call *call = (Call *)exp;
             emitRM("ST", 1, m_toffset, 1, "Store fp in ghost frame for", toChar(call->getName()));
             std::vector<Node *> parms = call->getParms();
@@ -98,13 +99,16 @@ void CodeGen::generateExp(const Exp *exp)
                             emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
                             break;
                     }
+                    m_toffset -= constN->getMemSize();
                 }
-                emitRM("ST", 3, -4, 1, "Push parameter");
+                emitRM("ST", 3, m_toffset - 1, 1, "Push parameter");
             }
-            emitRM("LDA", 1, -2, 1, "Ghost frame becomes new active frame");
+            emitRM("LDA", 1, prevToffset, 1, "Ghost frame becomes new active frame");
             emitRM("LDA", 3, 1, 7, "Return address in ac");
             emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
             emitRM("LDA", 3, 0, 2, "Save the result in ac");
+            // m_toffset -= 2;
+            m_toffset = prevToffset;
             break;
         }
         case Node::Kind::Const:
