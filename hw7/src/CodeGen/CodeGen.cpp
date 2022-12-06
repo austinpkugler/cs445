@@ -50,11 +50,14 @@ void CodeGen::generate()
                     Const *constN = (Const *)rhs;
                     switch (constN->getType())
                     {
+                        case Const::Type::Int:
+                            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                            break;
                         case Const::Type::Bool:
                             emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
                             break;
-                        case Const::Type::Int:
-                            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                        case Const::Type::Char:
+                            emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
                             break;
                     }
                     break;
@@ -132,11 +135,14 @@ void CodeGen::generateExp(const Exp *exp)
                         Const *constN = (Const *)parms[i];
                         switch (constN->getType())
                         {
+                            case Const::Type::Int:
+                                emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                                break;
                             case Const::Type::Bool:
                                 emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
                                 break;
-                            case Const::Type::Int:
-                                emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                            case Const::Type::Char:
+                                emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
                                 break;
                         }
                         m_toffset -= constN->getMemSize();
@@ -164,16 +170,22 @@ void CodeGen::generateExp(const Exp *exp)
             Const *constN = (Const *)exp;
             switch (constN->getType())
             {
+                case Const::Type::Int:
+                    if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
+                    {
+                        emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                    }
+                    break;
                 case Const::Type::Bool:
                     if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
                     {
                         emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
                     }
                     break;
-                case Const::Type::Int:
+                case Const::Type::Char:
                     if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
                     {
-                        emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                        emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
                     }
                     break;
             }
