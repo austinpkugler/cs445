@@ -44,7 +44,7 @@ void CodeGen::generateDecl(const Decl *decl)
     switch (decl->getNodeKind())
     {
         case Node::Kind::Func:
-            m_toff += decl->getMemSize();
+            // m_toff += decl->getMemSize();
             // emitComment("");
             // emitComment("** ** ** ** ** ** ** ** ** ** ** **");
             // emitComment(toChar("FUNCTION " + decl->getName()));

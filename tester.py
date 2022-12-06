@@ -231,7 +231,7 @@ class Tester:
 def help():
     print('Usage: python3 tester.py hw_dir -flag --flag')
 
-    print('Test Flags:')
+    print('\nTest Flags:')
     print('--help          Displays this help menu.')
     print('--sort          Sort the output files before diff.')
     print('--showdiff      Shows test diffs in the terminal.')
@@ -242,7 +242,7 @@ def help():
     print('--difftm        Use \'.tm\' files in diff comparison.')
     print('--nocomments    Remove comments from \'.tm\' files before diffing.')
 
-    print('Compiler Flags:')
+    print('\nCompiler Flags:')
     print('-h:    Print compiler usage message')
     print('-d:    Turn on parser debugging.')
     print('-D:    Turn on symbol table debugging.')
@@ -250,7 +250,7 @@ def help():
     print('-P:    Print the abstract syntax tree plus type information.')
     print('-M:    Print the abstract syntax tree plus type and memory information.')
 
-    print('For this project:')
+    print('\nFor this project:')
     print('$ python3 tester.py hw1/')
     print('$ python3 tester.py hw2/ -p')
     print('$ python3 tester.py hw3/ -p --sort')
