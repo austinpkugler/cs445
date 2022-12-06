@@ -114,6 +114,7 @@ class Tester:
     def run_tm(self, test, flags='', clean=True):
         src = os.path.join(self.test_dir, test + '.c-')
         out = os.path.join(self.test_dir, test + '.tm')
+        tm = os.path.join(self.tmp_dir, test + '.tm')
         actual = os.path.join(self.tmp_dir, test + '.actual')
         expected = os.path.join(self.tmp_dir, test + '.expected')
         compiler = os.path.join(self.src_dir, 'c-')
@@ -131,6 +132,7 @@ class Tester:
             os.system(f'sort {out} > {expected}')
         else:
             os.system(f'cp {out} {expected}')
+        os.system(f'cp {out} {tm}')
 
         os.system(f'{compiler} {src} {flags}')
         tmp_actual = test + '.tm'
@@ -144,14 +146,18 @@ class Tester:
             self.remove_tree(expected)
             self.remove_tree(actual)
 
+        if self.nocomments:
+            self.remove_comments(expected)
+            self.remove_comments(actual)
+
         if clean:
             self.execute(self.src_dir, 'make clean')
 
         diff = os.path.join(self.tmp_dir, test + '.diff')
         os.system(f'diff {expected} {actual} > {diff}')
 
-        if self.nocomments:
-            self.remove_comments(diff)
+        # if self.nocomments:
+        #     self.remove_comments(diff)
 
         diff_count = self.count_diff(diff)
         if not diff_count:
@@ -200,7 +206,7 @@ class Tester:
         lines = []
         with open(out, 'r') as file:
             for line in file:
-                if not line.startswith('> *') and not line.startswith('< *'):
+                if not line.startswith('*'):
                     lines.append(line)
         with open(out, 'w') as file:
             file.write(''.join(lines))
