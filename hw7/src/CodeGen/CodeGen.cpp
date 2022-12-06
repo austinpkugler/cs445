@@ -205,6 +205,7 @@ void CodeGen::emitEnd(const Node *node)
     {
         case Node::Kind::Func:
         {
+            Func *func = (Func *)node;
             emitRM("LDC", 2, 0, 6, "Set return value to 0");
             emitRM("LD", 3, -1, 1, "Load return address");
             emitRM("LD", 1, 0, 1, "Adjust fp");
@@ -212,8 +213,12 @@ void CodeGen::emitEnd(const Node *node)
 
             int instCount = emitWhereAmI();
             emitNewLoc(0);
-            emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
+            if (func->getName() == "main")
+            {
+                emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
+            }
             emitNewLoc(instCount);
+            m_toffset = 0;
             break;
         }
     }
