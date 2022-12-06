@@ -1,6 +1,9 @@
 #include "Semantics.hpp"
 
-Semantics::Semantics(SymTable *symTable) : m_symTable(symTable), m_mainExists(false), m_ioRoot(nullptr) {}
+Semantics::Semantics(SymTable *symTable, const bool verbose) : m_symTable(symTable), m_mainExists(false), m_ioRoot(nullptr)
+{
+    Emit::setVerbose(verbose);
+}
 
 void Semantics::analyze(Node *node)
 {

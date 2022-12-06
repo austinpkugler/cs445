@@ -17,9 +17,11 @@ class Emit
         static void warn(const int lineNum, const std::string msg);
         static void incWarnCount(unsigned count=1);
         static void count();
+        static void setVerbose(bool verbose) { s_verbose = verbose; }
 
     private:
-        inline static unsigned s_errorCount;
-        inline static unsigned s_warnCount;
+        inline static unsigned s_errorCount = 0;
+        inline static unsigned s_warnCount = 0;
+        inline static bool s_verbose = true;
         inline static std::vector<int> s_misplacedChars;
 };

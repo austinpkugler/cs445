@@ -40,35 +40,27 @@ void CodeGen::generate()
 
     for (int i = 0; i < m_globals.size(); i++)
     {
-        // switch (m_globals[i]->getData()->getType())
-        // {
-        //     case Data::Type::Bool:
-        //     case Data::Type::Int:
-        //     {
-                Node *rhs = m_globals[i]->getChild();
-                if (rhs != nullptr)
+        Node *rhs = m_globals[i]->getChild();
+        if (rhs != nullptr)
+        {
+            switch (rhs->getNodeKind())
+            {
+                case Node::Kind::Const:
                 {
-                    switch (rhs->getNodeKind())
+                    Const *constN = (Const *)rhs;
+                    switch (constN->getType())
                     {
-                        case Node::Kind::Const:
-                        {
-                            Const *constN = (Const *)rhs;
-                            switch (constN->getType())
-                            {
-                                case Const::Type::Bool:
-                                    emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                                    break;
-                                case Const::Type::Int:
-                                    emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                                    break;
-                            }
+                        case Const::Type::Bool:
+                            emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
                             break;
-                        }
+                        case Const::Type::Int:
+                            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                            break;
                     }
+                    break;
                 }
-                // break;
-        //     }
-        // }
+            }
+        }
         emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
     }
 

@@ -12,7 +12,7 @@
 class Semantics
 {
     public:
-        Semantics(SymTable *symTable);
+        Semantics(SymTable *symTable, const bool verbose);
 
         // Static
         static void printGoffset() { std::cout << "Offset for end of global space: " << s_goffset << std::endl; }
