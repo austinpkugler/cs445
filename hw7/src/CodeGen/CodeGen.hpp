@@ -3,7 +3,7 @@
 // #include "Instruction.hpp"
 #include "EmitCode/EmitCode.hpp"
 #include "../Tree/Tree.hpp"
-#include "../Semantics/Is.hpp"
+#include "../Semantics/Semantics.hpp"
 
 #include <iostream>
 #include <map>
@@ -14,7 +14,7 @@
 class CodeGen
 {
     public:
-        CodeGen(const Node *root, const std::string cMinusPath, const std::string tmPath);
+        CodeGen(const Node *root, const std::string tmPath, Semantics *analyzer);
         ~CodeGen();
 
         // Helpers
@@ -38,8 +38,8 @@ class CodeGen
         char * toChar(const std::string comment) const;
 
         const Node *m_root;
-        const std::string m_cMinusPath;
         const std::string m_tmPath;
+        Semantics *m_analyzer;
         int m_toffset;
         int m_goffset;
         std::map<std::string, int> m_funcs;

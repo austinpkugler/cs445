@@ -2,7 +2,7 @@
 
 FILE *code = NULL;
 
-CodeGen::CodeGen(const Node *root, const std::string cMinusPath, const std::string tmPath) : m_root(root), m_cMinusPath(cMinusPath), m_tmPath(tmPath) {}
+CodeGen::CodeGen(const Node *root, const std::string tmPath, Semantics *analyzer) : m_root(root), m_tmPath(tmPath), m_analyzer(analyzer) {}
 
 CodeGen::~CodeGen()
 {
@@ -149,13 +149,16 @@ void CodeGen::generateExp(const Exp *exp)
                     case Node::Kind::Id:
                     {
                         Id *id = (Id *)parms[i];
-                        if (id->hasRelative(Node::Kind::Call))
+                        Decl *decl = m_analyzer->lookupDecl(id);
+                        if (decl != nullptr)
                         {
-                            emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
+                            // This is bordering on insanity but I think if the parm is a global var you do 3,0(0)
+                            emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
                         }
                         else
                         {
-                            emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
+                            // Then if it is local you do 3,-2,(1)
+                            emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
                         }
                         m_toffset -= id->getMemSize();
                         break;

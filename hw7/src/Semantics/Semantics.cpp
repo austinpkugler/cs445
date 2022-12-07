@@ -5,6 +5,11 @@ Semantics::Semantics(SymTable *symTable, const bool verbose) : m_symTable(symTab
     Emit::setVerbose(verbose);
 }
 
+Decl * Semantics::lookupDecl(Id *id)
+{
+    return (Decl *)(symTableGet(id->getName()));;
+}
+
 void Semantics::analyze(Node *node)
 {
     symTableInitializeIOTree();

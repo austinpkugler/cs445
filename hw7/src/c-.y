@@ -1053,7 +1053,7 @@ int main(int argc, char *argv[])
         std::filesystem::path tmPath = cMinusPath;
         tmPath = tmPath.replace_extension(".tm").filename().generic_string();
 
-        CodeGen *generator = new CodeGen(root, cMinusPath, tmPath);
+        CodeGen *generator = new CodeGen(root, tmPath, &analyzer);
         generator->generate();
     }
 
