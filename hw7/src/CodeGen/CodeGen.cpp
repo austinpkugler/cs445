@@ -40,7 +40,7 @@ void CodeGen::generate()
 
     for (int i = 0; i < m_globals.size(); i++)
     {
-        std::cout << m_globals[i]->getLineNum() << " " << m_globals[i]->stringifyWithType() << std::endl;
+        std::cout << "CodeGen::generate() - Global at " << m_globals[i]->getLineNum() << " " << m_globals[i]->stringifyWithType() << std::endl;
         Node *rhs = m_globals[i]->getChild();
         if (rhs != nullptr && isConst(rhs))
         {
@@ -58,7 +58,13 @@ void CodeGen::generate()
                     break;
             }
         }
-        if (!m_globals[i]->getData()->getIsStatic())
+
+        if (m_globals[i]->getData()->getIsArray())
+        {
+            emitRM("LDC", 3, m_globals[i]->getMemSize() - 1, 6, "load size of array", toChar(m_globals[i]->getName()));
+            emitRM("ST", 3, 0, 0, "save size of array", toChar(m_globals[i]->getName()));
+        }
+        else if (!m_globals[i]->getData()->getIsStatic())
         {
             emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
         }
@@ -94,7 +100,6 @@ void CodeGen::generateDecl(Decl *decl)
             if (!var->getIsGlobal())
             {
                 m_toffset -= decl->getMemSize();
-
                 if (var->getChild() != nullptr)
                 {
                     emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
@@ -104,7 +109,7 @@ void CodeGen::generateDecl(Decl *decl)
             {
                 m_goffset -= decl->getMemSize();
                 Node *rhs = var->getChild();
-                if (rhs != nullptr)
+                if (rhs != nullptr || var->getData()->getIsArray())
                 {
                     m_globals.push_back(var);
                 }
@@ -138,6 +143,7 @@ void CodeGen::generateExp(const Exp *exp)
             std::vector<Node *> parms = call->getParms();
             for (int i = 0; i < parms.size(); i++)
             {
+                std::cout << "CodeGen::generateExp() - Parm at " << parms[i]->getLineNum() << " " << parms[i]->stringifyWithType() << std::endl;
                 switch (parms[i]->getNodeKind())
                 {
                     case Node::Kind::Const:
@@ -178,6 +184,21 @@ void CodeGen::generateExp(const Exp *exp)
                             emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
                         }
                         m_toffset -= id->getMemSize();
+                        break;
+                    }
+                    case Node::Kind::Unary:
+                    {
+                        Node *rhs = parms[i]->getChild();
+                        if (rhs != nullptr && isId(rhs))
+                        {
+                            Id *id = (Id *)rhs;
+                            if (id->getData()->getIsArray())
+                            {
+                                emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
+                                emitRM("LD", 3, 1, 3, "Load array size");
+                                m_toffset -= 1;
+                            }
+                        }
                         break;
                     }
                 }
