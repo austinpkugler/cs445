@@ -139,7 +139,16 @@ void CodeGen::generateExp(const Exp *exp)
             {
                 // std::cout << "CodeGen::generateExp() - Asgn lhs is " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
                 Const *constN = (Const *)lhs;
-                emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                switch (constN->getType())
+                {
+                    case Const::Type::Int:
+                        emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+                        break;
+                    case Const::Type::Bool:
+                        emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+                        break;
+                }
+                
             }
 
             break;
