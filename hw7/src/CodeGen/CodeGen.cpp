@@ -41,27 +41,20 @@ void CodeGen::generate()
     for (int i = 0; i < m_globals.size(); i++)
     {
         Node *rhs = m_globals[i]->getChild();
-        if (rhs != nullptr)
+        if (rhs != nullptr && isConst(rhs))
         {
-            switch (rhs->getNodeKind())
+            Const *constN = (Const *)rhs;
+            switch (constN->getType())
             {
-                case Node::Kind::Const:
-                {
-                    Const *constN = (Const *)rhs;
-                    switch (constN->getType())
-                    {
-                        case Const::Type::Int:
-                            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                            break;
-                        case Const::Type::Bool:
-                            emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                            break;
-                        case Const::Type::Char:
-                            emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
-                            break;
-                    }
+                case Const::Type::Int:
+                    emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
                     break;
-                }
+                case Const::Type::Bool:
+                    emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+                    break;
+                case Const::Type::Char:
+                    emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
+                    break;
             }
         }
         emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
@@ -93,6 +86,11 @@ void CodeGen::generateDecl(Decl *decl)
             if (!var->getIsGlobal())
             {
                 m_toffset -= decl->getMemSize();
+
+                if (var->getChild() != nullptr)
+                {
+                    emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
+                }
             }
             else
             {
@@ -151,7 +149,14 @@ void CodeGen::generateExp(const Exp *exp)
                     case Node::Kind::Id:
                     {
                         Id *id = (Id *)parms[i];
-                        emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
+                        if (id->hasRelative(Node::Kind::Call))
+                        {
+                            emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
+                        }
+                        else
+                        {
+                            emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
+                        }
                         m_toffset -= id->getMemSize();
                         break;
                     }
@@ -269,6 +274,16 @@ void CodeGen::emitEnd(const Node *node)
 {
     switch (node->getNodeKind())
     {
+        case Node::Kind::Asgn:
+        {
+            Node *lhs = node->getChild();
+            if (lhs != nullptr && isId(lhs))
+            {
+                Id *id = (Id *)lhs;
+                emitRM("ST", 3, -2, 1, "Store variable", toChar(id->getName()));
+            }
+            break;
+        }
         case Node::Kind::Func:
         {
             Func *func = (Func *)node;
