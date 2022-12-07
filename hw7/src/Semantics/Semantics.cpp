@@ -1,6 +1,14 @@
 #include "Semantics.hpp"
 
-Semantics::Semantics(SymTable *symTable) : m_symTable(symTable), m_mainExists(false), m_ioRoot(nullptr) {}
+Semantics::Semantics(SymTable *symTable, const bool verbose) : m_symTable(symTable), m_mainExists(false), m_ioRoot(nullptr)
+{
+    Emit::setVerbose(verbose);
+}
+
+Decl * Semantics::lookupDecl(Id *id)
+{
+    return (Decl *)(symTableGet(id->getName()));;
+}
 
 void Semantics::analyze(Node *node)
 {
@@ -135,6 +143,7 @@ void Semantics::analyzeVar(Var *var)
     if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
     {
         var->makeInitialized();
+        var->makeGlobal();
     }
 
     // Check for initializer errors if there is a child

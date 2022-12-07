@@ -35,6 +35,7 @@ class Tester:
         tests = [f[:-3] for f in os.listdir(self.test_dir) if f.endswith('.c-')]
         tests.sort()
 
+        diffs = {}
         passed = 0
         total_diff_count = 0
         for i, test in enumerate(tests):
@@ -49,6 +50,7 @@ class Tester:
                 self.success_msg(f'[ PASSED ({diff_count} diff) ]')
             else:
                 self.error_msg(f'[ FAILED ({diff_count} diff) ]')
+                diffs[test] = diff_count
             total_diff_count += diff_count
 
         if passed == len(tests):
@@ -59,6 +61,8 @@ class Tester:
         else:
             self.error_msg('=' * 32)
             self.error_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
+            min_diff = min(diffs, key=diffs.get)
+            self.error_msg(f'Min diff: {min_diff} ({diffs[min_diff]} diff)')
             self.error_msg('=' * 32)
 
         self.execute(self.src_dir, 'make clean')
@@ -130,6 +134,7 @@ class Tester:
 
         if self.sort:
             os.system(f'sort {out} > {expected}')
+            raise Exception('Shouldnotsort')
         else:
             os.system(f'cp {out} {expected}')
         os.system(f'cp {out} {tm}')
@@ -156,15 +161,13 @@ class Tester:
         diff = os.path.join(self.tmp_dir, test + '.diff')
         os.system(f'diff {expected} {actual} > {diff}')
 
-        # if self.nocomments:
-        #     self.remove_comments(diff)
-
         diff_count = self.count_diff(diff)
         if not diff_count:
             os.remove(expected)
             os.remove(actual)
             os.remove(diff)
             os.remove(src_cp)
+            os.remove(tm)
         else:
             if self.showdiff:
                 os.system(f'diff {expected} {actual}')
@@ -180,7 +183,6 @@ class Tester:
         with open(diff, 'r') as file:
             for line in file.readlines():
                 if line.startswith('>') or line.startswith('<'):
-                    # if not line.startswith('> *') and not line.startswith('< *'):
                     diff_count += 1
         return diff_count
 
@@ -231,7 +233,7 @@ class Tester:
 def help():
     print('Usage: python3 tester.py hw_dir -flag --flag')
 
-    print('Test Flags:')
+    print('\nTest Flags:')
     print('--help          Displays this help menu.')
     print('--sort          Sort the output files before diff.')
     print('--showdiff      Shows test diffs in the terminal.')
@@ -242,7 +244,7 @@ def help():
     print('--difftm        Use \'.tm\' files in diff comparison.')
     print('--nocomments    Remove comments from \'.tm\' files before diffing.')
 
-    print('Compiler Flags:')
+    print('\nCompiler Flags:')
     print('-h:    Print compiler usage message')
     print('-d:    Turn on parser debugging.')
     print('-D:    Turn on symbol table debugging.')
@@ -250,7 +252,7 @@ def help():
     print('-P:    Print the abstract syntax tree plus type information.')
     print('-M:    Print the abstract syntax tree plus type and memory information.')
 
-    print('For this project:')
+    print('\nFor this project:')
     print('$ python3 tester.py hw1/')
     print('$ python3 tester.py hw2/ -p')
     print('$ python3 tester.py hw3/ -p --sort')

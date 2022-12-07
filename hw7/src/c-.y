@@ -1017,13 +1017,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Remove for submission
-    /* std::cout << "====================================" << std::endl;
-    std::cout << "FILE: " << filename.substr(filename.find_last_of("/\\") + 1) << std::endl; */
-
     yyparse();
-
-    bool printTreeFlag = (flags.getPrintSyntaxTree() || flags.getPrintSyntaxTreeWithTypes() || flags.getPrintSyntaxTreeWithMem());
 
     if (flags.getPrintSyntaxTree() && root != nullptr && !SyntaxError::getHasError())
     {
@@ -1033,8 +1027,8 @@ int main(int argc, char *argv[])
     SymTable symTable = SymTable();
     symTable.debug(flags.getSymTableDebug());
 
-    Semantics analyzer = Semantics(&symTable);
-    if (!SyntaxError::getHasError()) //  && printTreeFlag
+    Semantics analyzer = Semantics(&symTable, false);
+    if (!SyntaxError::getHasError())
     {
         analyzer.analyze(root);
     }
@@ -1050,10 +1044,7 @@ int main(int argc, char *argv[])
         Semantics::printGoffset();
     }
 
-    if (printTreeFlag)
-    {
-        Emit::count();
-    }
+    Emit::count();
 
     if (!Emit::getErrorCount() && !SyntaxError::getHasError())
     {
@@ -1062,7 +1053,7 @@ int main(int argc, char *argv[])
         std::filesystem::path tmPath = cMinusPath;
         tmPath = tmPath.replace_extension(".tm").filename().generic_string();
 
-        CodeGen *generator = new CodeGen(root, cMinusPath, tmPath);
+        CodeGen *generator = new CodeGen(root, tmPath, &analyzer);
         generator->generate();
     }
 
