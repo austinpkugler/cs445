@@ -40,7 +40,7 @@ void CodeGen::generate()
 
     for (int i = 0; i < m_globals.size(); i++)
     {
-        std::cout << "CodeGen::generate() - Global at " << m_globals[i]->getLineNum() << " " << m_globals[i]->stringifyWithType() << std::endl;
+        // std::cout << "CodeGen::generate() - Global at " << m_globals[i]->getLineNum() << " " << m_globals[i]->stringifyWithType() << std::endl;
         Node *rhs = m_globals[i]->getChild();
         if (rhs != nullptr && isConst(rhs))
         {
@@ -132,7 +132,18 @@ void CodeGen::generateExp(const Exp *exp)
     switch (exp->getNodeKind())
     {
         case Node::Kind::Asgn:
+        {
+            // std::cout << "CodeGen::generateExp() - Asgn at " << exp->getLineNum() << " " << exp->stringifyWithType() << std::endl;
+            Node *lhs = exp->getChild(1);
+            if (lhs != nullptr && isConst(lhs))
+            {
+                // std::cout << "CodeGen::generateExp() - Asgn lhs is " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
+                Const *constN = (Const *)lhs;
+                emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+            }
+
             break;
+        }
         case Node::Kind::Binary:
             break;
         case Node::Kind::Call:
@@ -143,7 +154,7 @@ void CodeGen::generateExp(const Exp *exp)
             std::vector<Node *> parms = call->getParms();
             for (int i = 0; i < parms.size(); i++)
             {
-                std::cout << "CodeGen::generateExp() - Parm at " << parms[i]->getLineNum() << " " << parms[i]->stringifyWithType() << std::endl;
+                // std::cout << "CodeGen::generateExp() - Parm at " << parms[i]->getLineNum() << " " << parms[i]->stringifyWithType() << std::endl;
                 switch (parms[i]->getNodeKind())
                 {
                     case Node::Kind::Const:
@@ -321,7 +332,20 @@ void CodeGen::emitEnd(const Node *node)
             if (lhs != nullptr && isId(lhs))
             {
                 Id *id = (Id *)lhs;
-                emitRM("ST", 3, -2, 1, "Store variable", toChar(id->getName()));
+                // getIsGlobal
+                Decl *decl = m_analyzer->lookupDecl(id);
+                if (isVar(decl))
+                {
+                    Var *var = (Var *)decl;
+                    if (var->getIsGlobal())
+                    {
+                        emitRM("ST", 3, 0, 0, "Store variable", toChar(id->getName()));
+                    }
+                }
+                else
+                {
+                    emitRM("ST", 3, -2, 1, "Store variable", toChar(id->getName()));
+                }
             }
             break;
         }
