@@ -40,6 +40,7 @@ void CodeGen::generate()
 
     for (int i = 0; i < m_globals.size(); i++)
     {
+        std::cout << m_globals[i]->getLineNum() << " " << m_globals[i]->stringifyWithType() << std::endl;
         Node *rhs = m_globals[i]->getChild();
         if (rhs != nullptr && isConst(rhs))
         {
@@ -57,7 +58,14 @@ void CodeGen::generate()
                     break;
             }
         }
-        emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
+        if (!m_globals[i]->getData()->getIsStatic())
+        {
+            emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
+        }
+        else
+        {
+            emitRM("ST", 3, -2, 0, "Store variable", toChar(m_globals[i]->getName()));
+        }
     }
 
     emitRM("LDA", 3, 1, 7, "Return address in ac");
@@ -95,7 +103,11 @@ void CodeGen::generateDecl(Decl *decl)
             else
             {
                 m_goffset -= decl->getMemSize();
-                m_globals.push_back(var);
+                Node *rhs = var->getChild();
+                if (rhs != nullptr)
+                {
+                    m_globals.push_back(var);
+                }
             }
             break;
         }
@@ -150,10 +162,15 @@ void CodeGen::generateExp(const Exp *exp)
                     {
                         Id *id = (Id *)parms[i];
                         Decl *decl = m_analyzer->lookupDecl(id);
-                        if (decl != nullptr)
+                        if (decl != nullptr && !id->getData()->getIsStatic())
                         {
                             // This is bordering on insanity but I think if the parm is a global var you do 3,0(0)
                             emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
+                        }
+                        else if (id->getData()->getIsStatic())
+                        {
+                            // If static? Let's assume so
+                            emitRM("LD", 3, -2, 0, "Load variable", toChar(id->getName()));
                         }
                         else
                         {
