@@ -166,11 +166,6 @@ void CodeGen::generateFunc(Func *func)
 
 void CodeGen::generateParm(Parm *parm)
 {
-    // if (parm->getData()->getIsArray())
-    // {
-    //     emitRM("LDC", 3, parm->getMemSize() - 1, 6, "load size of array", toChar(parm->getName()));
-    //     emitRM("ST", 3, -2, 1, "save size of array", toChar(parm->getName()));
-    // }
     m_toffset -= parm->getMemSize();
     log("CodeGen::generateParm()", "dec for Parm TOFF: " + std::to_string(m_toffset), parm->getLineNum());
 }
@@ -217,21 +212,35 @@ void CodeGen::generateAsgn(Asgn *asgn)
             emitRM("ST", 3, id->getMemLoc(), 1, "Store variable", toChar(id->getName()));
         }
     }
+    else if (isBinary(lhs))
+    {
+        Binary *binary = (Binary *)lhs;
+        if (binary->getType() == Binary::Type::Index)
+        {
+            generateNode(binary->getChild(1));
+            emitRM("ST", 3, m_toffset, 1, "Push index");
+            generateNode(asgn->getChild(1));
+            emitRM("ST", 3, m_toffset, 1, "Pop index");
+        }
+    }
 }
 
 void CodeGen::generateBinary(Binary *binary)
 {
-    Node *lhs = binary->getChild();
-    generateAndTraverse(lhs);
-    emitRM("ST", 3, m_toffset, 1, "Push left side");
+    if (binary->getType() != Binary::Type::Index)
+    {
+        Node *lhs = binary->getChild();
+        generateAndTraverse(lhs);
+        emitRM("ST", 3, m_toffset, 1, "Push left side");
 
-    Node *rhs = binary->getChild(1);
-    m_toffset -= rhs->getMemSize();
-    generateAndTraverse(rhs);
-    m_toffset += rhs->getMemSize();
-    emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+        Node *rhs = binary->getChild(1);
+        m_toffset -= rhs->getMemSize();
+        generateAndTraverse(rhs);
+        m_toffset += rhs->getMemSize();
+        emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
 
-    emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
+        emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
+    }
 }
 
 void CodeGen::generateCall(Call *call)
