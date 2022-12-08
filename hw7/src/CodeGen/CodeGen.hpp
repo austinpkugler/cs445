@@ -15,27 +15,27 @@
 class CodeGen
 {
     public:
-        CodeGen(const Node *root, const std::string tmPath, Semantics *analyzer);
+        CodeGen(const Node *root, const std::string tmPath);
         ~CodeGen();
 
         // Helpers
         void generate();
 
     private:
-        // Print
-        void printFuncs() const;
-
         // Generate
         void generateAndTraverse(const Node *node);
         void generateEnd(const Node *node);
-        void generateDecl(Decl *decl);
-        void generateExp(const Exp *exp);
+        void generateNode(const Node *node);
+        void generateFunc(const Func *func);
+        void generateParm(const Parm *parm);
+        void generateVar(Var *var);
         void generateAsgn(const Asgn *asgn);
         void generateBinary(const Binary *binary);
+        void generateCall(const Call *call);
         void generateConst(const Const *constN);
         void generateId(const Id *id);
         void generateUnary(const Unary *unary);
-        void generateStmt(const Stmt *stmt);
+        void generateReturn(const Return *returnN);
 
         // Emit
         void emitIO();
@@ -46,7 +46,6 @@ class CodeGen
 
         const Node *m_root;
         const std::string m_tmPath;
-        Semantics *m_analyzer;
         int m_toffset;
         int m_goffset;
         std::map<std::string, int> m_funcs;
