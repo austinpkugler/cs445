@@ -117,6 +117,11 @@ void CodeGen::generateEnd(const Node *node)
 
 void CodeGen::generateNode(const Node *node)
 {
+    if (node == nullptr)
+    {
+        return;
+    }
+
     switch (node->getNodeKind())
     {
         case Node::Kind::Func:
@@ -221,11 +226,6 @@ void CodeGen::generateVar(Var *var)
 
 void CodeGen::generateAsgn(const Asgn *asgn)
 {
-    if (asgn == nullptr)
-    {
-        return;
-    }
-
     Node *lhs = asgn->getChild(1);
     if (isConst(lhs))
     {
@@ -239,14 +239,7 @@ void CodeGen::generateAsgn(const Asgn *asgn)
 
 void CodeGen::generateBinary(const Binary *binary)
 {
-    if (binary == nullptr)
-    {
-        return;
-    }
-
-    // Idk why this is needed
     m_toffset -= 1;
-
     Node *lhs = binary->getChild();
     Node *rhs = binary->getChild(1);
     if (lhs != nullptr && rhs != nullptr)
@@ -335,11 +328,6 @@ void CodeGen::generateCall(const Call *call)
 
 void CodeGen::generateConst(const Const *constN)
 {
-    if (constN == nullptr)
-    {
-        return;
-    }
-
     switch (constN->getType())
     {
         case Const::Type::Int:
@@ -356,11 +344,6 @@ void CodeGen::generateConst(const Const *constN)
 
 void CodeGen::generateId(const Id *id)
 {
-    if (id == nullptr)
-    {
-        return;
-    }
-
     if (id->getIsGlobal() || id->getData()->getIsStatic())
     {
         emitRM("LD", 3, id->getMemLoc(), 0, "Load variable", toChar(id->getName()));
@@ -373,11 +356,6 @@ void CodeGen::generateId(const Id *id)
 
 void CodeGen::generateUnary(const Unary *unary)
 {
-    if (unary == nullptr)
-    {
-        return;
-    }
-
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
