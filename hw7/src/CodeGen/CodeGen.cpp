@@ -225,7 +225,6 @@ void CodeGen::generateExp(const Exp *exp)
                 switch (parms[i]->getNodeKind())
                 {
                     case Node::Kind::Binary:
-                        std::cout << "Binary at " << exp->getLineNum() << " " << exp->stringifyWithType() << std::endl;
                         generateBinary((Binary *)parms[i]);
                         break;
                     case Node::Kind::Const:
@@ -329,6 +328,7 @@ void CodeGen::generateBinary(const Binary *binary)
             generateConst((Const *)rhs);
             emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
             m_toffset += lhs->getMemSize();
+            // This mess is required because both the Op text and symbol changed in format from previous assignments
             emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
         }
     }

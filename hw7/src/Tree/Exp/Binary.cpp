@@ -64,22 +64,22 @@ std::string Binary::getTypeString() const
             stringy = "OR";
             break;
         case Binary::Type::LT:
-            stringy = "LT";
+            stringy = "TLT";
             break;
         case Binary::Type::LEQ:
-            stringy = "LEQ";
+            stringy = "TLE";
             break;
         case Binary::Type::GT:
-            stringy = "GT";
+            stringy = "TGT";
             break;
         case Binary::Type::GEQ:
-            stringy = "GEQ";
+            stringy = "TGE";
             break;
         case Binary::Type::EQ:
-            stringy = "EQ";
+            stringy = "TEQ";
             break;
         case Binary::Type::NEQ:
-            stringy = "NEQ";
+            stringy = "TNE";
             break;
         default:
             throw std::runtime_error("Binary:getTypeString() - Unknown type");
