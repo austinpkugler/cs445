@@ -32,6 +32,7 @@ class CodeGen
         void generateExp(const Exp *exp);
         void generateBinary(const Binary *binary);
         void generateConst(const Const *constN);
+        void generateUnary(const Unary *unary);
         void generateStmt(const Stmt *stmt);
 
         // Emit

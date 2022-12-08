@@ -169,8 +169,13 @@ void CodeGen::generateDecl(Decl *decl)
                 {
                     generateConst((Const *)lhs);
                 }
+                else if (isUnary(lhs))
+                {
+                    generateUnary((Unary *)lhs);
+                }
 
-                if (var->getChild() != nullptr)
+                // Special case for : assignment
+                if (lhs != nullptr)
                 {
                     emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
                 }
@@ -296,7 +301,9 @@ void CodeGen::generateExp(const Exp *exp)
         case Node::Kind::Id:
             break;
         case Node::Kind::Unary:
+        {
             break;
+        }
         case Node::Kind::UnaryAsgn:
             break;
         default:
@@ -351,6 +358,37 @@ void CodeGen::generateConst(const Const *constN)
             break;
         case Const::Type::Char:
             emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
+            break;
+    }
+}
+
+void CodeGen::generateUnary(const Unary *unary)
+{
+    if (unary == nullptr)
+    {
+        return;
+    }
+
+    switch (unary->getType())
+    {
+        case Unary::Type::Chsign:
+            break;
+        case Unary::Type::Sizeof:
+            break;
+        case Unary::Type::Question:
+            break;
+        case Unary::Type::Not:
+            Node *lhs = unary->getChild();
+            if (isConst(lhs))
+            {
+                Const *constN = (Const *)lhs;
+                generateConst(constN);
+                if (constN->getType() == Const::Type::Bool)
+                {
+                    emitRM("LDC", 4, constN->getBoolValue(), 6, "Load 1");
+                }
+                emitRO("XOR", 3, 3, 4, "Op XOR to get logical not");
+            }
             break;
     }
 }
