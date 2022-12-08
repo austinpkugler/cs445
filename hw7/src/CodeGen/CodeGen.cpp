@@ -329,7 +329,7 @@ void CodeGen::generateBinary(const Binary *binary)
             generateConst((Const *)rhs);
             emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
             m_toffset += lhs->getMemSize();
-            emitRO("MUL", 3, 4, 3, toChar("Op " + binary->getSym()));
+            emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
         }
     }
 }
@@ -444,4 +444,10 @@ void CodeGen::emitIO()
 char * CodeGen::toChar(const std::string comment) const
 {
     return const_cast<char *>((comment).c_str());
+}
+
+std::string CodeGen::toUpper(std::string s) const
+{
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+    return s;
 }

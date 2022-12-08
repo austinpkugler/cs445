@@ -5,6 +5,7 @@
 #include "../Tree/Tree.hpp"
 #include "../Semantics/Semantics.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <string>
@@ -38,6 +39,7 @@ class CodeGen
 
         // Helpers
         char * toChar(const std::string comment) const;
+        std::string toUpper(std::string s) const;
 
         const Node *m_root;
         const std::string m_tmPath;

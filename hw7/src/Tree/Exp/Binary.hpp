@@ -15,6 +15,7 @@ class Binary : public Exp
 
         // Getters
         Binary::Type getType() const { return m_type; }
+        std::string getTypeString() const;
         std::string getSym() const;
 
     private:
