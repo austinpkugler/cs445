@@ -374,7 +374,9 @@ void CodeGen::generateUnary(const Unary *unary)
                 generateConst(constN);
                 if (constN->getType() == Const::Type::Bool)
                 {
-                    emitRM("LDC", 4, constN->getBoolValue(), 6, "Load 1");
+                    std::cout << "const bool " << constN->getLineNum() << " " << constN->stringifyWithType() << std::endl;
+                    emitRM("LDC", 4, 1, 6, "Load 1");
+                    m_toffset -= constN->getMemSize();
                 }
                 emitRO("XOR", 3, 3, 4, "Op XOR to get logical not");
             }
