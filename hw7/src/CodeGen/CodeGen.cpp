@@ -246,8 +246,11 @@ void CodeGen::generateCall(Call *call)
     std::vector<Node *> parms = call->getParms();
     for (int i = 0; i < parms.size(); i++)
     {
-        generateAndTraverse(parms[i]);
+        log("CodeGen::generateCall()", "Generating param " + parms[i]->stringifyWithType() + " for " + call->stringifyWithType(), call->getLineNum());
+        generateNode(parms[i]);
+        log("CodeGen::generateCall()", "ST 3," + std::to_string(m_toffset) + "(1) Push parameter", call->getLineNum());
         emitRM("ST", 3, m_toffset, 1, "Push parameter");
+        m_toffset -= parms[i]->getMemSize();
     }
 
     emitRM("LDA", 1, prevToffset, 1, "Ghost frame becomes new active frame");
@@ -263,6 +266,7 @@ void CodeGen::generateConst(Const *constN)
     switch (constN->getType())
     {
         case Const::Type::Int:
+            log("CodeGen::generateConst()", "LDC 3," + std::to_string(constN->getIntValue()) + "(6) Load integer constant", constN->getLineNum());
             emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
             break;
         case Const::Type::Bool:
@@ -394,6 +398,6 @@ void CodeGen::log(const std::string loc, const std::string msg, const int lineNu
 {
     if (m_showLog)
     {
-        std::cout << loc << " - " << emitWhereAmI() << "(line " << lineNum << "): " << msg << std::endl;
+        std::cout << loc << " - " << emitWhereAmI() << ": " << msg << " (line " << lineNum << ")" << std::endl;
     }
 }
