@@ -2,23 +2,11 @@
 
 FILE *code = NULL;
 
-CodeGen::CodeGen(const Node *root, const std::string tmPath, Semantics *analyzer) : m_root(root), m_tmPath(tmPath), m_analyzer(analyzer) {}
+CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog) {}
 
 CodeGen::~CodeGen()
 {
     fclose(code);
-}
-
-void CodeGen::printFuncs() const
-{
-    std::stringstream funcs;
-    for (const auto &[k, v] : m_funcs)
-    {
-        funcs << "\"" << k << "\": " << v << ", ";
-    }
-    std::string mapping = funcs.str();
-    mapping.erase(mapping.length() - 2);
-    std::cout << "{" << mapping << "}" << std::endl;
 }
 
 void CodeGen::generate()
@@ -33,7 +21,17 @@ void CodeGen::generate()
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
 
+    // IO Library
+    m_funcs["input"] = 1;
+    m_funcs["output"] = 6;
+    m_funcs["inputb"] = 12;
+    m_funcs["outputb"] = 17;
+    m_funcs["inputc"] = 23;
+    m_funcs["outputc"] = 28;
+    m_funcs["outnl"] = 34;
     emitIO();
+    emitNewLoc(39);
+
     generateAndTraverse(m_root);
     emitRM("LDA", 1, m_goffset, 0, "set first frame at end of globals");
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
@@ -41,10 +39,7 @@ void CodeGen::generate()
     for (int i = 0; i < m_globals.size(); i++)
     {
         Node *rhs = m_globals[i]->getChild();
-        if (rhs != nullptr && isConst(rhs))
-        {
-            generateConst((Const *)rhs);
-        }
+        generateAndTraverse(rhs);
 
         if (m_globals[i]->getData()->getIsArray())
         {
@@ -66,25 +61,14 @@ void CodeGen::generate()
     emitRO("HALT", 0, 0, 0, "DONE!");
 }
 
-void CodeGen::generateAndTraverse(const Node *node)
+void CodeGen::generateAndTraverse(Node *node)
 {
     if (node == nullptr)
     {
         return;
     }
 
-    if (isDecl(node))
-    {
-        generateDecl((Decl *)node);
-    }
-    else if (isExp(node))
-    {
-        generateExp((Exp *)node);
-    }
-    else if (isStmt(node))
-    {
-        generateStmt((Stmt *)node);
-    }
+    generateNode(node);
 
     std::vector<Node *> children = node->getChildren();
     for (int i = 0; i < children.size(); i++)
@@ -96,263 +80,163 @@ void CodeGen::generateAndTraverse(const Node *node)
     generateAndTraverse(node->getSibling());
 }
 
-void CodeGen::generateEnd(const Node *node)
+void CodeGen::generateNode(Node *node)
 {
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    if (node->getIsGenerated())
+    {
+        return;
+    }
+
     switch (node->getNodeKind())
     {
-        case Node::Kind::Asgn:
-        {
-            Node *lhs = node->getChild();
-            if (lhs != nullptr && isId(lhs))
-            {
-                Id *id = (Id *)lhs;
-                if (id->getIsGlobal())
-                {
-                    emitRM("ST", 3, id->getMemLoc(), 0, "Store variable", toChar(id->getName()));
-                }
-                else
-                {
-                    emitRM("ST", 3, id->getMemLoc(), 1, "Store variable", toChar(id->getName()));
-                }
-            }
-            break;
-        }
         case Node::Kind::Func:
-        {
-            Func *func = (Func *)node;
-            emitRM("LDC", 2, 0, 6, "Set return value to 0");
-            emitRM("LD", 3, -1, 1, "Load return address");
-            emitRM("LD", 1, 0, 1, "Adjust fp");
-            emitRM("JMP", 7, 0, 3, "Return");
-
-            int instCount = emitWhereAmI();
-            emitNewLoc(0);
-            if (func->getName() == "main")
-            {
-                emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
-            }
-            emitNewLoc(instCount);
-            m_toffset = 0;
-            break;
-        }
-    }
-}
-
-void CodeGen::generateDecl(Decl *decl)
-{
-    if (decl == nullptr)
-    {
-        return;
-    }
-
-    switch (decl->getNodeKind())
-    {
-        case Node::Kind::Func:
-            m_toffset -= 2;
-            emitRM("ST", 3, -1, 1, "Store return address");
-            m_funcs[decl->getName()] = emitWhereAmI() - 1;
+            generateFunc((Func *)node);
             break;
         case Node::Kind::Parm:
+            generateParm((Parm *)node);
+            break;
         case Node::Kind::Var:
-        {
-            Var *var = (Var *)decl;
-            if (!var->getIsGlobal())
-            {
-                if (var->getData()->getIsArray())
-                {
-                    emitRM("LDC", 3, var->getMemSize() - 1, 6, "load size of array", toChar(var->getName()));
-                    emitRM("ST", 3, -2, 1, "save size of array", toChar(var->getName()));
-                }
-
-                Node *lhs = var->getChild();
-                if (isConst(lhs))
-                {
-                    generateConst((Const *)lhs);
-                }
-                else if (isUnary(lhs))
-                {
-                    generateUnary((Unary *)lhs);
-                }
-
-                // Special case for : assignment
-                if (lhs != nullptr)
-                {
-                    emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
-                }
-
-                m_toffset -= decl->getMemSize();
-            }
-            else
-            {
-                m_goffset -= decl->getMemSize();
-                Node *rhs = var->getChild();
-                if (rhs != nullptr || var->getData()->getIsArray())
-                {
-                    m_globals.push_back(var);
-                }
-            }
+            generateVar((Var *)node);
             break;
-        }
-        default:
-            throw std::runtime_error("CodeGen::generateDecl - Invalid Decl");
-            break;
-    }
-}
-
-void CodeGen::generateExp(const Exp *exp)
-{
-    if (exp == nullptr)
-    {
-        return;
-    }
-
-    switch (exp->getNodeKind())
-    {
         case Node::Kind::Asgn:
-            generateAsgn((Asgn *)exp);
+            generateAsgn((Asgn *)node);
             break;
         case Node::Kind::Binary:
+            generateBinary((Binary *)node);
             break;
         case Node::Kind::Call:
-        {
-            int prevToffset = m_toffset;
-            Call *call = (Call *)exp;
-            emitRM("ST", 1, m_toffset, 1, "Store fp in ghost frame for", toChar(call->getName()));
-            std::vector<Node *> parms = call->getParms();
-            for (int i = 0; i < parms.size(); i++)
-            {
-                switch (parms[i]->getNodeKind())
-                {
-                    case Node::Kind::Asgn:
-                        generateAsgn((Asgn *)parms[i]);
-                        break;
-                    case Node::Kind::Binary:
-                        generateBinary((Binary *)parms[i]);
-                        break;
-                    case Node::Kind::Const:
-                        generateConst((Const *)parms[i]);
-                        m_toffset -= parms[i]->getMemSize();
-                        break;
-                    case Node::Kind::Id:
-                        generateId((Id *)parms[i]);
-                        m_toffset -= parms[i]->getMemSize();
-                        break;
-                    case Node::Kind::Unary:
-                    {
-                        Node *rhs = parms[i]->getChild();
-                        if (rhs != nullptr && isId(rhs))
-                        {
-                            Id *id = (Id *)rhs;
-                            if (id->getData()->getIsArray())
-                            {
-                                if (id->getIsGlobal())
-                                {
-                                    emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
-                                }
-                                else
-                                {
-                                    emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
-                                }
-                                emitRM("LD", 3, 1, 3, "Load array size");
-                                m_toffset -= 1;
-                            }
-                        }
-                        break;
-                    }
-                }
-                emitRM("ST", 3, m_toffset - 1, 1, "Push parameter");
-            }
-            emitRM("LDA", 1, prevToffset, 1, "Ghost frame becomes new active frame");
-            emitRM("LDA", 3, 1, 7, "Return address in ac");
-            emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
-            emitRM("LDA", 3, 0, 2, "Save the result in ac");
-            m_toffset = prevToffset;
+            generateCall((Call *)node);
             break;
-        }
         case Node::Kind::Const:
-            if (!exp->hasRelative(Node::Kind::Call) && !exp->hasRelative(Node::Kind::Var) && !exp->hasRelative(Node::Kind::Asgn))
-            {
-                generateConst((Const *)exp);
-            }
+            generateConst((Const *)node);
             break;
         case Node::Kind::Id:
+            generateId((Id *)node);
             break;
         case Node::Kind::Unary:
+            generateUnary((Unary *)node);
             break;
         case Node::Kind::UnaryAsgn:
+            generateUnaryAsgn((UnaryAsgn *)node);
             break;
-        default:
-            throw std::runtime_error("CodeGen::generateExp - Invalid Exp");
+        case Node::Kind::Break:
+            generateBreak((Break *)node);
             break;
+        case Node::Kind::Compound:
+            generateCompound((Compound *)node);
+            break;
+        case Node::Kind::For:
+            generateFor((For *)node);
+            break;
+        case Node::Kind::If:
+            generateIf((If *)node);
+            break;
+        case Node::Kind::Range:
+            generateRange((Range *)node);
+            break;
+        case Node::Kind::Return:
+            generateReturn((Return *)node);
+            break;
+        case Node::Kind::While:
+            generateWhile((While *)node);
+            break;
+    }
+
+    node->makeGenerated();
+}
+
+void CodeGen::generateFunc(Func *func)
+{
+    emitRM("ST", 3, -1, 1, "Store return address");
+    m_funcs[func->getName()] = emitWhereAmI() - 1;
+    m_toffset -= 2;
+}
+
+void CodeGen::generateParm(Parm *parm)
+{
+    if (parm->getData()->getIsArray())
+    {
+        emitRM("LDC", 3, parm->getMemSize() - 1, 6, "load size of array", toChar(parm->getName()));
+        emitRM("ST", 3, -2, 1, "save size of array", toChar(parm->getName()));
+    }
+    m_toffset -= parm->getMemSize();
+}
+
+void CodeGen::generateVar(Var *var)
+{
+    if (var->getIsGlobal())
+    {
+        m_goffset -= var->getMemSize();
+    }
+    else
+    {
+        m_toffset -= var->getMemSize();
     }
 }
 
-void CodeGen::generateAsgn(const Asgn *asgn)
+void CodeGen::generateAsgn(Asgn *asgn)
 {
-    if (asgn == nullptr)
-    {
-        return;
-    }
+    Node *rhs = asgn->getChild(1);
 
-    Node *lhs = asgn->getChild(1);
-    if (isConst(lhs))
+    log("CodeGen::generateAsgn()", "Asgn rhs is " + rhs->stringifyWithType() + " on line " + std::to_string(rhs->getLineNum()));
+    generateAndTraverse(rhs);
+    // Load the rhs by calling generateId
+
+    Node *lhs = asgn->getChild();
+    if (isId(lhs))
     {
-        generateConst((Const *)lhs);
-    }
-    else if (isId(lhs))
-    {
-        generateId((Id *)lhs);
+        Id *id = (Id *)lhs;
+        if (id->getIsGlobal())
+        {
+            emitRM("ST", 3, id->getMemLoc(), 0, "Store variable", toChar(id->getName()));
+        }
+        else
+        {
+            emitRM("ST", 3, id->getMemLoc(), 1, "Store variable", toChar(id->getName()));
+        }
     }
 }
 
-void CodeGen::generateBinary(const Binary *binary)
+void CodeGen::generateBinary(Binary *binary)
 {
-    if (binary == nullptr)
-    {
-        return;
-    }
-
-    // Idk why this is needed
-    m_toffset -= 1;
-
     Node *lhs = binary->getChild();
     Node *rhs = binary->getChild(1);
-    if (lhs != nullptr && rhs != nullptr)
-    {
-        if (isConst(lhs))
-        {
-            generateConst((Const *)lhs);
-        }
-        else if (isId(lhs))
-        {
-            generateId((Id *)lhs);
-        }
-
-        m_toffset -= lhs->getMemSize();
-        emitRM("ST", 3, m_toffset, 1, "Push left side");
-
-        if (isConst(rhs))
-        {
-            generateConst((Const *)rhs);
-        }
-        else if (isId(rhs))
-        {
-            generateId((Id *)rhs);
-        }
-
-        emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
-        m_toffset += lhs->getMemSize();
-        emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
-    }
+    generateAndTraverse(lhs);
+    emitRM("ST", 3, m_toffset, 1, "Push left side");
+    generateAndTraverse(rhs);
+    emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+    m_toffset += lhs->getMemSize();
+    emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " +toUpper(binary->getSym())));
+    m_toffset -= 1;
 }
 
-void CodeGen::generateConst(const Const *constN)
+void CodeGen::generateCall(Call *call)
 {
-    if (constN == nullptr)
+    int prevToffset = m_toffset;
+    emitRM("ST", 1, m_toffset, 1, "Store fp in ghost frame for", toChar(call->getName()));
+    m_toffset -= 2;
+
+    std::vector<Node *> parms = call->getParms();
+    for (int i = 0; i < parms.size(); i++)
     {
-        return;
+        generateAndTraverse(parms[i]);
+        emitRM("ST", 3, m_toffset, 1, "Push parameter");
     }
 
+    emitRM("LDA", 1, prevToffset, 1, "Ghost frame becomes new active frame");
+    emitRM("LDA", 3, 1, 7, "Return address in ac");
+    emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
+    emitRM("LDA", 3, 0, 2, "Save the result in ac");
+    m_toffset = prevToffset;
+}
+
+void CodeGen::generateConst(Const *constN)
+{
     switch (constN->getType())
     {
         case Const::Type::Int:
@@ -367,30 +251,29 @@ void CodeGen::generateConst(const Const *constN)
     }
 }
 
-void CodeGen::generateId(const Id *id)
+void CodeGen::generateId(Id *id)
 {
-    if (id == nullptr)
+    // Only load the Id if it is on the rhs of =
+    Asgn *asgn = (Asgn *)(id->getRelative(Node::Kind::Asgn));
+    if (asgn != nullptr && asgn->getChild() == id)
     {
         return;
     }
 
     if (id->getIsGlobal() || id->getData()->getIsStatic())
     {
+        log("CodeGen::generateId()", "LD 3," + std::to_string(id->getMemLoc()) + "(0) Load variable " + id->getName() + " on line " + std::to_string(id->getLineNum()));
         emitRM("LD", 3, id->getMemLoc(), 0, "Load variable", toChar(id->getName()));
     }
     else
     {
+        log("CodeGen::generateId()", "LD 3," + std::to_string(id->getMemLoc()) + "(1) Load variable " + id->getName() + " on line " + std::to_string(id->getLineNum()));
         emitRM("LD", 3, id->getMemLoc(), 1, "Load variable", toChar(id->getName()));
     }
 }
 
-void CodeGen::generateUnary(const Unary *unary)
+void CodeGen::generateUnary(Unary *unary)
 {
-    if (unary == nullptr)
-    {
-        return;
-    }
-
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
@@ -398,116 +281,112 @@ void CodeGen::generateUnary(const Unary *unary)
         case Unary::Type::Sizeof:
             break;
         case Unary::Type::Question:
+            emitRO("RND", 3, 3, 6, "Op ?");
+            emitRM("ST", 3, m_toffset, 1, "Push left side");
+            emitRM("LDC", 3, 0, 6, "Load integer constant");
+            emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
             break;
         case Unary::Type::Not:
+        {
             Node *lhs = unary->getChild();
-            if (isConst(lhs))
-            {
-                Const *constN = (Const *)lhs;
-                generateConst(constN);
-                if (constN->getType() == Const::Type::Bool)
-                {
-                    emitRM("LDC", 4, constN->getBoolValue(), 6, "Load 1");
-                }
-                emitRO("XOR", 3, 3, 4, "Op XOR to get logical not");
-            }
+            generateAndTraverse(lhs);
+            emitRM("LDC", 4, 1, 6, "Load 1");
+            emitRO("XOR", 3, 3, 4, "Op XOR to get logical not");
             break;
+        }
     }
 }
 
-void CodeGen::generateStmt(const Stmt *stmt)
+void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
 {
-    if (stmt == nullptr)
+
+}
+
+void CodeGen::generateBreak(Break *breakN)
+{
+
+}
+
+void CodeGen::generateCompound(Compound *compound)
+{
+
+}
+
+void CodeGen::generateFor(For *forN)
+{
+
+}
+
+void CodeGen::generateIf(If *ifN)
+{
+
+}
+
+void CodeGen::generateRange(Range *range)
+{
+
+}
+
+void CodeGen::generateReturn(Return *returnN)
+{
+    Node *lhs = returnN->getChild();
+    if (lhs != nullptr)
     {
-        return;
+        generateAndTraverse(lhs);
+        emitRM("LDA", 2, 0, 3, "Copy result to return register");
+        // m_toffset -= lhs->getMemSize();
     }
 
-    switch (stmt->getNodeKind())
+    emitRM("LD", 3, -1, 1, "Load return address");
+    emitRM("LD", 1, 0, 1, "Adjust fp");
+    emitRM("JMP", 7, 0, 3, "Return");
+}
+
+void CodeGen::generateWhile(While *whileN)
+{
+
+}
+
+void CodeGen::generateEnd(Node *node)
+{
+    // if (isAsgn(node))
+    // {
+    //     Node *lhs = node->getChild();
+    //     if (isId(lhs))
+    //     {
+    //         Id *id = (Id *)lhs;
+    //         if (id->getIsGlobal())
+    //         {
+    //             emitRM("ST", 3, id->getMemLoc(), 0, "Store variable", toChar(id->getName()));
+    //         }
+    //         else
+    //         {
+    //             emitRM("ST", 3, id->getMemLoc(), 1, "Store variable", toChar(id->getName()));
+    //         }
+    //     }
+    // }
+    if (isFunc(node))
     {
-        case Node::Kind::Break:
-            break;
-        case Node::Kind::Compound:
-            break;
-        case Node::Kind::For:
-            break;
-        case Node::Kind::If:
-            break;
-        case Node::Kind::Range:
-            break;
-        case Node::Kind::Return:
-            emitRM("LD", 3, -1, 1, "Load return address");
-            emitRM("LD", 1, 0, 1, "Adjust fp");
-            emitRM("JMP", 7, 0, 3, "Return");
-            break;
-        case Node::Kind::While:
-            break;
-        default:
-            throw std::runtime_error("CodeGen::generateStmt - Invalid Stmt");
-            break;
+        Func *func = (Func *)node;
+        emitRM("LDC", 2, 0, 6, "Set return value to 0");
+        emitRM("LD", 3, -1, 1, "Load return address");
+        emitRM("LD", 1, 0, 1, "Adjust fp");
+        emitRM("JMP", 7, 0, 3, "Return");
+        int instCount = emitWhereAmI();
+        emitNewLoc(0);
+        if (func->getName() == "main")
+        {
+            emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
+        }
+        emitNewLoc(instCount);
+        m_toffset = 0;
     }
 }
 
-void CodeGen::emitIO()
+void CodeGen::log(const std::string loc, const std::string msg)
 {
-    m_funcs["input"] = 1;
-    m_funcs["output"] = 6;
-    m_funcs["inputb"] = 12;
-    m_funcs["outputb"] = 17;
-    m_funcs["inputc"] = 23;
-    m_funcs["outputc"] = 28;
-    m_funcs["outnl"] = 34;
-    fprintf(code, "%s", R"""(* ** ** ** ** ** ** ** ** ** ** ** **
-* IO Library
-  1:     ST  3,-1(1)	Store return address 
-  2:     IN  2,2,2	Grab int input 
-  3:     LD  3,-1(1)	Load return address 
-  4:     LD  1,0(1)	Adjust fp 
-  5:    JMP  7,0(3)	Return 
-  6:     ST  3,-1(1)	Store return address 
-  7:     LD  3,-2(1)	Load parameter 
-  8:    OUT  3,3,3	Output integer 
-  9:     LD  3,-1(1)	Load return address 
- 10:     LD  1,0(1)	Adjust fp 
- 11:    JMP  7,0(3)	Return 
- 12:     ST  3,-1(1)	Store return address 
- 13:    INB  2,2,2	Grab bool input 
- 14:     LD  3,-1(1)	Load return address 
- 15:     LD  1,0(1)	Adjust fp 
- 16:    JMP  7,0(3)	Return 
- 17:     ST  3,-1(1)	Store return address 
- 18:     LD  3,-2(1)	Load parameter 
- 19:   OUTB  3,3,3	Output bool 
- 20:     LD  3,-1(1)	Load return address 
- 21:     LD  1,0(1)	Adjust fp 
- 22:    JMP  7,0(3)	Return 
- 23:     ST  3,-1(1)	Store return address 
- 24:    INC  2,2,2	Grab char input 
- 25:     LD  3,-1(1)	Load return address 
- 26:     LD  1,0(1)	Adjust fp 
- 27:    JMP  7,0(3)	Return 
- 28:     ST  3,-1(1)	Store return address 
- 29:     LD  3,-2(1)	Load parameter 
- 30:   OUTC  3,3,3	Output char 
- 31:     LD  3,-1(1)	Load return address 
- 32:     LD  1,0(1)	Adjust fp 
- 33:    JMP  7,0(3)	Return 
- 34:     ST  3,-1(1)	Store return address 
- 35:  OUTNL  3,3,3	Output a newline 
- 36:     LD  3,-1(1)	Load return address 
- 37:     LD  1,0(1)	Adjust fp 
- 38:    JMP  7,0(3)	Return 
-* ** ** ** ** ** ** ** ** ** ** ** **
-)""");
-    emitNewLoc(39);
-}
-
-char * CodeGen::toChar(const std::string comment) const
-{
-    return const_cast<char *>((comment).c_str());
-}
-
-std::string CodeGen::toUpper(std::string s) const
-{
-    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
-    return s;
+    if (m_showLog)
+    {
+        std::cout << loc << " - " << msg << std::endl;
+    }
 }
