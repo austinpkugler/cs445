@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_memExists(false), m_memScope("None"), m_memLoc(0), m_memSize(1) {}
+Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_memExists(false), m_memScope("None"), m_memLoc(0), m_memSize(1), m_isGenerated(false) {}
 
 Node::~Node()
 {

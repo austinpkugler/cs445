@@ -15,7 +15,7 @@
 class CodeGen
 {
     public:
-        CodeGen(const Node *root, const std::string tmPath);
+        CodeGen(Node *root, const std::string tmPath, bool showLog=true);
         ~CodeGen();
 
         // Helpers
@@ -23,29 +23,33 @@ class CodeGen
 
     private:
         // Generate
-        void generateAndTraverse(const Node *node);
-        void generateEnd(const Node *node);
-        void generateNode(const Node *node);
-        void generateFunc(const Func *func);
-        void generateParm(const Parm *parm);
+        void generateAndTraverse(Node *node);
+        void generateNode(Node *node);
+        void generateFunc(Func *func);
+        void generateParm(Parm *parm);
         void generateVar(Var *var);
-        void generateAsgn(const Asgn *asgn);
-        void generateBinary(const Binary *binary);
-        void generateCall(const Call *call);
-        void generateConst(const Const *constN);
-        void generateId(const Id *id);
-        void generateUnary(const Unary *unary);
-        void generateReturn(const Return *returnN);
+        void generateAsgn(Asgn *asgn);
+        void generateBinary(Binary *binary);
+        void generateCall(Call *call);
+        void generateConst(Const *constN);
+        void generateId(Id *id);
+        void generateUnary(Unary *unary);
+        void generateUnaryAsgn(UnaryAsgn *unaryAsgn);
+        void generateBreak(Break *breakN);
+        void generateCompound(Compound *compound);
+        void generateFor(For *forN);
+        void generateIf(If *ifN);
+        void generateRange(Range *range);
+        void generateReturn(Return *returnN);
+        void generateWhile(While *whileN);
+        void generateEnd(Node *node);
 
-        // Emit
-        void emitIO();
+        // Logging
+        void log(const std::string loc, const std::string msg);
 
-        // Helpers
-        char * toChar(const std::string comment) const;
-        std::string toUpper(std::string s) const;
-
-        const Node *m_root;
+        Node *m_root;
         const std::string m_tmPath;
+        bool m_showLog;
         int m_toffset;
         int m_goffset;
         std::map<std::string, int> m_funcs;

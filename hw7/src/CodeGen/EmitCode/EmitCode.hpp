@@ -19,6 +19,8 @@
 //
 #define NO_COMMENT (char *)""
 
+#include <algorithm>
+#include <string>
 
 //
 //  The following functions were borrowed from Tiny compiler code generator
@@ -48,5 +50,10 @@ void backPatchAJumpToHere(int addr, const char *comment);
 void backPatchAJumpToHere(const char *cmd, int reg, int addr, const char *comment);
 
 int emitStrLit(int goffset, const char *s); // for const char arrays
+
+void emitIO();
+
+char * toChar(const std::string comment);
+std::string toUpper(std::string s);
 
 #endif

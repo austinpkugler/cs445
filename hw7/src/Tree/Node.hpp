@@ -14,7 +14,8 @@ class Node
 
         // Getters
         int getLineNum() const { return m_lineNum; }
-        bool getIsAnalyzed() { return m_isAnalyzed; }
+        bool getIsAnalyzed() const { return m_isAnalyzed; }
+        bool getIsGenerated() const { return m_isGenerated; }
         Node * getParent() const { return m_parent; }
         Node * getSibling() const { return m_sibling; }
         unsigned getSiblingCount() const { return m_siblingCount; }
@@ -30,6 +31,7 @@ class Node
 
         // Setters
         void makeAnalyzed() { m_isAnalyzed = true; }
+        void makeGenerated() { m_isGenerated = true; }
         void setMemExists(const bool memExists) { m_memExists = memExists; }
         void setMemScope(const std::string scope) { m_memScope = scope; }
         void setMemLoc(const int loc) { m_memLoc = loc; }
@@ -75,4 +77,7 @@ class Node
         std::string m_memScope;
         int m_memLoc;
         int m_memSize;
+
+        // Generation
+        bool m_isGenerated;
 };
