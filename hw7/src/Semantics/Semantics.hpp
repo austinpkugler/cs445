@@ -17,11 +17,7 @@ class Semantics
         // Static
         static void printGoffset() { std::cout << "Offset for end of global space: " << s_goffset << std::endl; }
 
-        // Getters
-        SymTable * getSymTable() const { return m_symTable; }
-
         // Helpers
-        Decl * lookupDecl(Id *id);
         void analyze(Node *node);
 
     private:

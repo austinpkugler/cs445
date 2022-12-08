@@ -25,13 +25,14 @@ class CodeGen
         void printFuncs() const;
 
         // Generate
+        void generateAndTraverse(const Node *node);
+        void generateEnd(const Node *node);
         void generateDecl(Decl *decl);
         void generateExp(const Exp *exp);
+        void generateConst(const Const *constN);
         void generateStmt(const Stmt *stmt);
 
         // Emit
-        void emitAndTraverse(const Node *node);
-        void emitEnd(const Node *node);
         void emitIO();
 
         // Helpers

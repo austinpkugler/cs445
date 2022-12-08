@@ -5,11 +5,6 @@ Semantics::Semantics(SymTable *symTable, const bool verbose) : m_symTable(symTab
     Emit::setVerbose(verbose);
 }
 
-Decl * Semantics::lookupDecl(Id *id)
-{
-    return (Decl *)(symTableGet(id->getName()));;
-}
-
 void Semantics::analyze(Node *node)
 {
     symTableInitializeIOTree();
@@ -139,7 +134,6 @@ void Semantics::analyzeVar(Var *var)
         throw std::runtime_error("Semantics::analyzeVar() - Invalid Var");
     }
 
-    std::cout << "Semantics::analyzeVar() - Var at " << var->getLineNum() << " " << var->stringifyWithType() << " with depth " << m_symTable->depth() << std::endl;
     // Global vars are always initialized
     if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
     {

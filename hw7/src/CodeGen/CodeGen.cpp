@@ -34,29 +34,16 @@ void CodeGen::generate()
     }
 
     emitIO();
-    emitAndTraverse(m_root);
+    generateAndTraverse(m_root);
     emitRM("LDA", 1, m_goffset, 0, "set first frame at end of globals");
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
 
     for (int i = 0; i < m_globals.size(); i++)
     {
-        // std::cout << "CodeGen::generate() - Global at " << m_globals[i]->getLineNum() << " " << m_globals[i]->stringifyWithType() << std::endl;
         Node *rhs = m_globals[i]->getChild();
         if (rhs != nullptr && isConst(rhs))
         {
-            Const *constN = (Const *)rhs;
-            switch (constN->getType())
-            {
-                case Const::Type::Int:
-                    emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                    break;
-                case Const::Type::Bool:
-                    emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                    break;
-                case Const::Type::Char:
-                    emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
-                    break;
-            }
+            generateConst((Const *)rhs);
         }
 
         if (m_globals[i]->getData()->getIsArray())
@@ -77,6 +64,78 @@ void CodeGen::generate()
     emitRM("LDA", 3, 1, 7, "Return address in ac");
     emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs["main"]), 7, "Jump to main");
     emitRO("HALT", 0, 0, 0, "DONE!");
+}
+
+void CodeGen::generateAndTraverse(const Node *node)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    if (isDecl(node))
+    {
+        generateDecl((Decl *)node);
+    }
+    else if (isExp(node))
+    {
+        generateExp((Exp *)node);
+    }
+    else if (isStmt(node))
+    {
+        generateStmt((Stmt *)node);
+    }
+
+    std::vector<Node *> children = node->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        generateAndTraverse(children[i]);
+    }
+
+    generateEnd(node);
+    generateAndTraverse(node->getSibling());
+}
+
+void CodeGen::generateEnd(const Node *node)
+{
+    switch (node->getNodeKind())
+    {
+        case Node::Kind::Asgn:
+        {
+            Node *lhs = node->getChild();
+            if (lhs != nullptr && isId(lhs))
+            {
+                Id *id = (Id *)lhs;
+                if (id->getIsGlobal())
+                {
+                    emitRM("ST", 3, 0, 0, "Store variable", toChar(id->getName()));
+                }
+                else
+                {
+                    emitRM("ST", 3, -2, 1, "Store variable", toChar(id->getName()));
+                }
+            }
+            break;
+        }
+        case Node::Kind::Func:
+        {
+            Func *func = (Func *)node;
+            emitRM("LDC", 2, 0, 6, "Set return value to 0");
+            emitRM("LD", 3, -1, 1, "Load return address");
+            emitRM("LD", 1, 0, 1, "Adjust fp");
+            emitRM("JMP", 7, 0, 3, "Return");
+
+            int instCount = emitWhereAmI();
+            emitNewLoc(0);
+            if (func->getName() == "main")
+            {
+                emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
+            }
+            emitNewLoc(instCount);
+            m_toffset = 0;
+            break;
+        }
+    }
 }
 
 void CodeGen::generateDecl(Decl *decl)
@@ -133,22 +192,10 @@ void CodeGen::generateExp(const Exp *exp)
     {
         case Node::Kind::Asgn:
         {
-            // std::cout << "CodeGen::generateExp() - Asgn at " << exp->getLineNum() << " " << exp->stringifyWithType() << std::endl;
             Node *lhs = exp->getChild(1);
             if (lhs != nullptr && isConst(lhs))
             {
-                // std::cout << "CodeGen::generateExp() - Asgn lhs is " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
-                Const *constN = (Const *)lhs;
-                switch (constN->getType())
-                {
-                    case Const::Type::Int:
-                        emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                        break;
-                    case Const::Type::Bool:
-                        emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                        break;
-                }
-                
+                generateConst((Const *)lhs);
             }
 
             break;
@@ -163,24 +210,12 @@ void CodeGen::generateExp(const Exp *exp)
             std::vector<Node *> parms = call->getParms();
             for (int i = 0; i < parms.size(); i++)
             {
-                // std::cout << "CodeGen::generateExp() - Parm at " << parms[i]->getLineNum() << " " << parms[i]->stringifyWithType() << std::endl;
                 switch (parms[i]->getNodeKind())
                 {
                     case Node::Kind::Const:
                     {
                         Const *constN = (Const *)parms[i];
-                        switch (constN->getType())
-                        {
-                            case Const::Type::Int:
-                                emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                                break;
-                            case Const::Type::Bool:
-                                emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                                break;
-                            case Const::Type::Char:
-                                emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
-                                break;
-                        }
+                        generateConst(constN);
                         m_toffset -= constN->getMemSize();
                         break;
                     }
@@ -199,23 +234,6 @@ void CodeGen::generateExp(const Exp *exp)
                         {
                             emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
                         }
-
-                        // Decl *decl = m_analyzer->lookupDecl(id);
-                        // if (decl != nullptr && !id->getData()->getIsStatic())
-                        // {
-                        //     // This is bordering on insanity but I think if the parm is a global var you do 3,0(0)
-                        //     emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
-                        // }
-                        // else if (id->getData()->getIsStatic())
-                        // {
-                        //     // If static? Let's assume so
-                        //     emitRM("LD", 3, -2, 0, "Load variable", toChar(id->getName()));
-                        // }
-                        // else
-                        // {
-                        //     // Then if it is local you do 3,-2,(1)
-                        //     emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
-                        // }
                         m_toffset -= id->getMemSize();
                         break;
                     }
@@ -247,26 +265,9 @@ void CodeGen::generateExp(const Exp *exp)
         case Node::Kind::Const:
         {
             Const *constN = (Const *)exp;
-            switch (constN->getType())
+            if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
             {
-                case Const::Type::Int:
-                    if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
-                    {
-                        emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
-                    }
-                    break;
-                case Const::Type::Bool:
-                    if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
-                    {
-                        emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
-                    }
-                    break;
-                case Const::Type::Char:
-                    if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
-                    {
-                        emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
-                    }
-                    break;
+                generateConst(constN);
             }
             break;
         }
@@ -278,6 +279,27 @@ void CodeGen::generateExp(const Exp *exp)
             break;
         default:
             throw std::runtime_error("CodeGen::generateExp - Invalid Exp");
+            break;
+    }
+}
+
+void CodeGen::generateConst(const Const *constN)
+{
+    if (constN == nullptr)
+    {
+        return;
+    }
+
+    switch (constN->getType())
+    {
+        case Const::Type::Int:
+            emitRM("LDC", 3, constN->getIntValue(), 6, "Load integer constant");
+            break;
+        case Const::Type::Bool:
+            emitRM("LDC", 3, constN->getBoolValue(), 6, "Load Boolean constant");
+            break;
+        case Const::Type::Char:
+            emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
             break;
     }
 }
@@ -311,78 +333,6 @@ void CodeGen::generateStmt(const Stmt *stmt)
         default:
             throw std::runtime_error("CodeGen::generateStmt - Invalid Stmt");
             break;
-    }
-}
-
-void CodeGen::emitAndTraverse(const Node *node)
-{
-    if (node == nullptr)
-    {
-        return;
-    }
-
-    if (isDecl(node))
-    {
-        generateDecl((Decl *)node);
-    }
-    else if (isExp(node))
-    {
-        generateExp((Exp *)node);
-    }
-    else if (isStmt(node))
-    {
-        generateStmt((Stmt *)node);
-    }
-
-    std::vector<Node *> children = node->getChildren();
-    for (int i = 0; i < children.size(); i++)
-    {
-        emitAndTraverse(children[i]);
-    }
-
-    emitEnd(node);
-    emitAndTraverse(node->getSibling());
-}
-
-void CodeGen::emitEnd(const Node *node)
-{
-    switch (node->getNodeKind())
-    {
-        case Node::Kind::Asgn:
-        {
-            Node *lhs = node->getChild();
-            if (lhs != nullptr && isId(lhs))
-            {
-                Id *id = (Id *)lhs;
-                if (id->getIsGlobal())
-                {
-                    emitRM("ST", 3, 0, 0, "Store variable", toChar(id->getName()));
-                }
-                else
-                {
-                    emitRM("ST", 3, -2, 1, "Store variable", toChar(id->getName()));
-                }
-            }
-            break;
-        }
-        case Node::Kind::Func:
-        {
-            Func *func = (Func *)node;
-            emitRM("LDC", 2, 0, 6, "Set return value to 0");
-            emitRM("LD", 3, -1, 1, "Load return address");
-            emitRM("LD", 1, 0, 1, "Adjust fp");
-            emitRM("JMP", 7, 0, 3, "Return");
-
-            int instCount = emitWhereAmI();
-            emitNewLoc(0);
-            if (func->getName() == "main")
-            {
-                emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
-            }
-            emitNewLoc(instCount);
-            m_toffset = 0;
-            break;
-        }
     }
 }
 
