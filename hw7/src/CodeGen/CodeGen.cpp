@@ -187,22 +187,35 @@ void CodeGen::generateExp(const Exp *exp)
                     case Node::Kind::Id:
                     {
                         Id *id = (Id *)parms[i];
-                        Decl *decl = m_analyzer->lookupDecl(id);
-                        if (decl != nullptr && !id->getData()->getIsStatic())
+                        if (id->getIsGlobal() && !id->getData()->getIsStatic())
                         {
-                            // This is bordering on insanity but I think if the parm is a global var you do 3,0(0)
                             emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
                         }
                         else if (id->getData()->getIsStatic())
                         {
-                            // If static? Let's assume so
                             emitRM("LD", 3, -2, 0, "Load variable", toChar(id->getName()));
                         }
                         else
                         {
-                            // Then if it is local you do 3,-2,(1)
                             emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
                         }
+
+                        // Decl *decl = m_analyzer->lookupDecl(id);
+                        // if (decl != nullptr && !id->getData()->getIsStatic())
+                        // {
+                        //     // This is bordering on insanity but I think if the parm is a global var you do 3,0(0)
+                        //     emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
+                        // }
+                        // else if (id->getData()->getIsStatic())
+                        // {
+                        //     // If static? Let's assume so
+                        //     emitRM("LD", 3, -2, 0, "Load variable", toChar(id->getName()));
+                        // }
+                        // else
+                        // {
+                        //     // Then if it is local you do 3,-2,(1)
+                        //     emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
+                        // }
                         m_toffset -= id->getMemSize();
                         break;
                     }
@@ -341,15 +354,9 @@ void CodeGen::emitEnd(const Node *node)
             if (lhs != nullptr && isId(lhs))
             {
                 Id *id = (Id *)lhs;
-                // getIsGlobal
-                Decl *decl = m_analyzer->lookupDecl(id);
-                if (isVar(decl))
+                if (id->getIsGlobal())
                 {
-                    Var *var = (Var *)decl;
-                    if (var->getIsGlobal())
-                    {
-                        emitRM("ST", 3, 0, 0, "Store variable", toChar(id->getName()));
-                    }
+                    emitRM("ST", 3, 0, 0, "Store variable", toChar(id->getName()));
                 }
                 else
                 {

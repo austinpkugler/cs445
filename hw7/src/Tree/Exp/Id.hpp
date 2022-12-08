@@ -14,7 +14,12 @@ class Id : public Exp
 
         // Getters
         std::string getName() const { return m_name; }
+        bool getIsGlobal() const { return m_isGlobal; }
+
+        // Setters
+        void setIsGlobal(bool isGlobal) { m_isGlobal = isGlobal; }
 
     private:
         const std::string m_name;
+        bool m_isGlobal;
 };

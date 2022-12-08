@@ -1,6 +1,6 @@
 #include "Id.hpp"
 
-Id::Id(const int lineNum, const std::string isIdame) : Exp::Exp(lineNum, new Data(Data::Type::Undefined, false, false)), m_name(isIdame)
+Id::Id(const int lineNum, const std::string isIdame) : Exp::Exp(lineNum, new Data(Data::Type::Undefined, false, false)), m_name(isIdame), m_isGlobal(false)
 {
     setMemExists(true);
 }

@@ -139,11 +139,16 @@ void Semantics::analyzeVar(Var *var)
         throw std::runtime_error("Semantics::analyzeVar() - Invalid Var");
     }
 
+    std::cout << "Semantics::analyzeVar() - Var at " << var->getLineNum() << " " << var->stringifyWithType() << " with depth " << m_symTable->depth() << std::endl;
     // Global vars are always initialized
     if (m_symTable->depth() == 1 || var->getData()->getIsStatic())
     {
         var->makeInitialized();
-        var->makeGlobal();
+        var->setIsGlobal(true);
+    }
+    else
+    {
+        var->setIsGlobal(false);
     }
 
     // Check for initializer errors if there is a child
@@ -390,6 +395,7 @@ void Semantics::analyzeId(Id *id) const
     else if (isVar(idDecl))
     {
         Var *varDecl = (Var *)idDecl;
+        id->setIsGlobal(varDecl->getIsGlobal());
 
         // Don't warn if the uninitialized id is an array index (see hw4/test/lhs.c-)
         if (!varDecl->getIsInitialized() && varDecl->getShowErrors())
