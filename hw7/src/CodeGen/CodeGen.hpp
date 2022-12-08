@@ -15,7 +15,7 @@
 class CodeGen
 {
     public:
-        CodeGen(Node *root, const std::string tmPath, bool showLog=true);
+        CodeGen(Node *root, const std::string tmPath, bool showLog=false);
         ~CodeGen();
 
         // Helpers
@@ -23,6 +23,7 @@ class CodeGen
 
     private:
         // Generate
+        void generateGlobals();
         void generateAndTraverse(Node *node);
         void generateNode(Node *node);
         void generateFunc(Func *func);

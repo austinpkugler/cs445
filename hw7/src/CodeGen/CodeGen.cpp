@@ -23,7 +23,6 @@ void CodeGen::generate()
 
     log("\nCodeGen::generate()", "Starting generation", -1);
 
-    // IO Library
     m_funcs["input"] = 1;
     m_funcs["output"] = 6;
     m_funcs["inputb"] = 12;
@@ -33,35 +32,39 @@ void CodeGen::generate()
     m_funcs["outnl"] = 34;
     emitIO();
     emitNewLoc(39);
-
     generateAndTraverse(m_root);
+    generateGlobals();
+    emitRM("LDA", 3, 1, 7, "Return address in ac");
+    emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs["main"]), 7, "Jump to main");
+    emitRO("HALT", 0, 0, 0, "DONE!");
+}
+
+void CodeGen::generateGlobals()
+{
     emitRM("LDA", 1, m_goffset, 0, "set first frame at end of globals");
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
-
     for (int i = 0; i < m_globals.size(); i++)
     {
-        Node *rhs = m_globals[i]->getChild();
-        generateAndTraverse(rhs);
+        generateAndTraverse(m_globals[i]->getChild());
 
         if (m_globals[i]->getData()->getIsArray())
         {
             emitRM("LDC", 3, m_globals[i]->getMemSize() - 1, 6, "load size of array", toChar(m_globals[i]->getName()));
             emitRM("ST", 3, 0, 0, "save size of array", toChar(m_globals[i]->getName()));
         }
-        else if (!m_globals[i]->getData()->getIsStatic())
-        {
-            emitRM("ST", 3, m_globals[i]->getMemLoc(), 0, "Store variable", toChar(m_globals[i]->getName()));
-        }
-        else
-        {
-            emitRM("ST", 3, -2, 0, "Store variable", toChar(m_globals[i]->getName()));
-        }
+
+        // if ()
+        // {
+        //     emitRM("ST", 3, -2, 0, "Store variable", toChar(m_globals[i]->getName()));
+        // }
+        // else if (m_globals[i]->getData()->getIsStatic())
+        // {
+        //     emitRM("ST", 3, m_globals[i]->getMemLoc(), 0, "Store variable", toChar(m_globals[i]->getName()));
+            
+        // }
+
         m_globals[i]->makeGenerated();
     }
-
-    emitRM("LDA", 3, 1, 7, "Return address in ac");
-    emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs["main"]), 7, "Jump to main");
-    emitRO("HALT", 0, 0, 0, "DONE!");
 }
 
 void CodeGen::generateAndTraverse(Node *node)
@@ -163,11 +166,11 @@ void CodeGen::generateFunc(Func *func)
 
 void CodeGen::generateParm(Parm *parm)
 {
-    if (parm->getData()->getIsArray())
-    {
-        emitRM("LDC", 3, parm->getMemSize() - 1, 6, "load size of array", toChar(parm->getName()));
-        emitRM("ST", 3, -2, 1, "save size of array", toChar(parm->getName()));
-    }
+    // if (parm->getData()->getIsArray())
+    // {
+    //     emitRM("LDC", 3, parm->getMemSize() - 1, 6, "load size of array", toChar(parm->getName()));
+    //     emitRM("ST", 3, -2, 1, "save size of array", toChar(parm->getName()));
+    // }
     m_toffset -= parm->getMemSize();
     log("CodeGen::generateParm()", "dec for Parm TOFF: " + std::to_string(m_toffset), parm->getLineNum());
 }
@@ -176,10 +179,19 @@ void CodeGen::generateVar(Var *var)
 {
     if (var->getIsGlobal())
     {
+        m_globals.push_back(var);
         m_goffset -= var->getMemSize();
     }
     else
     {
+        // Special case for : assignment
+        Node *lhs = var->getChild();
+        if (lhs != nullptr)
+        {
+            generateAndTraverse(lhs);
+            emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
+        }
+
         m_toffset -= var->getMemSize();
         log("CodeGen::generateVar()", "dec for Var TOFF: " + std::to_string(m_toffset), var->getLineNum());
     }
@@ -209,7 +221,6 @@ void CodeGen::generateAsgn(Asgn *asgn)
 
 void CodeGen::generateBinary(Binary *binary)
 {
-    
     Node *lhs = binary->getChild();
     Node *rhs = binary->getChild(1);
     generateAndTraverse(lhs);
