@@ -45,7 +45,7 @@ class CodeGen
         void generateEnd(Node *node);
 
         // Logging
-        void log(const std::string loc, const std::string msg);
+        void log(const std::string loc, const std::string msg, const int lineNum);
 
         Node *m_root;
         const std::string m_tmPath;
