@@ -158,6 +158,12 @@ void CodeGen::generateDecl(Decl *decl)
             Var *var = (Var *)decl;
             if (!var->getIsGlobal())
             {
+                if (var->getData()->getIsArray())
+                {
+                    emitRM("LDC", 3, var->getMemSize() - 1, 6, "load size of array", toChar(var->getName()));
+                    emitRM("ST", 3, -2, 1, "save size of array", toChar(var->getName()));
+                }
+
                 Node *lhs = var->getChild();
                 if (isConst(lhs))
                 {
@@ -251,7 +257,14 @@ void CodeGen::generateExp(const Exp *exp)
                             Id *id = (Id *)rhs;
                             if (id->getData()->getIsArray())
                             {
-                                emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
+                                if (id->getIsGlobal())
+                                {
+                                    emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
+                                }
+                                else
+                                {
+                                    emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
+                                }
                                 emitRM("LD", 3, 1, 3, "Load array size");
                                 m_toffset -= 1;
                             }
