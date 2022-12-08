@@ -29,7 +29,7 @@ void CodeGen::generate()
     for (int i = 0; i < m_globals.size(); i++)
     {
         Node *rhs = m_globals[i]->getChild();
-        if (rhs != nullptr && isConst(rhs))
+        if (isConst(rhs))
         {
             generateConst((Const *)rhs);
         }
@@ -80,7 +80,7 @@ void CodeGen::generateEnd(const Node *node)
         case Node::Kind::Asgn:
         {
             Node *lhs = node->getChild();
-            if (lhs != nullptr && isId(lhs))
+            if (isId(lhs))
             {
                 Id *id = (Id *)lhs;
                 if (id->getIsGlobal())
@@ -235,6 +235,10 @@ void CodeGen::generateAsgn(const Asgn *asgn)
     {
         generateId((Id *)lhs);
     }
+    // else if (isAsgn(lhs))
+    // {
+    //     generateAsgn((Asgn *)lhs);
+    // }
 }
 
 void CodeGen::generateBinary(const Binary *binary)
@@ -295,27 +299,8 @@ void CodeGen::generateCall(const Call *call)
                 m_toffset -= parms[i]->getMemSize();
                 break;
             case Node::Kind::Unary:
-            {
-                Node *rhs = parms[i]->getChild();
-                if (rhs != nullptr && isId(rhs))
-                {
-                    Id *id = (Id *)rhs;
-                    if (id->getData()->getIsArray())
-                    {
-                        if (id->getIsGlobal())
-                        {
-                            emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
-                        }
-                        else
-                        {
-                            emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
-                        }
-                        emitRM("LD", 3, 1, 3, "Load array size");
-                        m_toffset -= 1;
-                    }
-                }
+                generateUnary((Unary *)parms[i]);
                 break;
-            }
         }
         emitRM("ST", 3, m_toffset - 1, 1, "Push parameter");
     }
@@ -361,10 +346,27 @@ void CodeGen::generateUnary(const Unary *unary)
         case Unary::Type::Chsign:
             break;
         case Unary::Type::Sizeof:
+        {
+            Id *id = (Id *)(unary->getChild());
+            if (id->getData()->getIsArray())
+            {
+                if (id->getIsGlobal())
+                {
+                    emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
+                }
+                else
+                {
+                    emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
+                }
+                emitRM("LD", 3, 1, 3, "Load array size");
+                m_toffset -= 1;
+            }
             break;
+        }
         case Unary::Type::Question:
             break;
         case Unary::Type::Not:
+        {
             Node *lhs = unary->getChild();
             if (isConst(lhs))
             {
@@ -377,6 +379,7 @@ void CodeGen::generateUnary(const Unary *unary)
                 emitRO("XOR", 3, 3, 4, "Op XOR to get logical not");
             }
             break;
+        }
     }
 }
 
