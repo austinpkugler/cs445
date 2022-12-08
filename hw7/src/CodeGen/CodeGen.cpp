@@ -222,29 +222,16 @@ void CodeGen::generateAsgn(Asgn *asgn)
 void CodeGen::generateBinary(Binary *binary)
 {
     Node *lhs = binary->getChild();
-    Node *rhs = binary->getChild(1);
     generateAndTraverse(lhs);
-
-    log("CodeGen::generateBinary()", "ST 3," + std::to_string(m_toffset) + "(1) Push left side", binary->getLineNum());
     emitRM("ST", 3, m_toffset, 1, "Push left side");
 
+    Node *rhs = binary->getChild(1);
     m_toffset -= rhs->getMemSize();
-    log("CodeGen::generateBinary()", "dec for rhs of Binary TOFF: " + std::to_string(m_toffset), binary->getLineNum());
     generateAndTraverse(rhs);
     m_toffset += rhs->getMemSize();
-    log("CodeGen::generateBinary()", "inc for rhs of Binary TOFF: " + std::to_string(m_toffset), binary->getLineNum());
-
-    log("CodeGen::generateBinary()", "ST 4," + std::to_string(m_toffset) + "(1) Pop left into ac1", binary->getLineNum());
     emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
 
-    m_toffset += lhs->getMemSize();
-    log("CodeGen::generateBinary()", "inc for lhs of Binary TOFF: " + std::to_string(m_toffset), binary->getLineNum());
-
-    log("CodeGen::generateBinary()", binary->getTypeString() + " 3,4,3 Op " + toUpper(binary->getSym()), binary->getLineNum());
     emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
-
-    m_toffset -= 1;
-    log("CodeGen::generateBinary()", "dec for Binary Op TOFF 2: " + std::to_string(m_toffset), binary->getLineNum());
 }
 
 void CodeGen::generateCall(Call *call)
