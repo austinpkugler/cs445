@@ -29,6 +29,7 @@ class CodeGen
         void generateEnd(const Node *node);
         void generateDecl(Decl *decl);
         void generateExp(const Exp *exp);
+        void generateBinary(const Binary *binary);
         void generateConst(const Const *constN);
         void generateStmt(const Stmt *stmt);
 

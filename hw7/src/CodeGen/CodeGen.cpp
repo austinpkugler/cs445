@@ -224,6 +224,10 @@ void CodeGen::generateExp(const Exp *exp)
             {
                 switch (parms[i]->getNodeKind())
                 {
+                    case Node::Kind::Binary:
+                        std::cout << "Binary at " << exp->getLineNum() << " " << exp->stringifyWithType() << std::endl;
+                        generateBinary((Binary *)parms[i]);
+                        break;
                     case Node::Kind::Const:
                     {
                         Const *constN = (Const *)parms[i];
@@ -299,6 +303,34 @@ void CodeGen::generateExp(const Exp *exp)
         default:
             throw std::runtime_error("CodeGen::generateExp - Invalid Exp");
             break;
+    }
+}
+
+void CodeGen::generateBinary(const Binary *binary)
+{
+    if (binary == nullptr)
+    {
+        return;
+    }
+
+    // Idk why this is needed
+    m_toffset -= 1;
+
+    Node *lhs = binary->getChild();
+    Node *rhs = binary->getChild(1);
+    if (lhs != nullptr && rhs != nullptr)
+    {
+        if (isConst(lhs) && isConst(rhs))
+        {
+            // I have no idea why but it seems like we only mess with toffset for the lhs
+            generateConst((Const *)lhs);
+            m_toffset -= lhs->getMemSize();
+            emitRM("ST", 3, m_toffset, 1, "Push left side");
+            generateConst((Const *)rhs);
+            emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+            m_toffset += lhs->getMemSize();
+            emitRO("MUL", 3, 4, 3, toChar("Op " + binary->getSym()));
+        }
     }
 }
 
