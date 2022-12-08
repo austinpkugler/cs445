@@ -53,7 +53,7 @@ void CodeGen::generate()
         }
         else if (!m_globals[i]->getData()->getIsStatic())
         {
-            emitRM("ST", 3, 0, 0, "Store variable", toChar(m_globals[i]->getName()));
+            emitRM("ST", 3, m_globals[i]->getMemLoc(), 0, "Store variable", toChar(m_globals[i]->getName()));
         }
         else
         {
@@ -108,11 +108,11 @@ void CodeGen::generateEnd(const Node *node)
                 Id *id = (Id *)lhs;
                 if (id->getIsGlobal())
                 {
-                    emitRM("ST", 3, 0, 0, "Store variable", toChar(id->getName()));
+                    emitRM("ST", 3, id->getMemLoc(), 0, "Store variable", toChar(id->getName()));
                 }
                 else
                 {
-                    emitRM("ST", 3, -2, 1, "Store variable", toChar(id->getName()));
+                    emitRM("ST", 3, id->getMemLoc(), 1, "Store variable", toChar(id->getName()));
                 }
             }
             break;
@@ -233,30 +233,13 @@ void CodeGen::generateExp(const Exp *exp)
                         generateBinary((Binary *)parms[i]);
                         break;
                     case Node::Kind::Const:
-                    {
-                        Const *constN = (Const *)parms[i];
-                        generateConst(constN);
-                        m_toffset -= constN->getMemSize();
+                        generateConst((Const *)parms[i]);
+                        m_toffset -= parms[i]->getMemSize();
                         break;
-                    }
                     case Node::Kind::Id:
-                    {
-                        Id *id = (Id *)parms[i];
-                        if (id->getIsGlobal() && !id->getData()->getIsStatic())
-                        {
-                            emitRM("LD", 3, 0, 0, "Load variable", toChar(id->getName()));
-                        }
-                        else if (id->getData()->getIsStatic())
-                        {
-                            emitRM("LD", 3, -2, 0, "Load variable", toChar(id->getName()));
-                        }
-                        else
-                        {
-                            emitRM("LD", 3, -2, 1, "Load variable", toChar(id->getName()));
-                        }
-                        m_toffset -= id->getMemSize();
+                        generateId((Id *)parms[i]);
+                        m_toffset -= parms[i]->getMemSize();
                         break;
-                    }
                     case Node::Kind::Unary:
                     {
                         Node *rhs = parms[i]->getChild();
@@ -290,14 +273,11 @@ void CodeGen::generateExp(const Exp *exp)
             break;
         }
         case Node::Kind::Const:
-        {
-            Const *constN = (Const *)exp;
-            if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var) && !constN->hasRelative(Node::Kind::Asgn))
+            if (!exp->hasRelative(Node::Kind::Call) && !exp->hasRelative(Node::Kind::Var) && !exp->hasRelative(Node::Kind::Asgn))
             {
-                generateConst(constN);
+                generateConst((Const *)exp);
             }
             break;
-        }
         case Node::Kind::Id:
             break;
         case Node::Kind::Unary:
@@ -326,18 +306,30 @@ void CodeGen::generateBinary(const Binary *binary)
     Node *rhs = binary->getChild(1);
     if (lhs != nullptr && rhs != nullptr)
     {
-        if (isConst(lhs) && isConst(rhs))
-        {
-            // I have no idea why but it seems like we only mess with toffset for the lhs
-            generateConst((Const *)lhs);
+            if (isConst(lhs))
+            {
+                generateConst((Const *)lhs);
+            }
+            else if (isId(lhs))
+            {
+                generateId((Id *)lhs);
+            }
+
             m_toffset -= lhs->getMemSize();
             emitRM("ST", 3, m_toffset, 1, "Push left side");
-            generateConst((Const *)rhs);
+
+            if (isConst(rhs))
+            {
+                generateConst((Const *)rhs);
+            }
+            else if (isId(rhs))
+            {
+                generateId((Id *)rhs);
+            }
+
             emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
             m_toffset += lhs->getMemSize();
-            // This mess is required because both the Op text and symbol changed in format from previous assignments
             emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
-        }
     }
 }
 
@@ -359,6 +351,23 @@ void CodeGen::generateConst(const Const *constN)
         case Const::Type::Char:
             emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
             break;
+    }
+}
+
+void CodeGen::generateId(const Id *id)
+{
+    if (id == nullptr)
+    {
+        return;
+    }
+
+    if (id->getIsGlobal() || id->getData()->getIsStatic())
+    {
+        emitRM("LD", 3, id->getMemLoc(), 0, "Load variable", toChar(id->getName()));
+    }
+    else
+    {
+        emitRM("LD", 3, id->getMemLoc(), 1, "Load variable", toChar(id->getName()));
     }
 }
 
