@@ -158,11 +158,18 @@ void CodeGen::generateDecl(Decl *decl)
             Var *var = (Var *)decl;
             if (!var->getIsGlobal())
             {
-                m_toffset -= decl->getMemSize();
+                Node *lhs = var->getChild();
+                if (isConst(lhs))
+                {
+                    generateConst((Const *)lhs);
+                }
+
                 if (var->getChild() != nullptr)
                 {
                     emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
                 }
+
+                m_toffset -= decl->getMemSize();
             }
             else
             {
@@ -197,7 +204,6 @@ void CodeGen::generateExp(const Exp *exp)
             {
                 generateConst((Const *)lhs);
             }
-
             break;
         }
         case Node::Kind::Binary:
