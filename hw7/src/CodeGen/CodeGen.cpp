@@ -302,6 +302,8 @@ void CodeGen::generateUnary(Unary *unary)
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
+            generateAndTraverse(unary->getChild());
+            emitRO("NEG", 3, 3, 3, "Op unary -");
             break;
         case Unary::Type::Sizeof:
             break;
