@@ -18,7 +18,7 @@ class Var : public Decl
         // Setters
         void makeInitialized() { m_isInitialized = true; }
         void makeStatic();
-        void makeGlobal() { m_isGlobal = true; }
+        void setIsGlobal(bool isGlobal) { m_isGlobal = isGlobal; }
 
     private:
         bool m_isInitialized;

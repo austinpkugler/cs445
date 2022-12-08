@@ -34,6 +34,60 @@ std::string Binary::stringify() const
     return "Op: " + getSym();
 }
 
+std::string Binary::getTypeString() const
+{
+    std::string stringy;
+    switch (m_type)
+    {
+        case Binary::Type::Mul:
+            stringy = "MUL";
+            break;
+        case Binary::Type::Div:
+            stringy = "DIV";
+            break;
+        case Binary::Type::Mod:
+            stringy = "MOD";
+            break;
+        case Binary::Type::Add:
+            stringy = "ADD";
+            break;
+        case Binary::Type::Sub:
+            stringy = "SUB";
+            break;
+        case Binary::Type::Index:
+            stringy = "INDEX";
+            break;
+        case Binary::Type::And:
+            stringy = "AND";
+            break;
+        case Binary::Type::Or:
+            stringy = "OR";
+            break;
+        case Binary::Type::LT:
+            stringy = "TLT";
+            break;
+        case Binary::Type::LEQ:
+            stringy = "TLE";
+            break;
+        case Binary::Type::GT:
+            stringy = "TGT";
+            break;
+        case Binary::Type::GEQ:
+            stringy = "TGE";
+            break;
+        case Binary::Type::EQ:
+            stringy = "TEQ";
+            break;
+        case Binary::Type::NEQ:
+            stringy = "TNE";
+            break;
+        default:
+            throw std::runtime_error("Binary:getTypeString() - Unknown type");
+            break;
+    }
+    return stringy;
+}
+
 std::string Binary::getSym() const
 {
     std::string stringy;

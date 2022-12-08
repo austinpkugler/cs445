@@ -5,6 +5,7 @@
 #include "../Tree/Tree.hpp"
 #include "../Semantics/Semantics.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <string>
@@ -25,17 +26,23 @@ class CodeGen
         void printFuncs() const;
 
         // Generate
+        void generateAndTraverse(const Node *node);
+        void generateEnd(const Node *node);
         void generateDecl(Decl *decl);
         void generateExp(const Exp *exp);
+        void generateAsgn(const Asgn *asgn);
+        void generateBinary(const Binary *binary);
+        void generateConst(const Const *constN);
+        void generateId(const Id *id);
+        void generateUnary(const Unary *unary);
         void generateStmt(const Stmt *stmt);
 
         // Emit
-        void emitAndTraverse(const Node *node);
-        void emitEnd(const Node *node);
         void emitIO();
 
         // Helpers
         char * toChar(const std::string comment) const;
+        std::string toUpper(std::string s) const;
 
         const Node *m_root;
         const std::string m_tmPath;

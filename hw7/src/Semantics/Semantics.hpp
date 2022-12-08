@@ -18,7 +18,6 @@ class Semantics
         static void printGoffset() { std::cout << "Offset for end of global space: " << s_goffset << std::endl; }
 
         // Helpers
-        Decl * lookupDecl(Id *id);
         void analyze(Node *node);
 
     private:
