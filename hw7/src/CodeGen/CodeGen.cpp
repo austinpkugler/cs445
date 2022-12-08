@@ -265,7 +265,7 @@ void CodeGen::generateExp(const Exp *exp)
         case Node::Kind::Const:
         {
             Const *constN = (Const *)exp;
-            if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var))
+            if (!constN->hasRelative(Node::Kind::Call) && !constN->hasRelative(Node::Kind::Var) && !constN->hasRelative(Node::Kind::Asgn))
             {
                 generateConst(constN);
             }
