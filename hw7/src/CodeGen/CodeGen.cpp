@@ -209,14 +209,8 @@ void CodeGen::generateExp(const Exp *exp)
     switch (exp->getNodeKind())
     {
         case Node::Kind::Asgn:
-        {
-            Node *lhs = exp->getChild(1);
-            if (lhs != nullptr && isConst(lhs))
-            {
-                generateConst((Const *)lhs);
-            }
+            generateAsgn((Asgn *)exp);
             break;
-        }
         case Node::Kind::Binary:
             break;
         case Node::Kind::Call:
@@ -229,6 +223,9 @@ void CodeGen::generateExp(const Exp *exp)
             {
                 switch (parms[i]->getNodeKind())
                 {
+                    case Node::Kind::Asgn:
+                        generateAsgn((Asgn *)parms[i]);
+                        break;
                     case Node::Kind::Binary:
                         generateBinary((Binary *)parms[i]);
                         break;
@@ -281,14 +278,30 @@ void CodeGen::generateExp(const Exp *exp)
         case Node::Kind::Id:
             break;
         case Node::Kind::Unary:
-        {
             break;
-        }
         case Node::Kind::UnaryAsgn:
             break;
         default:
             throw std::runtime_error("CodeGen::generateExp - Invalid Exp");
             break;
+    }
+}
+
+void CodeGen::generateAsgn(const Asgn *asgn)
+{
+    if (asgn == nullptr)
+    {
+        return;
+    }
+
+    Node *lhs = asgn->getChild(1);
+    if (isConst(lhs))
+    {
+        generateConst((Const *)lhs);
+    }
+    else if (isId(lhs))
+    {
+        generateId((Id *)lhs);
     }
 }
 
@@ -306,30 +319,30 @@ void CodeGen::generateBinary(const Binary *binary)
     Node *rhs = binary->getChild(1);
     if (lhs != nullptr && rhs != nullptr)
     {
-            if (isConst(lhs))
-            {
-                generateConst((Const *)lhs);
-            }
-            else if (isId(lhs))
-            {
-                generateId((Id *)lhs);
-            }
+        if (isConst(lhs))
+        {
+            generateConst((Const *)lhs);
+        }
+        else if (isId(lhs))
+        {
+            generateId((Id *)lhs);
+        }
 
-            m_toffset -= lhs->getMemSize();
-            emitRM("ST", 3, m_toffset, 1, "Push left side");
+        m_toffset -= lhs->getMemSize();
+        emitRM("ST", 3, m_toffset, 1, "Push left side");
 
-            if (isConst(rhs))
-            {
-                generateConst((Const *)rhs);
-            }
-            else if (isId(rhs))
-            {
-                generateId((Id *)rhs);
-            }
+        if (isConst(rhs))
+        {
+            generateConst((Const *)rhs);
+        }
+        else if (isId(rhs))
+        {
+            generateId((Id *)rhs);
+        }
 
-            emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
-            m_toffset += lhs->getMemSize();
-            emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
+        emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+        m_toffset += lhs->getMemSize();
+        emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
     }
 }
 
