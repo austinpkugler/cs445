@@ -299,8 +299,11 @@ void CodeGen::generateCall(const Call *call)
                 m_toffset -= parms[i]->getMemSize();
                 break;
             case Node::Kind::Unary:
+            {
+                Unary *unary = (Unary *)parms[i];
                 generateUnary((Unary *)parms[i]);
                 break;
+            }
         }
         emitRM("ST", 3, m_toffset - 1, 1, "Push parameter");
     }
@@ -344,19 +347,28 @@ void CodeGen::generateUnary(const Unary *unary)
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
+        {
+            Node *rhs = unary->getChild();
+            if (isConst(rhs))
+            {
+                generateConst((Const *)rhs);
+                m_toffset -= rhs->getMemSize();
+            }
+            emitRO("NEG", 3, 3, 3, "Op unary -");
             break;
+        }
         case Unary::Type::Sizeof:
         {
-            Id *id = (Id *)(unary->getChild());
-            if (id->getData()->getIsArray())
+            Id *rhs = (Id *)(unary->getChild());
+            if (rhs->getData()->getIsArray())
             {
-                if (id->getIsGlobal())
+                if (rhs->getIsGlobal())
                 {
-                    emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(id->getName()));
+                    emitRM("LDA", 3, -1, 0, "Load address of base of array", toChar(rhs->getName()));
                 }
                 else
                 {
-                    emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
+                    emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(rhs->getName()));
                 }
                 emitRM("LD", 3, 1, 3, "Load array size");
                 m_toffset -= 1;
@@ -364,6 +376,10 @@ void CodeGen::generateUnary(const Unary *unary)
             break;
         }
         case Unary::Type::Question:
+            emitRO("RND", 3, 3, 6, "Op ?");
+            emitRM("ST", 3, m_toffset, 1, "Push left side");
+            emitRM("LDC", 3, 0, 6, "Load integer constant");
+            emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
             break;
         case Unary::Type::Not:
         {
@@ -374,7 +390,6 @@ void CodeGen::generateUnary(const Unary *unary)
                 generateConst(constN);
                 if (constN->getType() == Const::Type::Bool)
                 {
-                    std::cout << "const bool " << constN->getLineNum() << " " << constN->stringifyWithType() << std::endl;
                     emitRM("LDC", 4, 1, 6, "Load 1");
                     m_toffset -= constN->getMemSize();
                 }
