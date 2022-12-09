@@ -45,13 +45,16 @@ void CodeGen::generateGlobals()
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
     for (int i = 0; i < m_globals.size(); i++)
     {
-        generateAndTraverse(m_globals[i]->getChild());
+        generateNode(m_globals[i], true);
+        // generateAndTraverse(m_globals[i]->getChild());
 
-        if (m_globals[i]->getData()->getIsArray())
-        {
-            emitRM("LDC", 3, m_globals[i]->getMemSize() - 1, 6, "load size of array", toChar(m_globals[i]->getName()));
-            emitRM("ST", 3, 0, 0, "save size of array", toChar(m_globals[i]->getName()));
-        }
+        // if (m_globals[i]->getData()->getIsArray())
+        // {
+        //     emitRM("LDC", 3, m_globals[i]->getMemSize() - 1, 6, "load size of array", toChar(m_globals[i]->getName()));
+        //     emitRM("ST", 3, 0, 0, "save size of array", toChar(m_globals[i]->getName()));
+        // }
+
+
 
         // if ()
         // {
@@ -63,7 +66,7 @@ void CodeGen::generateGlobals()
             
         // }
 
-        m_globals[i]->makeGenerated();
+        // m_globals[i]->makeGenerated();
     }
 }
 
@@ -86,16 +89,36 @@ void CodeGen::generateAndTraverse(Node *node)
     generateAndTraverse(node->getSibling());
 }
 
-void CodeGen::generateNode(Node *node)
+void CodeGen::generateNode(Node *node, const bool generateGlobals)
 {
-    if (node == nullptr)
+    if (node == nullptr || node->getIsGenerated())
     {
         return;
     }
 
-    if (node->getIsGenerated())
+    // Return if we are not generating globals yet
+    if (isVar(node))
     {
-        return;
+        Var *var = (Var *)node;
+        if (var->getIsGlobal() && !generateGlobals)
+        {
+            m_globals.push_back(var);
+            m_goffset -= var->getMemSize();
+            return;
+        }
+    }
+    else if (isConst(node))
+    {
+        Var *parent = (Var *)(node->getParent());
+        if (isVar(parent) && parent->getIsGlobal() && !generateGlobals)
+        {
+            return;
+        }
+    }
+
+    if (generateGlobals)
+    {
+        std::cout << "Generating global " << node->stringifyWithType() << " on line " << node->getLineNum() << std::endl;
     }
 
     switch (node->getNodeKind())
@@ -107,7 +130,7 @@ void CodeGen::generateNode(Node *node)
             generateParm((Parm *)node);
             break;
         case Node::Kind::Var:
-            generateVar((Var *)node);
+            generateVar((Var *)node, generateGlobals);
             break;
         case Node::Kind::Asgn:
             generateAsgn((Asgn *)node);
@@ -170,23 +193,18 @@ void CodeGen::generateParm(Parm *parm)
     log("CodeGen::generateParm()", "dec for Parm TOFF: " + std::to_string(m_toffset), parm->getLineNum());
 }
 
-void CodeGen::generateVar(Var *var)
+void CodeGen::generateVar(Var *var, const bool generateGlobals)
 {
-    if (var->getIsGlobal())
+    // Special case for : assignment
+    Node *lhs = var->getChild();
+    if (lhs != nullptr)
     {
-        m_globals.push_back(var);
-        m_goffset -= var->getMemSize();
+        generateNode(lhs, generateGlobals);
+        emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
     }
-    else
-    {
-        // Special case for : assignment
-        Node *lhs = var->getChild();
-        if (lhs != nullptr)
-        {
-            generateAndTraverse(lhs);
-            emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
-        }
 
+    if (!var->getIsGlobal())
+    {
         m_toffset -= var->getMemSize();
         log("CodeGen::generateVar()", "dec for Var TOFF: " + std::to_string(m_toffset), var->getLineNum());
     }

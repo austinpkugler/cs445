@@ -25,10 +25,10 @@ class CodeGen
         // Generate
         void generateGlobals();
         void generateAndTraverse(Node *node);
-        void generateNode(Node *node);
+        void generateNode(Node *node, const bool generateGlobals=false);
         void generateFunc(Func *func);
         void generateParm(Parm *parm);
-        void generateVar(Var *var);
+        void generateVar(Var *var, const bool generateGlobals=false);
         void generateAsgn(Asgn *asgn);
         void generateBinary(Binary *binary);
         void generateCall(Call *call);
