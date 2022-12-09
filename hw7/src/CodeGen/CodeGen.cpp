@@ -205,18 +205,10 @@ void CodeGen::generateAsgn(Asgn *asgn)
         Id *id = (Id *)lhs;
         if (asgn->getType() != Asgn::Type::Asgn)
         {
-            emitRM("LD", 4, id->getMemLoc(), 0, "load lhs variable", toChar(id->getName()));
+            emitRM("LD", 4, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
             emitRO(toChar(asgn->getTypeString()), 3, 4, 3, toChar("op " + asgn->getSym()));
         }
-
-        if (id->getIsGlobal())
-        {
-            emitRM("ST", 3, id->getMemLoc(), 0, "Store variable", toChar(id->getName()));
-        }
-        else
-        {
-            emitRM("ST", 3, id->getMemLoc(), 1, "Store variable", toChar(id->getName()));
-        }
+        emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
     }
     else if (isBinary(lhs))
     {
