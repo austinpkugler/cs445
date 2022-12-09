@@ -15,6 +15,8 @@ class UnaryAsgn : public Exp
 
         // Getters
         UnaryAsgn::Type getType() const { return m_type; }
+        std::string getTypeString() const;
+        int getTypeValue() const;
         std::string getSym() const;
 
     private:

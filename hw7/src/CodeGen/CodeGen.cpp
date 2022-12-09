@@ -333,7 +333,7 @@ void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
 {
     Id *id = (Id *)unaryAsgn->getChild();
     emitRM("LD", 3, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
-    emitRM("LDA", 3, 1, 3, "increment value of", toChar(id->getName()));
+    emitRM("LDA", 3, unaryAsgn->getTypeValue(), 3, toChar(unaryAsgn->getTypeString() + " value of"), toChar(id->getName()));
     emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
     id->makeGenerated();
 }

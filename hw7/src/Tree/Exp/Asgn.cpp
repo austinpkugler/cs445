@@ -51,7 +51,7 @@ std::string Asgn::getTypeString() const
             stringy = "MUL";
             break;
         default:
-            throw std::runtime_error("Asgn::getSym() - Unknown type");
+            throw std::runtime_error("Asgn:getTypeString() - Unknown type");
             break;
     }
     return stringy;
