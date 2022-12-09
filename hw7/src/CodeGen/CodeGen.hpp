@@ -31,6 +31,8 @@ class CodeGen
         void generateVar(Var *var, const bool generateGlobals=false);
         void generateAsgn(Asgn *asgn);
         void generateBinary(Binary *binary);
+        void generateBinaryIndex(Binary *binary);
+        void generateBinaryIndexValue(Binary *binary, Node *indexValue=nullptr);
         void generateCall(Call *call);
         void generateConst(Const *constN);
         void generateId(Id *id);
