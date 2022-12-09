@@ -93,6 +93,8 @@ void CodeGen::generateNode(Node *node, const bool generateGlobals)
         }
     }
 
+    log("Generating Node: " + node->stringifyWithType(), node->getLineNum());
+
     switch (node->getNodeKind())
     {
         case Node::Kind::Func:
@@ -149,22 +151,36 @@ void CodeGen::generateNode(Node *node, const bool generateGlobals)
     }
 
     node->makeGenerated();
+
+    log("Done Generating Node", node->getLineNum());
 }
 
 void CodeGen::generateFunc(Func *func)
 {
+    log("enter generateFunc()", func->getLineNum());
+
     emitRM("ST", 3, -1, 1, "Store return address");
     m_funcs[func->getName()] = emitWhereAmI() - 1;
     m_toffset -= 2;
+    logToffset("generateFunc()", func->getLineNum());
+
+    log("leave generateFunc()", func->getLineNum());
 }
 
 void CodeGen::generateParm(Parm *parm)
 {
+    log("enter generateParm()", parm->getLineNum());
+
     m_toffset -= parm->getMemSize();
+    logToffset("generateParm()", parm->getLineNum());
+
+    log("leave generateParm()", parm->getLineNum());
 }
 
 void CodeGen::generateVar(Var *var, const bool generateGlobals)
 {
+    log("enter generateVar()", var->getLineNum());
+
     if (var->getData()->getIsArray())
     {
         emitRM("LDC", 3, var->getMemSize() - 1, 6, "load size of array", toChar(var->getName()));
@@ -172,21 +188,32 @@ void CodeGen::generateVar(Var *var, const bool generateGlobals)
     }
 
     // Special case for : assignment
-    Node *lhs = var->getChild();
-    if (lhs != nullptr)
+    // int a;
+    // int c:5;
+    Node *varValue = var->getChild();
+    if (varValue != nullptr)
     {
-        generateAndTraverse(lhs, generateGlobals);
+        log("Var has : assignment and value is " + varValue->stringifyWithType(), var->getLineNum());
+        generateAndTraverse(varValue, generateGlobals);
+        // generateAndTraverse(var->getSibling(), generateGlobals);
         emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
+        // m_toffset -= var->getMemSize();
+        // logToffset(var->getLineNum());
     }
 
     if (!var->getIsGlobal())
     {
-        m_toffset -= var->getMemSize();
+        // m_toffset -= var->getMemSize();
+        logToffset("generateVar()", var->getLineNum());
     }
+
+    log("leave generateVar()", var->getLineNum());
 }
 
 void CodeGen::generateAsgn(Asgn *asgn)
 {
+    log("enter generateAsgn()", asgn->getLineNum());
+
     Node *rhs = asgn->getChild(1);
     Node *lhs = asgn->getChild();
     if (isId(lhs))
@@ -207,23 +234,33 @@ void CodeGen::generateAsgn(Asgn *asgn)
         Id *arrayId = (Id *)(lhs->getChild());
         emitRM("ST", 3, 0, 5, "Store variable", toChar(arrayId->getName()));
     }
+
+    log("leave generateAsgn()", asgn->getLineNum());
 }
 
 void CodeGen::generateBinary(Binary *binary)
 {
+    log("enter generateBinary()", binary->getLineNum());
+
     if (binary->getType() != Binary::Type::Index)
     {
-        Node *lhs = binary->getChild();
-        generateNode(lhs);
+        generateAndTraverse(binary->getChild());
 
         emitRM("ST", 3, m_toffset, 1, "Push left side");
+        logBreak();
+        log("Push left side", binary->getLineNum());
 
-        Node *rhs = binary->getChild(1);
-        m_toffset -= rhs->getMemSize();
-        generateNode(rhs);
+        m_toffset -= 1;
+        logToffset("generateBinary()", binary->getLineNum());
 
-        m_toffset += rhs->getMemSize();
+        generateAndTraverse(binary->getChild(1));
+
+        m_toffset += 1;
+        logToffset("generateBinary()", binary->getLineNum());
+
         emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+        log("Pop left into ac1", binary->getLineNum());
+        logBreak();
 
         emitRO(toChar(binary->getTypeString()), 3, 4, 3, toChar("Op " + toUpper(binary->getSym())));
     }
@@ -231,10 +268,14 @@ void CodeGen::generateBinary(Binary *binary)
     {
         generateBinaryIndex(binary);
     }
+
+    log("leave generateBinary()", binary->getLineNum());
 }
 
 void CodeGen::generateBinaryIndex(Binary *binary)
 {
+    log("enter generateBinaryIndex()", binary->getLineNum());
+
     if (binary->getType() != Binary::Type::Index)
     {
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
@@ -254,15 +295,21 @@ void CodeGen::generateBinaryIndex(Binary *binary)
 
     emitRM("ST", 3, m_toffset, 1, "Push left side");
     m_toffset -= 1;
+    logToffset("generateBinaryIndex()", binary->getLineNum());
     generateAndTraverse(binary->getChild(1));
     m_toffset += 1;
+    logToffset("generateBinaryIndex()", binary->getLineNum());
     emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
     emitRO("SUB", 3, 4, 3, "compute location from index");
     emitRM("LD", 3, 0, 3, "Load array element");
+
+    log("leave generateBinaryIndex()", binary->getLineNum());
 }
 
 void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
 {
+    log("enter generateBinaryIndexValue()", binary->getLineNum());
+
     if (binary->getType() != Binary::Type::Index)
     {
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
@@ -275,8 +322,10 @@ void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
     {
         emitRM("ST", 3, m_toffset, 1, "Push index");
         m_toffset -= 1;
+        logToffset("generateBinaryIndexValue()", binary->getLineNum());
         generateAndTraverse(indexValue);
         m_toffset += 1;
+        logToffset("generateBinaryIndexValue()", binary->getLineNum());
         emitRM("LD", 4, m_toffset, 1, "Pop index");
     }
 
@@ -291,13 +340,18 @@ void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
 
     binary->makeGenerated();
     emitRO("SUB", 5, 5, 4, "Compute offset of value");
+
+    log("leave generateBinaryIndexValue()", binary->getLineNum());
 }
 
 void CodeGen::generateCall(Call *call)
 {
+    log("enter generateCall()", call->getLineNum());
+
     int prevToffset = m_toffset;
     emitRM("ST", 1, m_toffset, 1, "Store fp in ghost frame for", toChar(call->getName()));
     m_toffset -= 2;
+    logToffset("generateCall()", call->getLineNum());
 
     std::vector<Node *> parms = call->getParms();
     for (int i = 0; i < parms.size(); i++)
@@ -305,6 +359,7 @@ void CodeGen::generateCall(Call *call)
         generateNode(parms[i]);
         emitRM("ST", 3, m_toffset, 1, "Push parameter");
         m_toffset -= parms[i]->getMemSize();
+        logToffset("generateCall()", parms[i]->getLineNum());
     }
 
     emitRM("LDA", 1, prevToffset, 1, "Ghost frame becomes new active frame");
@@ -312,10 +367,15 @@ void CodeGen::generateCall(Call *call)
     emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
     emitRM("LDA", 3, 0, 2, "Save the result in ac");
     m_toffset = prevToffset;
+    logToffset("generateCall()", call->getLineNum());
+
+    log("leave generateCall()", call->getLineNum());
 }
 
 void CodeGen::generateConst(Const *constN)
 {
+    log("enter generateConst()", constN->getLineNum());
+
     switch (constN->getType())
     {
         case Const::Type::Int:
@@ -328,10 +388,14 @@ void CodeGen::generateConst(Const *constN)
             emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
             break;
     }
+
+    log("leave generateConst()", constN->getLineNum());
 }
 
 void CodeGen::generateId(Id *id)
 {
+    log("enter generateId()", id->getLineNum());
+
     // Only load the Id if it is on the rhs of =
     if (id->getData()->getIsArray())
     {
@@ -352,10 +416,14 @@ void CodeGen::generateId(Id *id)
     {
         emitRM("LD", 3, id->getMemLoc(), 1, "Load variable", toChar(id->getName()));
     }
+
+    log("leave generateId()", id->getLineNum());
 }
 
 void CodeGen::generateUnary(Unary *unary)
 {
+    log("enter generateUnary()", unary->getLineNum());
+
     switch (unary->getType())
     {
         case Unary::Type::Chsign:
@@ -371,10 +439,10 @@ void CodeGen::generateUnary(Unary *unary)
             break;
         }
         case Unary::Type::Question:
-            emitRO("RND", 3, 3, 6, "Op ?");
-            emitRM("ST", 3, m_toffset, 1, "Push left side");
-            emitRM("LDC", 3, 0, 6, "Load integer constant");
-            emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+            // emitRO("RND", 3, 3, 6, "Op ?");
+            // emitRM("ST", 3, m_toffset, 1, "Push left side");
+            // emitRM("LDC", 3, 0, 6, "Load integer constant");
+            // emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
             break;
         case Unary::Type::Not:
         {
@@ -385,34 +453,59 @@ void CodeGen::generateUnary(Unary *unary)
             break;
         }
     }
+
+    log("leave generateUnary()", unary->getLineNum());
 }
 
 void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
 {
+    log("enter generateUnaryAsgn()", unaryAsgn->getLineNum());
+
     Id *id = (Id *)unaryAsgn->getChild();
     emitRM("LD", 3, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
     emitRM("LDA", 3, unaryAsgn->getTypeValue(), 3, toChar(unaryAsgn->getTypeString() + " value of"), toChar(id->getName()));
     emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
     id->makeGenerated();
+
+    log("leave generateUnaryAsgn()", unaryAsgn->getLineNum());
 }
 
 void CodeGen::generateBreak(Break *breakN)
 {
-
+    log("enter generateBreak()", breakN->getLineNum());
+    log("leave generateBreak()", breakN->getLineNum());
 }
 
 void CodeGen::generateCompound(Compound *compound)
 {
+    log("enter generateCompound()", compound->getLineNum());
 
+    // m_compoundOffset = m_toffset;
+
+    Node *currSibling = compound->getChild();
+    while (currSibling != nullptr)
+    {
+        Var *var = (Var *)(currSibling);
+        if (isVar(var) && !var->getData()->getIsStatic())
+        {
+            m_toffset -= var->getMemSize();
+        }
+        currSibling = currSibling->getSibling();
+    }
+
+    log("leave generateCompound()", compound->getLineNum());
 }
 
 void CodeGen::generateFor(For *forN)
 {
-
+    log("enter generateFor()", forN->getLineNum());
+    log("leave generateFor()", forN->getLineNum());
 }
 
 void CodeGen::generateIf(If *ifN)
 {
+    log("enter generateIf()", ifN->getLineNum());
+
     // Generate lhs
     generateAndTraverse(ifN->getChild());
     int prevInstLoc = emitWhereAmI();
@@ -442,15 +535,20 @@ void CodeGen::generateIf(If *ifN)
         emitRM("JZR", 3, prevInstLoc2 - prevInstLoc - 1, 7, "Jump around the THEN if false [backpatch]");
         emitNewLoc(prevInstLoc2);
     }
+
+    log("leave generateIf()", ifN->getLineNum());
 }
 
 void CodeGen::generateRange(Range *range)
 {
-
+    log("enter generateRange()", range->getLineNum());
+    log("leave generateRange()", range->getLineNum());
 }
 
 void CodeGen::generateReturn(Return *returnN)
 {
+    log("enter generateReturn()", returnN->getLineNum());
+
     Node *lhs = returnN->getChild();
     if (lhs != nullptr)
     {
@@ -467,10 +565,14 @@ void CodeGen::generateReturn(Return *returnN)
     {
         m_mainHasReturn = true;
     }
+
+    log("leave generateReturn()", returnN->getLineNum());
 }
 
 void CodeGen::generateWhile(While *whileN)
 {
+    log("enter generateWhile()", whileN->getLineNum());
+
     // Generate lhs
     int prevInstLoc = emitWhereAmI();
     generateAndTraverse(whileN->getChild());
@@ -486,10 +588,14 @@ void CodeGen::generateWhile(While *whileN)
     emitNewLoc(prevInstLoc2);
     emitRM("JMP", 7, prevInstLoc3 - prevInstLoc2 - 1, 7, "Jump past loop [backpatch]");
     emitNewLoc(prevInstLoc3);
+
+    log("leave generateWhile()", whileN->getLineNum());
 }
 
 void CodeGen::generateEnd(Node *node)
 {
+    log("enter generateEnd()", node->getLineNum());
+
     if (isFunc(node))
     {
         Func *func = (Func *)node;
@@ -505,13 +611,32 @@ void CodeGen::generateEnd(Node *node)
         }
         emitNewLoc(prevInstLoc);
         m_toffset = 0;
+        logToffset("generateEnd()", func->getLineNum());
     }
+
+    log("leave generateEnd()", node->getLineNum());
 }
 
-void CodeGen::log(const std::string loc, const std::string msg, const int lineNum)
+void CodeGen::log(const std::string msg, const int lineNum) const
 {
     if (m_showLog)
     {
-        std::cout << loc << " - " << emitWhereAmI() << ": " << msg << " (line " << lineNum << ")" << std::endl;
+        std::cout << "line " << lineNum << ", emit " << emitWhereAmI() << ": " << msg << std::endl;
+    }
+}
+
+void CodeGen::logToffset(const std::string loc, const int lineNum) const
+{
+    if (m_showLog)
+    {
+        std::cout << "line " << lineNum << ", emit " << emitWhereAmI() << ": " << loc << " TOFF set: " << m_toffset << std::endl;
+    }
+}
+
+void CodeGen::logBreak() const
+{
+    if (m_showLog)
+    {
+        std::cout << std::endl;
     }
 }

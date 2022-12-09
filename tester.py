@@ -34,6 +34,7 @@ class Tester:
         print(f'Running all tests in \'{self.test_dir}\'')
         tests = [f[:-3] for f in os.listdir(self.test_dir) if f.endswith('.c-')]
         tests.sort()
+        # tests = ['i05']
 
         diffs = {}
         passed = 0

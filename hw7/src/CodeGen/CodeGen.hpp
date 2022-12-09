@@ -48,7 +48,9 @@ class CodeGen
         void generateEnd(Node *node);
 
         // Logging
-        void log(const std::string loc, const std::string msg, const int lineNum);
+        void log(const std::string msg, const int lineNum) const;
+        void logToffset(const std::string loc, const int lineNum) const;
+        void logBreak() const;
 
         Node *m_root;
         const std::string m_tmPath;
@@ -56,6 +58,7 @@ class CodeGen
         bool m_mainHasReturn;
         int m_toffset;
         int m_goffset;
+        int m_compoundOffset;
         std::map<std::string, int> m_funcs;
         std::vector<Var *> m_globals;
 };
