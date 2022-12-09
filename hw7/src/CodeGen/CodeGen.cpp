@@ -184,7 +184,7 @@ void CodeGen::generateVar(Var *var)
         if (lhs != nullptr)
         {
             generateAndTraverse(lhs);
-            emitRM("ST", 3, -2, 1, "Store variable", toChar(var->getName()));
+            emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
         }
 
         m_toffset -= var->getMemSize();
@@ -294,12 +294,10 @@ void CodeGen::generateId(Id *id)
 
     if (id->getIsGlobal() || id->getData()->getIsStatic())
     {
-        log("CodeGen::generateId()", "LD 3," + std::to_string(id->getMemLoc()) + "(0) Load variable " + id->getName(), id->getLineNum());
         emitRM("LD", 3, id->getMemLoc(), 0, "Load variable", toChar(id->getName()));
     }
     else
     {
-        log("CodeGen::generateId()", "LD 3," + std::to_string(id->getMemLoc()) + "(1) Load variable " + id->getName(), id->getLineNum());
         emitRM("LD", 3, id->getMemLoc(), 1, "Load variable", toChar(id->getName()));
     }
 }
@@ -333,7 +331,11 @@ void CodeGen::generateUnary(Unary *unary)
 
 void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
 {
-
+    Id *id = (Id *)unaryAsgn->getChild();
+    emitRM("LD", 3, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
+    emitRM("LDA", 3, 1, 3, "increment value of", toChar(id->getName()));
+    emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
+    id->makeGenerated();
 }
 
 void CodeGen::generateBreak(Break *breakN)
