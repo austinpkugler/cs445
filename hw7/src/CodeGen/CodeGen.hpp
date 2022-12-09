@@ -51,6 +51,7 @@ class CodeGen
         Node *m_root;
         const std::string m_tmPath;
         bool m_showLog;
+        bool m_mainHasReturn;
         int m_toffset;
         int m_goffset;
         std::map<std::string, int> m_funcs;

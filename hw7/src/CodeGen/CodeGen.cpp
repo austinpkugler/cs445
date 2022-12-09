@@ -2,7 +2,7 @@
 
 FILE *code = NULL;
 
-CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog) {}
+CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false) {}
 
 CodeGen::~CodeGen()
 {
@@ -170,13 +170,13 @@ void CodeGen::generateParm(Parm *parm)
 void CodeGen::generateVar(Var *var, const bool generateGlobals)
 {
     log("CodeGen::generateVar()", "Generating Var " + var->stringifyWithType(), var->getLineNum());
-    // Special case for : assignment
     if (var->getData()->getIsArray())
     {
         emitRM("LDC", 3, var->getMemSize() - 1, 6, "load size of array", toChar(var->getName()));
-        emitRM("ST", 3, -2, 1, "save size of array", toChar(var->getName()));
+        emitRM("ST", 3, var->getMemLoc() + 1, !var->getIsGlobal(), "save size of array", toChar(var->getName()));
     }
 
+    // Special case for : assignment
     Node *lhs = var->getChild();
     if (lhs != nullptr)
     {
@@ -423,11 +423,17 @@ void CodeGen::generateReturn(Return *returnN)
     emitRM("LD", 3, -1, 1, "Load return address");
     emitRM("LD", 1, 0, 1, "Adjust fp");
     emitRM("JMP", 7, 0, 3, "Return");
+
+    Func *func = (Func *)(returnN->getRelative(Node::Kind::Func));
+    if (isFunc(func) && func->getName() == "main")
+    {
+        m_mainHasReturn = true;
+    }
 }
 
 void CodeGen::generateWhile(While *whileN)
 {
-    // emitRM("JMP", 3, , 7, "Jump around the THEN if false [backpatch]");
+
 }
 
 void CodeGen::generateEnd(Node *node)
