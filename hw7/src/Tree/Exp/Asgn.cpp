@@ -30,6 +30,33 @@ std::string Asgn::stringify() const
     }
 }
 
+std::string Asgn::getTypeString() const
+{
+    std::string stringy;
+    switch (m_type)
+    {
+        case Asgn::Type::Asgn:
+            stringy = "ASGN";
+            break;
+        case Asgn::Type::AddAsgn:
+            stringy = "ADD";
+            break;
+        case Asgn::Type::SubAsgn:
+            stringy = "SUB";
+            break;
+        case Asgn::Type::DivAsgn:
+            stringy = "DIV";
+            break;
+        case Asgn::Type::MulAsgn:
+            stringy = "MUL";
+            break;
+        default:
+            throw std::runtime_error("Asgn::getSym() - Unknown type");
+            break;
+    }
+    return stringy;
+}
+
 std::string Asgn::getSym() const
 {
     std::string stringy;
