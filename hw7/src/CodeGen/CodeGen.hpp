@@ -24,7 +24,7 @@ class CodeGen
     private:
         // Generate
         void generateGlobals();
-        void generateAndTraverse(Node *node);
+        void generateAndTraverse(Node *node, const bool generateGlobals=false);
         void generateNode(Node *node, const bool generateGlobals=false);
         void generateFunc(Func *func);
         void generateParm(Parm *parm);
