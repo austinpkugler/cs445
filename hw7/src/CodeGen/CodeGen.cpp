@@ -375,7 +375,35 @@ void CodeGen::generateFor(For *forN)
 
 void CodeGen::generateIf(If *ifN)
 {
+    // Generate lhs
+    generateAndTraverse(ifN->getChild());
+    int prevInstLoc = emitWhereAmI();
+    emitNewLoc(prevInstLoc + 1);
 
+    // Generate rhs
+    generateAndTraverse(ifN->getChild(1));
+    int prevInstLoc2 = emitWhereAmI();
+    emitNewLoc(prevInstLoc);
+
+    if (ifN->getChild(2) != nullptr)
+    {
+        // Handle the "then" statement
+        emitRM("JZR", 3, prevInstLoc2 - prevInstLoc, 7, "Jump around the THEN if false [backpatch]");
+        emitNewLoc(prevInstLoc2);
+        prevInstLoc = emitWhereAmI();
+        emitNewLoc(prevInstLoc + 1);
+        generateAndTraverse(ifN->getChild(2));
+        int prevInstLoc3 = emitWhereAmI();
+        emitNewLoc(prevInstLoc);
+        emitRM("JMP", 7, prevInstLoc3 - prevInstLoc - 1, 7, "Jump around the ELSE [backpatch]");
+        emitNewLoc(prevInstLoc3);
+    }
+    else
+    {
+        // There is no "then" statement
+        emitRM("JZR", 3, prevInstLoc2 - prevInstLoc - 1, 7, "Jump around the THEN if false [backpatch]");
+        emitNewLoc(prevInstLoc2);
+    }
 }
 
 void CodeGen::generateRange(Range *range)
@@ -399,7 +427,7 @@ void CodeGen::generateReturn(Return *returnN)
 
 void CodeGen::generateWhile(While *whileN)
 {
-
+    // emitRM("JMP", 3, , 7, "Jump around the THEN if false [backpatch]");
 }
 
 void CodeGen::generateEnd(Node *node)
@@ -411,13 +439,13 @@ void CodeGen::generateEnd(Node *node)
         emitRM("LD", 3, -1, 1, "Load return address");
         emitRM("LD", 1, 0, 1, "Adjust fp");
         emitRM("JMP", 7, 0, 3, "Return");
-        int instCount = emitWhereAmI();
+        int prevInstLoc = emitWhereAmI();
         emitNewLoc(0);
         if (func->getName() == "main")
         {
-            emitRM("JMP", 7, instCount - 1, 7, "Jump to init [backpatch]");
+            emitRM("JMP", 7, prevInstLoc - 1, 7, "Jump to init [backpatch]");
         }
-        emitNewLoc(instCount);
+        emitNewLoc(prevInstLoc);
         m_toffset = 0;
         log("CodeGen::generateEnd()", "TOFF: " + std::to_string(m_toffset), node->getLineNum());
     }
