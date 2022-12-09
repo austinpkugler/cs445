@@ -44,27 +44,6 @@ void CodeGen::generateGlobals()
     for (int i = 0; i < m_globals.size(); i++)
     {
         generateNode(m_globals[i], true);
-        // generateAndTraverse(m_globals[i]->getChild());
-
-        // if (m_globals[i]->getData()->getIsArray())
-        // {
-        //     emitRM("LDC", 3, m_globals[i]->getMemSize() - 1, 6, "load size of array", toChar(m_globals[i]->getName()));
-        //     emitRM("ST", 3, 0, 0, "save size of array", toChar(m_globals[i]->getName()));
-        // }
-
-
-
-        // if ()
-        // {
-        //     emitRM("ST", 3, -2, 0, "Store variable", toChar(m_globals[i]->getName()));
-        // }
-        // else if (m_globals[i]->getData()->getIsStatic())
-        // {
-        //     emitRM("ST", 3, m_globals[i]->getMemLoc(), 0, "Store variable", toChar(m_globals[i]->getName()));
-            
-        // }
-
-        // m_globals[i]->makeGenerated();
     }
 }
 
@@ -192,6 +171,12 @@ void CodeGen::generateVar(Var *var, const bool generateGlobals)
 {
     log("CodeGen::generateVar()", "Generating Var " + var->stringifyWithType(), var->getLineNum());
     // Special case for : assignment
+    if (var->getData()->getIsArray())
+    {
+        emitRM("LDC", 3, var->getMemSize() - 1, 6, "load size of array", toChar(var->getName()));
+        emitRM("ST", 3, -2, 1, "save size of array", toChar(var->getName()));
+    }
+
     Node *lhs = var->getChild();
     if (lhs != nullptr)
     {
@@ -254,8 +239,6 @@ void CodeGen::generateBinary(Binary *binary)
         log("CodeGen::generateBinary()", "TOFF: " + std::to_string(m_toffset), rhs->getLineNum());
         generateNode(rhs);
 
-        
-
         m_toffset += rhs->getMemSize();
         log("CodeGen::generateBinary()", "TOFF 2: " + std::to_string(m_toffset), rhs->getLineNum());
         emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
@@ -312,6 +295,11 @@ void CodeGen::generateId(Id *id)
 {
     // log("CodeGen::generateId()", "Generating Id " + id->stringifyWithType(), id->getLineNum());
     // Only load the Id if it is on the rhs of =
+    if (id->getData()->getIsArray())
+    {
+        return;
+    }
+
     Asgn *asgn = (Asgn *)(id->getRelative(Node::Kind::Asgn));
     if (asgn != nullptr && asgn->getChild() == id)
     {
@@ -337,7 +325,13 @@ void CodeGen::generateUnary(Unary *unary)
             emitRO("NEG", 3, 3, 3, "Op unary -");
             break;
         case Unary::Type::Sizeof:
+        {
+            Id *id = (Id *)(unary->getChild());
+            emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
+            emitRM("LD", 3, 1, 3, "Load array size");
+            // m_toffset -= 1;
             break;
+        }
         case Unary::Type::Question:
             emitRO("RND", 3, 3, 6, "Op ?");
             emitRM("ST", 3, m_toffset, 1, "Push left side");
