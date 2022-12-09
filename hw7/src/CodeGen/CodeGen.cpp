@@ -433,7 +433,21 @@ void CodeGen::generateReturn(Return *returnN)
 
 void CodeGen::generateWhile(While *whileN)
 {
+    // Generate lhs
+    int prevInstLoc = emitWhereAmI();
+    generateAndTraverse(whileN->getChild());
+    emitRM("JNZ", 3, 1, 7, "Jump to while part");
 
+    // Generate rhs
+    int prevInstLoc2 = emitWhereAmI();
+    emitNewLoc(prevInstLoc2 + 1);
+    generateAndTraverse(whileN->getChild(1));
+    emitRM("JMP", 7, prevInstLoc - emitWhereAmI() - 1, 7, "go to beginning of loop");
+
+    int prevInstLoc3 = emitWhereAmI();
+    emitNewLoc(prevInstLoc2);
+    emitRM("JMP", 7, prevInstLoc3 - prevInstLoc2 - 1, 7, "Jump past loop [backpatch]");
+    emitNewLoc(prevInstLoc3);
 }
 
 void CodeGen::generateEnd(Node *node)
