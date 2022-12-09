@@ -327,7 +327,7 @@ void CodeGen::generateUnary(Unary *unary)
         case Unary::Type::Sizeof:
         {
             Id *id = (Id *)(unary->getChild());
-            emitRM("LDA", 3, -3, 1, "Load address of base of array", toChar(id->getName()));
+            emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
             emitRM("LD", 3, 1, 3, "Load array size");
             // m_toffset -= 1;
             break;
