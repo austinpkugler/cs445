@@ -422,14 +422,16 @@ void CodeGen::generateConst(Const *constN)
             break;
         case Const::Type::String:
             emitStrLit(m_litOffset, toChar(constN->getStringValue()));
-
-            Node *id = constN->getParent();
+            Node *parent = constN->getParent();
             emitRM("LDA", 3, constN->getMemLoc(), 0, "Load address of char array");
-            emitRM("LDA", 4, id->getMemLoc(), 1, "address of lhs");
-            emitRM("LD", 5, 1, 3, "size of rhs");
-            emitRM("LD", 6, 1, 4, "size of lhs");
-            emitRO("SWP", 5, 6, 6, "pick smallest size");
-            emitRO("MOV", 4, 3, 5, "array op =");
+            if (!isCall(parent))
+            {
+                emitRM("LDA", 4, parent->getMemLoc(), 1, "address of lhs");
+                emitRM("LD", 5, 1, 3, "size of rhs");
+                emitRM("LD", 6, 1, 4, "size of lhs");
+                emitRO("SWP", 5, 6, 6, "pick smallest size");
+                emitRO("MOV", 4, 3, 5, "array op =");
+            }
             m_litOffset += constN->getMemSize();
             m_goffset -= constN->getMemSize();
             break;
