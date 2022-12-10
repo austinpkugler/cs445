@@ -41,10 +41,20 @@ void CodeGen::generate()
     emitRO("HALT", 0, 0, 0, "DONE!");
 }
 
+void CodeGen::sortGlobals()
+{
+    sort(m_globals.begin( ), m_globals.end( ), [ ]( const auto &lhs, const auto &rhs )
+    {
+    return lhs->getName() < rhs->getName();
+    });
+}
+
 void CodeGen::generateGlobals()
 {
     emitRM("LDA", 1, m_goffset, 0, "set first frame at end of globals");
     emitRM("ST", 1, 0, 1, "store old fp (point to self)");
+
+    sortGlobals();
     for (int i = 0; i < m_globals.size(); i++)
     {
         generateNode(m_globals[i], true);
@@ -393,6 +403,11 @@ void CodeGen::generateConst(Const *constN)
             break;
         case Const::Type::String:
             emitStrLit(m_litOffset, toChar(constN->getStringValue()));
+            // emitRM("LDA", 3, constN->getMemLoc(), 0, "Load address of char array");
+            // emitRM("LDA", 3, constN->getChild()->getMemLoc(), 0, "address of lhs");
+            // emitRM("LD", 5, 1, 3, "size of rhs");
+            // emitRM("LD", 6, 1, 4, "size of lhs");
+            // emitRM("SWP", 5, 6, 6, "pick smallest size");
             m_litOffset += constN->getMemSize();
             break;
     }

@@ -23,6 +23,7 @@ class CodeGen
 
     private:
         // Generate
+        void sortGlobals();
         void generateGlobals();
         void generateAndTraverse(Node *node, const bool generateGlobals=false);
         void generateNode(Node *node, const bool generateGlobals=false);
