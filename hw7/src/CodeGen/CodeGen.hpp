@@ -33,7 +33,7 @@ class CodeGen
         void generateAsgn(Asgn *asgn);
         void generateBinary(Binary *binary);
         void generateBinaryIndex(Binary *binary);
-        void generateBinaryIndexValue(Binary *binary, Node *indexValue=nullptr);
+        void generateBinaryIndexValue(Binary *binary, Node *indexValue=nullptr, int valueOffset3=4);
         void generateCall(Call *call);
         void generateConst(Const *constN);
         void generateId(Id *id);

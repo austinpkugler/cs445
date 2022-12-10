@@ -220,8 +220,8 @@ void CodeGen::generateAsgn(Asgn *asgn)
 {
     log("enter generateAsgn()", asgn->getLineNum());
 
-    Node *rhs = asgn->getChild(1);
     Node *lhs = asgn->getChild();
+    Node *rhs = asgn->getChild(1);
     if (isId(lhs))
     {
         generateAndTraverse(rhs);
@@ -236,6 +236,16 @@ void CodeGen::generateAsgn(Asgn *asgn)
     }
     else if (isBinary(lhs))
     {
+        std::cout << "Asgn: " << asgn->getLineNum() << " " << asgn->stringifyWithType() << std::endl;
+        if (lhs != nullptr)
+        {
+            std::cout << "Param 1: " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
+        }
+        if (rhs->getChild() != nullptr)
+        {
+            std::cout << "Param 2: " << rhs->getLineNum() << " " << rhs->stringifyWithType() << std::endl;
+        }
+        std::cout << std::endl;
         generateBinaryIndexValue((Binary *)lhs, rhs);
         Id *arrayId = (Id *)(lhs->getChild());
         emitRM("ST", 3, 0, 5, "Store variable", toChar(arrayId->getName()));
@@ -310,7 +320,7 @@ void CodeGen::generateBinaryIndex(Binary *binary)
     log("leave generateBinaryIndex()", binary->getLineNum());
 }
 
-void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
+void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue, int valueOffset3)
 {
     log("enter generateBinaryIndexValue()", binary->getLineNum());
 
@@ -343,7 +353,7 @@ void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
     }
     id->makeGenerated();
     binary->makeGenerated();
-    emitRO("SUB", 5, 5, 4, "Compute offset of value");
+    emitRO("SUB", 5, 5, valueOffset3, "Compute offset of value");
 
     log("leave generateBinaryIndexValue()", binary->getLineNum());
 }
@@ -493,7 +503,12 @@ void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
     }
     else
     {
-        std::cout << "unaryAsgn lhs: " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
+        generateBinaryIndexValue((Binary *)(unaryAsgn->getChild()), unaryAsgn->getChild(1), 3);
+
+        Id *id = (Id *)(unaryAsgn->getChild()->getChild());
+        emitRM("LD", 3, 0, 5, "load lhs variable", toChar(id->getName()));
+        emitRM("LDA", 3, unaryAsgn->getTypeValue(), 3, toChar(unaryAsgn->getTypeString() + " value of"), toChar(id->getName()));
+        emitRM("ST", 3, 0, 5, "Store variable", toChar(id->getName()));
     }
 
     log("leave generateUnaryAsgn()", unaryAsgn->getLineNum());
