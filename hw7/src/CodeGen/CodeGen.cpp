@@ -362,8 +362,9 @@ void CodeGen::generateCall(Call *call)
     for (int i = 0; i < parms.size(); i++)
     {
         generateNode(parms[i]);
+        log("generateCall() ST 3," + std::to_string(m_toffsets.back()) + "(1) Push parameter", parms[i]->getLineNum());
         emitRM("ST", 3, m_toffsets.back(), 1, "Push parameter");
-        m_toffsets.back() -= parms[i]->getMemSize();
+        m_toffsets.back() -= 1;
         log("generateCall() TOFF dec for parms[i]", parms[i]->getLineNum());
     }
 

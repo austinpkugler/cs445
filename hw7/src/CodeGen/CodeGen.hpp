@@ -50,7 +50,6 @@ class CodeGen
 
         // Logging
         void log(const std::string msg, const int lineNum) const;
-        void logToffset(const std::string loc, const int lineNum) const;
         void logBreak() const;
 
         Node *m_root;
