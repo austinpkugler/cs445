@@ -2,7 +2,7 @@
 
 FILE *code = NULL;
 
-CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false), m_toffset(0), m_goffset(0), m_compoundOffset(0), m_litOffset(1) {}
+CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false), m_toffset(0), m_goffset(0), m_litOffset(1) {}
 
 CodeGen::~CodeGen()
 {
@@ -202,23 +202,12 @@ void CodeGen::generateVar(Var *var, const bool generateGlobals)
     }
 
     // Special case for : assignment
-    // int a;
-    // int c:5;
     Node *varValue = var->getChild();
     if (varValue != nullptr)
     {
         log("Var has : assignment and value is " + varValue->stringifyWithType(), var->getLineNum());
         generateAndTraverse(varValue, generateGlobals);
-        // generateAndTraverse(var->getSibling(), generateGlobals);
         emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
-        // m_toffset -= var->getMemSize();
-        // logToffset(var->getLineNum());
-    }
-
-    if (!var->getIsGlobal())
-    {
-        // m_toffset -= var->getMemSize();
-        logToffset("generateVar()", var->getLineNum());
     }
 
     log("leave generateVar()", var->getLineNum());
@@ -458,7 +447,6 @@ void CodeGen::generateUnary(Unary *unary)
             Id *id = (Id *)(unary->getChild());
             emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
             emitRM("LD", 3, 1, 3, "Load array size");
-            // m_toffset -= 1;
             break;
         }
         case Unary::Type::Question:
@@ -502,8 +490,6 @@ void CodeGen::generateBreak(Break *breakN)
 void CodeGen::generateCompound(Compound *compound)
 {
     log("enter generateCompound()", compound->getLineNum());
-
-    // m_compoundOffset = m_toffset;
 
     Node *currSibling = compound->getChild();
     while (currSibling != nullptr)
@@ -628,10 +614,6 @@ void CodeGen::generateEnd(Node *node)
         emitRM("JMP", 7, 0, 3, "Return");
         int prevInstLoc = emitWhereAmI();
         emitNewLoc(0);
-        // if (func->getName() == "main")
-        // {
-        //     emitRM("JMP", 7, prevInstLoc - 1, 7, "Jump to init [backpatch]");
-        // }
         emitNewLoc(prevInstLoc);
         m_toffset = 0;
         logToffset("generateEnd()", func->getLineNum());
