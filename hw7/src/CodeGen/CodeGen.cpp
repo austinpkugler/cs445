@@ -210,18 +210,16 @@ void CodeGen::generateVar(Var *var, const bool generateGlobals)
     {
         log("Var has : assignment and value is " + varValue->stringifyWithType(), var->getLineNum());
         generateAndTraverse(varValue, generateGlobals);
-        emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
 
-        // std::cout << "Var has : assignment and value is " << varValue->stringifyWithType() << " " << var->getLineNum() << std::endl;
-
-        // Const *constVarValue = (Const *)(varValue);
-        // if (isConst(constVarValue) && constVarValue->getType() == Const::Type::Char && constVarValue->getData()->getIsArray())
+        // if (var->getData()->getIsArray() && isConst(varValue))
         // {
-        //     constVarValue->makeGenerated();
-        //     return;
+        //     Const *varValueConst = (Const *)varValue;
+        //     if (varValueConst->getType() == Const::Type::String)
+        //     {
+        //         return;
+        //     }
         // }
-        // generateAndTraverse(varValue, generateGlobals);
-        // emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
+        emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
     }
 
     log("leave generateVar()", var->getLineNum());
