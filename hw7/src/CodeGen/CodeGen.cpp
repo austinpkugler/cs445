@@ -486,6 +486,9 @@ void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
 void CodeGen::generateBreak(Break *breakN)
 {
     log("enter generateBreak()", breakN->getLineNum());
+
+    emitRM("JMP", 7, m_loffsets.back() - emitWhereAmI() - 1, 7, "break");
+
     log("leave generateBreak()", breakN->getLineNum());
 }
 
@@ -591,6 +594,9 @@ void CodeGen::generateWhile(While *whileN)
     generateAndTraverse(whileN->getChild());
     emitRM("JNZ", 3, 1, 7, "Jump to while part");
 
+    // Save offset for While
+    m_loffsets.push_back(emitWhereAmI());
+
     // Generate rhs
     int prevInstLoc2 = emitWhereAmI();
     emitNewLoc(prevInstLoc2 + 1);
@@ -601,6 +607,8 @@ void CodeGen::generateWhile(While *whileN)
     emitNewLoc(prevInstLoc2);
     emitRM("JMP", 7, prevInstLoc3 - prevInstLoc2 - 1, 7, "Jump past loop [backpatch]");
     emitNewLoc(prevInstLoc3);
+
+    m_loffsets.pop_back();
 
     log("leave generateWhile()", whileN->getLineNum());
 }

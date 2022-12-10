@@ -57,9 +57,10 @@ class CodeGen
         const std::string m_tmPath;
         bool m_showLog;
         bool m_mainHasReturn;
-        std::vector<int> m_toffsets;
         int m_goffset;
         int m_litOffset;
+        std::vector<int> m_toffsets;
+        std::vector<int> m_loffsets;
         std::map<std::string, int> m_funcs;
         std::vector<Var *> m_globals;
 };
