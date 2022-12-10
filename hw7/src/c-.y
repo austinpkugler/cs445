@@ -8,7 +8,6 @@
 #include "Tree/Tree.hpp"
 #include "CodeGen/CodeGen.hpp"
 
-#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -1048,11 +1047,7 @@ int main(int argc, char *argv[])
 
     if (!Emit::getErrorCount() && !SyntaxError::getHasError())
     {
-        std::filesystem::path cMinusPath = flags.getFilename();
-        cMinusPath = cMinusPath.filename().generic_string();
-        std::filesystem::path tmPath = cMinusPath;
-        tmPath = tmPath.replace_extension(".tm").filename().generic_string();
-
+        std::string tmPath = flags.getFilenameBase() + ".tm";
         CodeGen *generator = new CodeGen(root, tmPath);
         generator->generate();
     }

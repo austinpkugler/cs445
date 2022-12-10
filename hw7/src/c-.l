@@ -9,7 +9,6 @@
 #include "Tree/Tree.hpp"
 #include "CodeGen/CodeGen.hpp"
 
-#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>

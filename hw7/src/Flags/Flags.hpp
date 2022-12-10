@@ -16,6 +16,7 @@ class Flags
         bool getPrintSyntaxTree() const { return m_printSyntaxTree; }
         bool getPrintSyntaxTreeWithTypes() const { return m_printSyntaxTreeWithTypes; }
         bool getPrintSyntaxTreeWithMem() const { return m_printSyntaxTreeWithMem; }
+        std::string getFilenameBase() const;
 
     private:
         void resetAll();
