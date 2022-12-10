@@ -237,6 +237,17 @@ void CodeGen::generateAsgn(Asgn *asgn)
             emitRM("LD", 4, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
             emitRO(toChar(asgn->getTypeString()), 3, 4, 3, toChar("op " + asgn->getSym()));
         }
+        else
+        {
+            if (id->getData()->getIsArray())
+            {
+                emitRM("LDA", 4, id->getMemLoc(), 1, "address of lhs");
+                emitRM("LD", 5, 1, 3, "size of rhs");
+                emitRM("LD", 6, 1, 4, "size of lhs");
+                emitRO("SWP", 5, 6, 6, "pick smallest size");
+                emitRO("MOV", 4, 3, 5, "array op =");
+            }
+        }
 
         if (!(id->getData()->getIsArray() && id->getData()->getType() == Data::Type::Char))
         {
@@ -420,6 +431,7 @@ void CodeGen::generateConst(Const *constN)
             emitRO("SWP", 5, 6, 6, "pick smallest size");
             emitRO("MOV", 4, 3, 5, "array op =");
             m_litOffset += constN->getMemSize();
+            m_goffset -= constN->getMemSize();
             break;
     }
 
@@ -429,6 +441,12 @@ void CodeGen::generateConst(Const *constN)
 void CodeGen::generateId(Id *id)
 {
     log("enter generateId()", id->getLineNum());
+
+    Asgn *asgn = (Asgn *)(id->getRelative(Node::Kind::Asgn));
+    if (asgn != nullptr && asgn->getChild() == id)
+    {
+        return;
+    }
 
     if (id->getData()->getIsArray())
     {
@@ -441,12 +459,6 @@ void CodeGen::generateId(Id *id)
             emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
         }
         id->makeGenerated();
-        return;
-    }
-
-    Asgn *asgn = (Asgn *)(id->getRelative(Node::Kind::Asgn));
-    if (asgn != nullptr && asgn->getChild() == id)
-    {
         return;
     }
 
