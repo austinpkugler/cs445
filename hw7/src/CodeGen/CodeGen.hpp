@@ -58,6 +58,7 @@ class CodeGen
         bool m_showLog;
         bool m_mainHasReturn;
         int m_toffset;
+        std::vector<int> m_toffsets;
         int m_goffset;
         int m_litOffset;
         std::map<std::string, int> m_funcs;
