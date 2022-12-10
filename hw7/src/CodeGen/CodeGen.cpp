@@ -525,6 +525,47 @@ void CodeGen::generateCompound(Compound *compound)
 void CodeGen::generateFor(For *forN)
 {
     log("enter generateFor()", forN->getLineNum());
+
+    Range *range = (Range *)(forN->getChild(1));
+
+    int prevInstLoc = m_toffsets.back();
+    m_toffsets.push_back(m_toffsets.back() - 3);
+    generateAndTraverse(range->getChild());
+    emitRM("ST", 3, prevInstLoc, 1, "save starting value in index variable");
+    generateAndTraverse(range->getChild(1));
+    emitRM("ST", 3, prevInstLoc - 1, 1, "save stop value");
+    if (range->getChild(2))
+    {
+        generateAndTraverse(range->getChild(2));
+    }
+    else
+    {
+        emitRM("LDC", 3, 1, 6, "default increment by 1");
+    }
+    emitRM("ST", 3, prevInstLoc - 2, 1, "save step value");
+
+    int prevInstLoc2 = emitWhereAmI();
+    emitRM("LD", 4, prevInstLoc, 1, "loop index");
+    emitRM("LD", 5, prevInstLoc - 1, 1, "stop value");
+    emitRM("LD", 3, prevInstLoc - 2, 1, "step value");
+    emitRO("SLT", 3, 4, 5, "Op <");
+    emitRM("JNZ", 3, 1, 7, "Jump to loop body");
+
+    int prevInstLoc3 = emitWhereAmI();
+    emitNewLoc(prevInstLoc3 + 1);
+    generateAndTraverse(forN->getChild(2));
+    emitRM("LD", 3, prevInstLoc, 1, "Load index");
+    emitRM("LD", 5, prevInstLoc - 2, 1, "Load step");
+    emitRO("ADD", 3, 3, 5, "increment");
+    emitRM("ST", 3, prevInstLoc, 1, "store back to index");
+    emitRM("JMP", 7, prevInstLoc2 - emitWhereAmI() - 1, 7, "go to beginning of loop");
+
+    int prevInstLoc4 = emitWhereAmI();
+    emitNewLoc(prevInstLoc3);
+    emitRM("JMP", 7, prevInstLoc4 - prevInstLoc3 - 1, 7, "Jump past loop [backpatch]");
+    emitNewLoc(prevInstLoc4);
+    m_toffsets.pop_back();
+
     log("leave generateFor()", forN->getLineNum());
 }
 
