@@ -2,7 +2,7 @@
 
 FILE *code = NULL;
 
-CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false), m_toffset(0), m_goffset(0), m_litOffset(1)
+CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false), m_goffset(0), m_litOffset(1)
 {
     m_toffsets.push_back(0);
 }
@@ -178,7 +178,6 @@ void CodeGen::generateFunc(Func *func)
 
     emitRM("ST", 3, -1, 1, "Store return address");
     m_funcs[func->getName()] = emitWhereAmI() - 1;
-    m_toffset -= 2;
     m_toffsets.back() -= 2;
     logToffset("generateFunc()", func->getLineNum());
 
@@ -189,7 +188,6 @@ void CodeGen::generateParm(Parm *parm)
 {
     log("enter generateParm()", parm->getLineNum());
 
-    m_toffset -= parm->getMemSize();
     m_toffsets.back() -= parm->getMemSize();
     logToffset("generateParm()", parm->getLineNum());
 
@@ -258,13 +256,11 @@ void CodeGen::generateBinary(Binary *binary)
         logBreak();
         log("Push left side", binary->getLineNum());
 
-        m_toffset -= 1;
         m_toffsets.back() -= 1;
         logToffset("generateBinary()", binary->getLineNum());
 
         generateAndTraverse(binary->getChild(1));
 
-        m_toffset += 1;
         m_toffsets.back() += 1;
         logToffset("generateBinary()", binary->getLineNum());
 
@@ -304,11 +300,9 @@ void CodeGen::generateBinaryIndex(Binary *binary)
     binary->makeGenerated();
 
     emitRM("ST", 3, m_toffsets.back(), 1, "Push left side");
-    m_toffset -= 1;
     m_toffsets.back() -= 1;
     logToffset("generateBinaryIndex()", binary->getLineNum());
     generateAndTraverse(binary->getChild(1));
-    m_toffset += 1;
     m_toffsets.back() += 1;
     logToffset("generateBinaryIndex()", binary->getLineNum());
     emitRM("LD", 4, m_toffsets.back(), 1, "Pop left into ac1");
@@ -333,11 +327,9 @@ void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
     if (indexValue != nullptr)
     {
         emitRM("ST", 3, m_toffsets.back(), 1, "Push index");
-        m_toffset -= 1;
         m_toffsets.back() -= 1;
         logToffset("generateBinaryIndexValue()", binary->getLineNum());
         generateAndTraverse(indexValue);
-        m_toffset += 1;
         m_toffsets.back() += 1;
         logToffset("generateBinaryIndexValue()", binary->getLineNum());
         emitRM("LD", 4, m_toffsets.back(), 1, "Pop index");
@@ -362,9 +354,8 @@ void CodeGen::generateCall(Call *call)
 {
     log("enter generateCall()", call->getLineNum());
 
-    int prevToffset = m_toffset;
+    int prevToffset = m_toffsets.back();
     emitRM("ST", 1, m_toffsets.back(), 1, "Store fp in ghost frame for", toChar(call->getName()));
-    m_toffset -= 2;
     m_toffsets.back() -= 2;
     logToffset("generateCall()", call->getLineNum());
 
@@ -373,7 +364,6 @@ void CodeGen::generateCall(Call *call)
     {
         generateNode(parms[i]);
         emitRM("ST", 3, m_toffsets.back(), 1, "Push parameter");
-        m_toffset -= parms[i]->getMemSize();
         m_toffsets.back() -= parms[i]->getMemSize();
         logToffset("generateCall()", parms[i]->getLineNum());
     }
@@ -382,7 +372,6 @@ void CodeGen::generateCall(Call *call)
     emitRM("LDA", 3, 1, 7, "Return address in ac");
     emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs[call->getName()]), 7, "CALL", toChar(call->getName()));
     emitRM("LDA", 3, 0, 2, "Save the result in ac");
-    m_toffset = prevToffset;
     m_toffsets.back() = prevToffset;
     logToffset("generateCall()", call->getLineNum());
 
@@ -511,7 +500,6 @@ void CodeGen::generateCompound(Compound *compound)
         Var *var = (Var *)(currSibling);
         if (isVar(var) && !var->getData()->getIsStatic())
         {
-            m_toffset -= var->getMemSize();
             m_toffsets.back() -= var->getMemSize();
         }
         currSibling = currSibling->getSibling();
@@ -630,7 +618,6 @@ void CodeGen::generateEnd(Node *node)
         int prevInstLoc = emitWhereAmI();
         emitNewLoc(0);
         emitNewLoc(prevInstLoc);
-        m_toffset = 0;
         m_toffsets.back() = 0;
         logToffset("generateEnd()", func->getLineNum());
     }
@@ -650,7 +637,7 @@ void CodeGen::logToffset(const std::string loc, const int lineNum) const
 {
     if (m_showLog)
     {
-        std::cout << "line " << lineNum << ", emit " << emitWhereAmI() << ": " << loc << " TOFF set: " << m_toffset << " " << m_toffsets.back() << std::endl;
+        std::cout << "line " << lineNum << ", emit " << emitWhereAmI() << ": " << loc << " TOFF set: " << m_toffsets.back() << std::endl;
     }
 }
 
