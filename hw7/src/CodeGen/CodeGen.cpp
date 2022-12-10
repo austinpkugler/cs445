@@ -204,21 +204,17 @@ void CodeGen::generateVar(Var *var, const bool generateGlobals)
         emitRM("ST", 3, var->getMemLoc() + 1, !var->getIsGlobal(), "save size of array", toChar(var->getName()));
     }
 
+    if (var->getData()->getIsArray() && var->getData()->getType() == Data::Type::Char)
+    {
+        return;
+    }
+
     // Special case for : assignment
     Node *varValue = var->getChild();
     if (varValue != nullptr)
     {
         log("Var has : assignment and value is " + varValue->stringifyWithType(), var->getLineNum());
         generateAndTraverse(varValue, generateGlobals);
-
-        // if (var->getData()->getIsArray() && isConst(varValue))
-        // {
-        //     Const *varValueConst = (Const *)varValue;
-        //     if (varValueConst->getType() == Const::Type::String)
-        //     {
-        //         return;
-        //     }
-        // }
         emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
     }
 
@@ -241,7 +237,11 @@ void CodeGen::generateAsgn(Asgn *asgn)
             emitRM("LD", 4, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
             emitRO(toChar(asgn->getTypeString()), 3, 4, 3, toChar("op " + asgn->getSym()));
         }
-        emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
+
+        if (!(id->getData()->getIsArray() && id->getData()->getType() == Data::Type::Char))
+        {
+            emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
+        }
     }
     else if (isBinary(lhs))
     {
@@ -734,7 +734,7 @@ void CodeGen::log(const std::string msg, const int lineNum) const
 {
     if (m_showLog)
     {
-        std::cout << "line " << lineNum << ", toffset " << m_toffsets.back() << ", emit " << emitWhereAmI() << ": " << msg << std::endl;
+        std::cout << "line " << lineNum << ", toffset " << m_toffsets.back() << ", emit " << emitWhereAmI() << " : " << msg << std::endl;
     }
 }
 
