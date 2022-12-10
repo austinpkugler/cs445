@@ -17,6 +17,7 @@ class Binary : public Exp
         Binary::Type getType() const { return m_type; }
         std::string getTypeString() const;
         std::string getSym() const;
+        bool getIsComparison() const;
 
     private:
         const Binary::Type m_type;

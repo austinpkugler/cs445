@@ -36,8 +36,9 @@ class Tester:
         tests.sort()
 
         diffs = {}
-        passed = 0
         total_diff_count = 0
+        passed_tests = []
+        failed_tests = []
         for i, test in enumerate(tests):
             print(f'Running {test} {i + 1}/{len(tests)}...', end='')
             diff_count = 0
@@ -46,27 +47,28 @@ class Tester:
             else:
                 diff_count = self.run(test, flags=flags, clean=False)
             if not diff_count:
-                passed += 1
+                passed_tests.append(test)
                 self.success_msg(f'[ PASSED ({diff_count} diff) ]')
             else:
+                failed_tests.append(test)
                 self.error_msg(f'[ FAILED ({diff_count} diff) ]')
                 diffs[test] = diff_count
             total_diff_count += diff_count
 
-        if passed == len(tests):
+        if len(passed_tests) == len(tests):
             self.remove_tmp()
             self.success_msg('=' * 32)
-            self.success_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
+            self.success_msg(f'Passed {len(passed_tests)}/{len(tests)} tests; {total_diff_count} diff')
             self.success_msg('=' * 32)
         else:
             self.error_msg('=' * 32)
-            self.error_msg(f'Passed {passed}/{len(tests)} tests; {total_diff_count} diff')
+            self.error_msg(f'Passed {len(passed_tests)}/{len(tests)} tests; {total_diff_count} diff')
             min_diff = min(diffs, key=diffs.get)
             self.error_msg(f'Min diff: {min_diff} ({diffs[min_diff]} diff)')
             self.error_msg('=' * 32)
 
         self.execute(self.src_dir, 'make clean')
-        return passed, len(tests), total_diff_count
+        return passed_tests, failed_tests, total_diff_count
 
     def run(self, test, flags='', clean=True):
         src = os.path.join(self.test_dir, test + '.c-')
@@ -290,10 +292,11 @@ if __name__ == '__main__':
 
     tester = Tester(sys.argv[1], sort=test_flags['--sort'], showdiff=test_flags['--showdiff'], notree=test_flags['--notree'], unit=test_flags['--unit'], broad=test_flags['--broad'], difftm=test_flags['--difftm'], nocomments=test_flags['--nocomments'])
 
-    passed, tests, diff_count = tester.run_all(compiler_flags)
+    passed_tests, failed_tests, diff_count = tester.run_all(compiler_flags)
     with open('test.history', 'a') as history:
         cmd = ' '.join(sys.argv)
-        history.write(f'{time.time()},"python3 {cmd}",{passed},{tests},{diff_count}\n')
+        failed_tests_str = '"[' + ', '.join(['\'' + t + '\'' for t in failed_tests]) + ']"'
+        history.write(f'{time.time()},"python3 {cmd}",{len(passed_tests)},{len(passed_tests) + len(failed_tests)},{diff_count},{failed_tests_str}\n')
 
     if test_flags['--rmtmp']:
         tester.remove_tmp()

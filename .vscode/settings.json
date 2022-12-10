@@ -45,6 +45,8 @@
         "string_view": "cpp",
         "algorithm": "cpp",
         "TokenData.hpp": "c",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "deque": "cpp",
+        "functional": "cpp"
     },
 }

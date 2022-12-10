@@ -15,7 +15,7 @@
 class CodeGen
 {
     public:
-        CodeGen(Node *root, const std::string tmPath, bool showLog=true);
+        CodeGen(Node *root, const std::string tmPath, bool showLog=false);
         ~CodeGen();
 
         // Helpers
@@ -23,13 +23,17 @@ class CodeGen
 
     private:
         // Generate
-        void generateAndTraverse(Node *node);
-        void generateNode(Node *node);
+        void sortGlobals();
+        void generateGlobals();
+        void generateAndTraverse(Node *node, const bool generateGlobals=false);
+        void generateNode(Node *node, const bool generateGlobals=false);
         void generateFunc(Func *func);
         void generateParm(Parm *parm);
-        void generateVar(Var *var);
+        void generateVar(Var *var, const bool generateGlobals=false);
         void generateAsgn(Asgn *asgn);
         void generateBinary(Binary *binary);
+        void generateBinaryIndex(Binary *binary);
+        void generateBinaryIndexValue(Binary *binary, Node *indexValue=nullptr, int valueOffset3=4);
         void generateCall(Call *call);
         void generateConst(Const *constN);
         void generateId(Id *id);
@@ -45,13 +49,17 @@ class CodeGen
         void generateEnd(Node *node);
 
         // Logging
-        void log(const std::string loc, const std::string msg);
+        void log(const std::string msg, const int lineNum) const;
+        void logBreak() const;
 
         Node *m_root;
         const std::string m_tmPath;
         bool m_showLog;
-        int m_toffset;
+        bool m_mainHasReturn;
         int m_goffset;
+        int m_litOffset;
+        std::vector<int> m_toffsets;
+        std::vector<int> m_loffsets;
         std::map<std::string, int> m_funcs;
         std::vector<Var *> m_globals;
 };

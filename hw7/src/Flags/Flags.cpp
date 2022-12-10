@@ -74,6 +74,17 @@ Flags::Flags(int argc, char *argv[])
     }
 }
 
+std::string Flags::getFilenameBase() const
+{
+    std::string base = m_filename;
+    base.erase(base.size() - 3);
+    while (base.find("/") != std::string::npos)
+    {
+        base.erase(base.begin());
+    }
+    return base;
+}
+
 void Flags::resetAll()
 {
     m_debug = false;                       // -d

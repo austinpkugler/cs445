@@ -15,6 +15,7 @@ class Asgn : public Exp
 
         // Getters
         Asgn::Type getType() const { return m_type; }
+        std::string getTypeString() const;
         std::string getSym() const;
 
     private:
