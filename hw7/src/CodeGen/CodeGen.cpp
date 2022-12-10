@@ -411,10 +411,16 @@ void CodeGen::generateId(Id *id)
 {
     log("enter generateId()", id->getLineNum());
 
-    // Only load the Id if it is on the rhs of =
     if (id->getData()->getIsArray())
     {
-        emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
+        if (id->getMemScope() == "Parameter")
+        {
+            emitRM("LD", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
+        }
+        else
+        {
+            emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
+        }
         id->makeGenerated();
         return;
     }
