@@ -395,7 +395,7 @@ void CodeGen::generateConst(Const *constN)
             break;
         case Const::Type::String:
             emitStrLit(m_litOffset, toChar(constN->getStringValue()));
-            // emitRM("LDA", 3, constN->getMemLoc(), 0, "Load address of char array");
+            emitRM("LDA", 3, constN->getMemLoc(), 0, "Load address of char array");
             // emitRM("LDA", 3, constN->getChild()->getMemLoc(), 0, "address of lhs");
             // emitRM("LD", 5, 1, 3, "size of rhs");
             // emitRM("LD", 6, 1, 4, "size of lhs");
@@ -462,10 +462,8 @@ void CodeGen::generateUnary(Unary *unary)
             break;
         }
         case Unary::Type::Question:
-            // emitRO("RND", 3, 3, 6, "Op ?");
-            // emitRM("ST", 3, m_toffset, 1, "Push left side");
-            // emitRM("LDC", 3, 0, 6, "Load integer constant");
-            // emitRM("LD", 4, m_toffset, 1, "Pop left into ac1");
+            generateAndTraverse(unary->getChild());
+            emitRO("RND", 3, 3, 6, "Op ?");
             break;
         case Unary::Type::Not:
         {
@@ -484,11 +482,19 @@ void CodeGen::generateUnaryAsgn(UnaryAsgn *unaryAsgn)
 {
     log("enter generateUnaryAsgn()", unaryAsgn->getLineNum());
 
-    Id *id = (Id *)unaryAsgn->getChild();
-    emitRM("LD", 3, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
-    emitRM("LDA", 3, unaryAsgn->getTypeValue(), 3, toChar(unaryAsgn->getTypeString() + " value of"), toChar(id->getName()));
-    emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
-    id->makeGenerated();
+    Node *lhs = unaryAsgn->getChild();
+    if (isId(lhs))
+    {
+        Id *id = (Id *)lhs;
+        emitRM("LD", 3, id->getMemLoc(), !id->getIsGlobal(), "load lhs variable", toChar(id->getName()));
+        emitRM("LDA", 3, unaryAsgn->getTypeValue(), 3, toChar(unaryAsgn->getTypeString() + " value of"), toChar(id->getName()));
+        emitRM("ST", 3, id->getMemLoc(), !id->getIsGlobal(), "Store variable", toChar(id->getName()));
+        id->makeGenerated();
+    }
+    else
+    {
+        std::cout << "unaryAsgn lhs: " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
+    }
 
     log("leave generateUnaryAsgn()", unaryAsgn->getLineNum());
 }
