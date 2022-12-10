@@ -211,6 +211,17 @@ void CodeGen::generateVar(Var *var, const bool generateGlobals)
         log("Var has : assignment and value is " + varValue->stringifyWithType(), var->getLineNum());
         generateAndTraverse(varValue, generateGlobals);
         emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
+
+        // std::cout << "Var has : assignment and value is " << varValue->stringifyWithType() << " " << var->getLineNum() << std::endl;
+
+        // Const *constVarValue = (Const *)(varValue);
+        // if (isConst(constVarValue) && constVarValue->getType() == Const::Type::Char && constVarValue->getData()->getIsArray())
+        // {
+        //     constVarValue->makeGenerated();
+        //     return;
+        // }
+        // generateAndTraverse(varValue, generateGlobals);
+        // emitRM("ST", 3, var->getMemLoc(), !var->getIsGlobal(), "Store variable", toChar(var->getName()));
     }
 
     log("leave generateVar()", var->getLineNum());
@@ -402,11 +413,14 @@ void CodeGen::generateConst(Const *constN)
             break;
         case Const::Type::String:
             emitStrLit(m_litOffset, toChar(constN->getStringValue()));
+
+            Node *id = constN->getParent();
             emitRM("LDA", 3, constN->getMemLoc(), 0, "Load address of char array");
-            // emitRM("LDA", 3, constN->getChild()->getMemLoc(), 0, "address of lhs");
-            // emitRM("LD", 5, 1, 3, "size of rhs");
-            // emitRM("LD", 6, 1, 4, "size of lhs");
-            // emitRM("SWP", 5, 6, 6, "pick smallest size");
+            emitRM("LDA", 4, id->getMemLoc(), 1, "address of lhs");
+            emitRM("LD", 5, 1, 3, "size of rhs");
+            emitRM("LD", 6, 1, 4, "size of lhs");
+            emitRO("SWP", 5, 6, 6, "pick smallest size");
+            emitRO("MOV", 4, 3, 5, "array op =");
             m_litOffset += constN->getMemSize();
             break;
     }
