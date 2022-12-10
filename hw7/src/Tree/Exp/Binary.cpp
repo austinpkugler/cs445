@@ -141,3 +141,32 @@ std::string Binary::getSym() const
     }
     return stringy;
 }
+
+bool Binary::getIsComparison() const
+{
+    bool isComparison = false;
+    switch (m_type)
+    {
+        case Binary::Type::Mul:
+        case Binary::Type::Div:
+        case Binary::Type::Mod:
+        case Binary::Type::Add:
+        case Binary::Type::Sub:
+        case Binary::Type::Index:
+        case Binary::Type::And:
+        case Binary::Type::Or:
+            break;
+        case Binary::Type::LT:
+        case Binary::Type::LEQ:
+        case Binary::Type::GT:
+        case Binary::Type::GEQ:
+        case Binary::Type::EQ:
+        case Binary::Type::NEQ:
+            isComparison = true;
+            break;
+        default:
+            throw std::runtime_error("Binary:getIsComparison() - Unknown type");
+            break;
+    }
+    return isComparison;
+}
