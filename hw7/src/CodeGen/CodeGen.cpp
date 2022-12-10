@@ -236,18 +236,13 @@ void CodeGen::generateAsgn(Asgn *asgn)
     }
     else if (isBinary(lhs))
     {
-        std::cout << "Asgn: " << asgn->getLineNum() << " " << asgn->stringifyWithType() << std::endl;
-        if (lhs != nullptr)
-        {
-            std::cout << "Param 1: " << lhs->getLineNum() << " " << lhs->stringifyWithType() << std::endl;
-        }
-        if (rhs->getChild() != nullptr)
-        {
-            std::cout << "Param 2: " << rhs->getLineNum() << " " << rhs->stringifyWithType() << std::endl;
-        }
-        std::cout << std::endl;
         generateBinaryIndexValue((Binary *)lhs, rhs);
         Id *arrayId = (Id *)(lhs->getChild());
+        if (asgn->getType() != Asgn::Type::Asgn)
+        {
+            emitRM("LD", 4, 0, 5, "load lhs variable", toChar(arrayId->getName()));
+            emitRO(toChar(asgn->getTypeString()), 3, 4, 3, toChar("op " + asgn->getSym()));
+        }
         emitRM("ST", 3, 0, 5, "Store variable", toChar(arrayId->getName()));
     }
 
@@ -351,9 +346,11 @@ void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue, int val
     {
         emitRM("LDA", 5, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
     }
+
+    emitRO("SUB", 5, 5, valueOffset3, "Compute offset of value");
+
     id->makeGenerated();
     binary->makeGenerated();
-    emitRO("SUB", 5, 5, valueOffset3, "Compute offset of value");
 
     log("leave generateBinaryIndexValue()", binary->getLineNum());
 }
