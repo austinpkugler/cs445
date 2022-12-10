@@ -31,6 +31,10 @@ void CodeGen::generate()
     emitIO();
     emitNewLoc(39);
     generateAndTraverse(m_root);
+    int prevInstLoc = emitWhereAmI();
+    emitNewLoc(0);
+    emitRM("JMP", 7, prevInstLoc - 1, 7, "Jump to init [backpatch]");
+    emitNewLoc(prevInstLoc);
     generateGlobals();
     emitRM("LDA", 3, 1, 7, "Return address in ac");
     emitRM("JMP", 7, -(emitWhereAmI() + 1 - m_funcs["main"]), 7, "Jump to main");
@@ -605,10 +609,10 @@ void CodeGen::generateEnd(Node *node)
         emitRM("JMP", 7, 0, 3, "Return");
         int prevInstLoc = emitWhereAmI();
         emitNewLoc(0);
-        if (func->getName() == "main")
-        {
-            emitRM("JMP", 7, prevInstLoc - 1, 7, "Jump to init [backpatch]");
-        }
+        // if (func->getName() == "main")
+        // {
+        //     emitRM("JMP", 7, prevInstLoc - 1, 7, "Jump to init [backpatch]");
+        // }
         emitNewLoc(prevInstLoc);
         m_toffset = 0;
         logToffset("generateEnd()", func->getLineNum());
