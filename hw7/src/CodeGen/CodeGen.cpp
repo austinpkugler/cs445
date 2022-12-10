@@ -341,7 +341,7 @@ void CodeGen::generateBinaryIndexValue(Binary *binary, Node *indexValue)
     {
         emitRM("LDA", 5, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
     }
-
+    id->makeGenerated();
     binary->makeGenerated();
     emitRO("SUB", 5, 5, 4, "Compute offset of value");
 
@@ -413,6 +413,8 @@ void CodeGen::generateId(Id *id)
     // Only load the Id if it is on the rhs of =
     if (id->getData()->getIsArray())
     {
+        emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
+        id->makeGenerated();
         return;
     }
 
@@ -449,6 +451,7 @@ void CodeGen::generateUnary(Unary *unary)
             Id *id = (Id *)(unary->getChild());
             emitRM("LDA", 3, id->getMemLoc(), !id->getIsGlobal(), "Load address of base of array", toChar(id->getName()));
             emitRM("LD", 3, 1, 3, "Load array size");
+            id->makeGenerated();
             break;
         }
         case Unary::Type::Question:
