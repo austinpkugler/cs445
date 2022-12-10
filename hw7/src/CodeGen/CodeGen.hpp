@@ -59,6 +59,7 @@ class CodeGen
         int m_toffset;
         int m_goffset;
         int m_compoundOffset;
+        int m_litOffset;
         std::map<std::string, int> m_funcs;
         std::vector<Var *> m_globals;
 };

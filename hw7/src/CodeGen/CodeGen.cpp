@@ -2,7 +2,7 @@
 
 FILE *code = NULL;
 
-CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false), m_toffset(0), m_goffset(0) {}
+CodeGen::CodeGen(Node *root, const std::string tmPath, bool showLog) : m_root(root), m_tmPath(tmPath), m_showLog(showLog), m_mainHasReturn(false), m_toffset(0), m_goffset(0), m_compoundOffset(0), m_litOffset(1) {}
 
 CodeGen::~CodeGen()
 {
@@ -392,8 +392,8 @@ void CodeGen::generateConst(Const *constN)
             emitRM("LDC", 3, (int)(constN->getCharValue()), 6, "Load char constant");
             break;
         case Const::Type::String:
-            m_goffset -= 1;
-            emitStrLit(m_goffset, toChar(constN->getStringValue()));
+            emitStrLit(m_litOffset, toChar(constN->getStringValue()));
+            m_litOffset += constN->getMemSize();
             break;
     }
 
