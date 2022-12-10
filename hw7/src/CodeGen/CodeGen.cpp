@@ -12,6 +12,100 @@ CodeGen::~CodeGen()
     fclose(code);
 }
 
+void CodeGen::updateForMem(Node *node, Node *lastIterator)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    // If it is a for loop then dec mem size and track the iterator
+    if (isFor(node))
+    {
+        node->setMemSize(node->getMemSize() - 2);
+        lastIterator = node->getChild();
+        // std::cout << "Last iterator: " << node->getLineNum() << " " << node->getChild()->stringifyWithType() << std::endl;
+    }
+
+    // If it inside a for loop then dec mem size
+    Node *firstForRelative = node->getRelative(Node::Kind::For);
+    if (!isVar(node) && !isId(node) && node->getMemExists() && firstForRelative != nullptr) // !isVar(node) && !isId(node) && 
+    {
+        node->setMemSize(node->getMemSize() - 2);
+
+        // If it is inside 2 or more compounds then dec mem size
+        Node *firstCompoundRelative = node->getRelative(Node::Kind::Compound);
+        if (!isFor(node) && firstCompoundRelative != nullptr && firstCompoundRelative->hasRelative(Node::Kind::Compound))
+        {
+            node->setMemSize(node->getMemSize() - 2);
+        }
+    }
+
+
+
+
+    // If it is inside 2 or more for loops then check if it is the iterator
+    if (firstForRelative != nullptr && firstForRelative->hasRelative(Node::Kind::For))
+    {
+        // If the node is a reference to the iterator then dec mem loc
+        if (isId(node))
+        {
+            // if (isVar(lastIterator))
+            // {
+                Var *lastIteratorVar = (Var *)lastIterator;
+                Id *iteratorRef = (Id *)node;
+                if (lastIteratorVar->getName() == iteratorRef->getName())
+                {
+                    iteratorRef->setMemLoc(iteratorRef->getMemLoc() - 2);
+                    // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
+                    // std::cout << " (inside 2 or more for loops)" << std::endl;
+                }
+            // }
+        }
+        // If the node is the iterator then dec mem loc
+        else if (isVar(node)) //  && isFor(node->getParent())
+        {
+            node->setMemLoc(node->getMemLoc() - 2);
+            // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
+            // std::cout << " (inside 2 or more for loops)" << std::endl;
+        }
+    }
+    else if (firstForRelative != nullptr)
+    {
+        // If it is inside a for compound and not the iterator then dec mem loc
+        Node *firstCompoundRelative = node->getRelative(Node::Kind::Compound);
+        if (isFor(firstCompoundRelative->getParent()) && node->hasRelative(Node::Kind::Compound))
+        {
+            if (isId(node))
+            {
+                Var *lastIteratorVar = (Var *)lastIterator;
+                Id *id = (Id *)node;
+                if (lastIteratorVar->getName() != id->getName())
+                {
+                    id->setMemLoc(id->getMemLoc() - 2);
+                    // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
+                    // std::cout << " (inside 1 for loop)" << std::endl;
+                }
+            }
+            else if (isVar(node))
+            {
+                node->setMemLoc(node->getMemLoc() - 2);
+                // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
+                // std::cout << " (inside 1 for loop)" << std::endl;
+            }
+        }
+    }
+
+
+    std::vector<Node *> children = node->getChildren();
+    for (int i = 0; i < children.size(); i++)
+    {
+        updateForMem(children[i], lastIterator);
+    }
+
+    updateForMem(node->getSibling(), lastIterator);
+}
+
 void CodeGen::generate()
 {
     if (m_root == nullptr)
@@ -23,6 +117,9 @@ void CodeGen::generate()
     {
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
+
+    updateForMem(m_root);
+    // m_root->printTree(true, true);
 
     m_funcs["input"] = 1;
     m_funcs["output"] = 6;
@@ -600,7 +697,7 @@ void CodeGen::generateFor(For *forN)
     Range *range = (Range *)(forN->getChild(1));
 
     int prevInstLoc = m_toffsets.back();
-    m_toffsets.push_back(m_toffsets.back() - 3);
+    m_toffsets.push_back(m_toffsets.back() - 3); //  - 3
     generateAndTraverse(range->getChild());
     emitRM("ST", 3, prevInstLoc, 1, "save starting value in index variable");
     generateAndTraverse(range->getChild(1));

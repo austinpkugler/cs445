@@ -22,6 +22,9 @@ class CodeGen
         void generate();
 
     private:
+        // Helpers
+        void updateForMem(Node *node, Node *lastIterator=nullptr);
+
         // Generate
         void sortGlobals();
         void generateGlobals();
