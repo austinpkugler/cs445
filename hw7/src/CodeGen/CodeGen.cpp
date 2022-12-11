@@ -15,11 +15,12 @@ CodeGen::~CodeGen()
 void CodeGen::updateForMem(Node *node, std::vector<std::string> iterators)
 {
     /*
-     * This function is the result of ~5 hours of attempting to match the changes in hw6 memory management that suddenly appeared in hw7.
+     * This function is the culmination of ~7 hours of attempting to match the changes in hw6 memory management that suddenly appeared in hw7.
      * It is quite frankly disgusting code and should be deleted. However, it does help pass a few more test cases....
      * TODO:
-     * k03.c-   Don't decrement when iterator var is in for loop compound
-     * k07.c-   Handle operations in the range and the "by 2*c" portion
+     * k03.c-   Don't decrement when iterator Var is inside a For node's Compound
+     * k07.c-   Handle operations in Range node and the "by 2*c" portion
+     * v07.c-   Also likely has issues due to changes in how For and Range node memory is managed (this was done in hw6 but changed in hw7)
     */
     if (node == nullptr || node->getMemIsUpdated())
     {
