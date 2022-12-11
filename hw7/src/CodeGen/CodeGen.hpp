@@ -15,7 +15,7 @@
 class CodeGen
 {
     public:
-        CodeGen(Node *root, const std::string tmPath, bool showLog=false);
+        CodeGen(Node *root, const std::string tmPath);
         ~CodeGen();
 
         // Helpers
@@ -50,10 +50,6 @@ class CodeGen
         void generateReturn(Return *returnN);
         void generateWhile(While *whileN);
         void generateEnd(Node *node);
-
-        // Logging
-        void log(const std::string msg, const int lineNum) const;
-        void logBreak() const;
 
         Node *m_root;
         const std::string m_tmPath;
