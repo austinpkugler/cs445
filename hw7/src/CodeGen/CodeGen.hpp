@@ -23,7 +23,7 @@ class CodeGen
 
     private:
         // Helpers
-        void updateForMem(Node *node, Node *lastIterator=nullptr);
+        void updateForMem(Node *node, std::vector<std::string> iterators);
 
         // Generate
         void sortGlobals();

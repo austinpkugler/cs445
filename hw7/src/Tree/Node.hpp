@@ -24,6 +24,7 @@ class Node
         std::string getMemScope() const { return m_memScope; }
         int getMemLoc() const { return m_memLoc; }
         int getMemSize() const { return m_memSize; }
+        bool getMemIsUpdated() const { return m_memIsUpdated; }
         Node * getChild(const unsigned index=0) const;
         unsigned getChildCount() const;
         Node * getRelative(const Node::Kind nodeKind) const;
@@ -36,10 +37,12 @@ class Node
         void setMemScope(const std::string scope) { m_memScope = scope; }
         void setMemLoc(const int loc) { m_memLoc = loc; }
         void setMemSize(const int size) { m_memSize = size; }
+        void setMemIsUpdated(const bool memIsUpdated) { m_memIsUpdated = memIsUpdated; }
 
         // Print
         void printTree(const bool showTypes=false, const bool showMem=false) const;
         void printNode(const bool showTypes=false) const;
+        void printNodeInfo() const;
 
         // Helpers
         void addChild(Node *node);
@@ -77,6 +80,7 @@ class Node
         std::string m_memScope;
         int m_memLoc;
         int m_memSize;
+        bool m_memIsUpdated;
 
         // Generation
         bool m_isGenerated;

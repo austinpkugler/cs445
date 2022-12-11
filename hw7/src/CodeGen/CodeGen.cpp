@@ -12,19 +12,36 @@ CodeGen::~CodeGen()
     fclose(code);
 }
 
-void CodeGen::updateForMem(Node *node, Node *lastIterator)
+void CodeGen::updateForMem(Node *node, std::vector<std::string> iterators)
 {
-    if (node == nullptr)
+    if (node == nullptr || node->getMemIsUpdated())
     {
         return;
     }
 
+    node->setMemIsUpdated(true);
+
+    if (isRange(node))
+    {
+        std::vector<Node *> children = node->getChildren();
+        for (int i = 0; i < children.size(); i++)
+        {
+            if (isId(children[i]))
+            {
+                Id *id = (Id *)(children[i]);
+                iterators.push_back(id->getName());
+                id->setMemIsUpdated(true);
+            }
+        }
+        updateForMem(node->getParent()->getChild(2), iterators);
+    }
     // If it is a for loop then dec mem size and track the iterator
-    if (isFor(node))
+    else if (isFor(node))
     {
         node->setMemSize(node->getMemSize() - 2);
-        lastIterator = node->getChild();
-        // std::cout << "Last iterator: " << node->getLineNum() << " " << node->getChild()->stringifyWithType() << std::endl;
+        Var *iterator = (Var *)(node->getChild());
+        iterators.push_back(iterator->getName());
+        iterator->setMemIsUpdated(true);
     }
 
     // If it inside a for loop then dec mem size
@@ -41,33 +58,22 @@ void CodeGen::updateForMem(Node *node, Node *lastIterator)
         }
     }
 
-
-
-
     // If it is inside 2 or more for loops then check if it is the iterator
     if (firstForRelative != nullptr && firstForRelative->hasRelative(Node::Kind::For))
     {
         // If the node is a reference to the iterator then dec mem loc
         if (isId(node))
         {
-            // if (isVar(lastIterator))
-            // {
-                Var *lastIteratorVar = (Var *)lastIterator;
-                Id *iteratorRef = (Id *)node;
-                if (lastIteratorVar->getName() == iteratorRef->getName())
-                {
-                    iteratorRef->setMemLoc(iteratorRef->getMemLoc() - 2);
-                    // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
-                    // std::cout << " (inside 2 or more for loops)" << std::endl;
-                }
-            // }
+            Id *iteratorRef = (Id *)node;
+            if (std::find(iterators.begin(), iterators.end(), iteratorRef->getName()) != iterators.end())
+            {
+                iteratorRef->setMemLoc(iteratorRef->getMemLoc() - 2);
+            }
         }
         // If the node is the iterator then dec mem loc
-        else if (isVar(node)) //  && isFor(node->getParent())
+        else if (isVar(node))
         {
             node->setMemLoc(node->getMemLoc() - 2);
-            // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
-            // std::cout << " (inside 2 or more for loops)" << std::endl;
         }
     }
     else if (firstForRelative != nullptr)
@@ -78,32 +84,37 @@ void CodeGen::updateForMem(Node *node, Node *lastIterator)
         {
             if (isId(node))
             {
-                Var *lastIteratorVar = (Var *)lastIterator;
-                Id *id = (Id *)node;
-                if (lastIteratorVar->getName() != id->getName())
+                std::cout << node->getLineNum() << " Iterators: ";
+                for (int i = 0; i < iterators.size(); i++)
                 {
-                    id->setMemLoc(id->getMemLoc() - 2);
-                    // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
-                    // std::cout << " (inside 1 for loop)" << std::endl;
+                    std::cout << iterators[i] << " ";
+                }
+                std::cout << std::endl;
+
+                Id *iteratorRef = (Id *)node;
+                if (std::find(iterators.begin(), iterators.end(), iteratorRef->getName()) == iterators.end())
+                {
+                    iteratorRef->setMemLoc(iteratorRef->getMemLoc() - 2);
+                    std::cout << "dec for Id inside 1 for loop: ";
+                    std::cout << iteratorRef->getLineNum() << " " << iteratorRef->stringifyWithType() << " mem loc: " << iteratorRef->getMemLoc() << std::endl;
                 }
             }
             else if (isVar(node))
             {
                 node->setMemLoc(node->getMemLoc() - 2);
-                // std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc();
-                // std::cout << " (inside 1 for loop)" << std::endl;
+                std::cout << "dec for Var inside 1 for loop: ";
+                std::cout << node->getLineNum() << " " << node->stringifyWithType() << " mem loc: " << node->getMemLoc() << std::endl;
             }
         }
     }
 
-
     std::vector<Node *> children = node->getChildren();
     for (int i = 0; i < children.size(); i++)
     {
-        updateForMem(children[i], lastIterator);
+        updateForMem(children[i], iterators);
     }
 
-    updateForMem(node->getSibling(), lastIterator);
+    updateForMem(node->getSibling(), iterators);
 }
 
 void CodeGen::generate()
@@ -118,7 +129,8 @@ void CodeGen::generate()
         throw std::runtime_error("CodeGen::generate() - Invalid tmPath provided to constructor");
     }
 
-    updateForMem(m_root);
+    std::vector<std::string> iterators;
+    updateForMem(m_root, iterators);
     // m_root->printTree(true, true);
 
     m_funcs["input"] = 1;

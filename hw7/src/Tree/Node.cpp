@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_memExists(false), m_memScope("None"), m_memLoc(0), m_memSize(1), m_isGenerated(false) {}
+Node::Node(const int lineNum) : m_parent(nullptr), m_sibling(nullptr), m_siblingCount(1), m_lineNum(lineNum), m_isAnalyzed(false), m_memExists(false), m_memScope("None"), m_memLoc(0), m_memSize(1), m_memIsUpdated(false), m_isGenerated(false) {}
 
 Node::~Node()
 {
@@ -104,6 +104,34 @@ void Node::printNode(const bool showTypes) const
     {
         std::cout << stringify();
     }
+}
+
+void Node::printNodeInfo() const
+{
+    std::cout << "Node: " << m_lineNum << " " << stringifyWithType() << std::endl;
+
+    if (m_parent != nullptr)
+    {
+        std::cout << "Parent: " << m_parent->getLineNum() << " " << m_parent->stringifyWithType() << std::endl;
+
+        std::vector<Node *> parentChildren = m_parent->getChildren();
+        for (int i = 0; i < parentChildren.size(); i++)
+        {
+            std::cout << "Parent Child " << i << ": " << parentChildren[i]->getLineNum() << " " << parentChildren[i]->stringifyWithType() << std::endl;
+        }
+        std::cout << "Parent Total children: " << parentChildren.size() << std::endl;
+    }
+
+    if (m_sibling != nullptr)
+    {
+        std::cout << "Sibling: " << m_sibling->getLineNum() << " " << m_sibling->stringifyWithType() << std::endl;
+    }
+
+    for (int i = 0; i < m_children.size(); i++)
+    {
+        std::cout << "Child " << i << ": " << m_children[i]->getLineNum() << " " << m_children[i]->stringifyWithType() << std::endl;
+    }
+    std::cout << "Total children: " << m_children.size() << std::endl;
 }
 
 void Node::addChild(Node *node)

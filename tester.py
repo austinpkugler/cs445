@@ -34,10 +34,11 @@ class Tester:
         print(f'Running all tests in \'{self.test_dir}\'')
         tests = [f[:-3] for f in os.listdir(self.test_dir) if f.endswith('.c-')]
         tests.sort()
-        # tests = ['k01', 'k02', 'k03', 'k04', 'k05']
-        # tests = ['k01', 'k02', 'k03', 'k05']
+        # tests = ['k01', 'k02', 'k03', 'k04', 'k05', 'k06', 'k07']
+        # tests = ['k05']
         # matches .mem: k04
         # wrong loc: k05 because we need to ignore i, a, b, and c in for i = a to b by c do { (right now we only ignore i)
+        # also k06 and k07 for same reason
 
         # old below
         # matches .mem: k01 k02 k03
