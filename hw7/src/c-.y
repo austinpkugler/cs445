@@ -1008,7 +1008,7 @@ int main(int argc, char *argv[])
     Flags flags(argc, argv);
     yydebug = flags.getDebug();
 
-    std::string filename = flags.getFilename();
+    std::string filename = flags.getFilepath();
     if (argc > 1 && !(yyin = fopen(filename.c_str(), "r")))
     {
         Emit::error("ARGLIST", "source file \"" + filename + "\" could not be opened.");
@@ -1047,8 +1047,8 @@ int main(int argc, char *argv[])
 
     if (!Emit::getErrorCount() && !SyntaxError::getHasError())
     {
-        std::string tmPath = flags.getFilenameBase() + ".tm";
-        CodeGen *generator = new CodeGen(root, tmPath);
+        // Use flags.getTmFilepath() for submission, flags.getTmFilename() for local
+        CodeGen *generator = new CodeGen(root, flags.getTmFilename());
         generator->generate();
     }
 

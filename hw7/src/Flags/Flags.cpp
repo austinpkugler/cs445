@@ -63,7 +63,7 @@ Flags::Flags(int argc, char *argv[])
             // Pick off a nonoption
             if (optind < argc)
             {
-                m_filename = argv[optind];
+                m_filepath = argv[optind];
                 optind++;
             }
             else
@@ -74,15 +74,27 @@ Flags::Flags(int argc, char *argv[])
     }
 }
 
-std::string Flags::getFilenameBase() const
+std::string Flags::getFileBase() const
 {
-    std::string base = m_filename;
+    std::string base = m_filepath;
     base.erase(base.size() - 3);
     while (base.find("/") != std::string::npos)
     {
         base.erase(base.begin());
     }
     return base;
+}
+
+std::string Flags::getTmFilename() const
+{
+    return getFileBase() + ".tm";
+}
+
+std::string Flags::getTmFilepath() const
+{
+    std::string base = m_filepath;
+    base.erase(base.size() - 3);
+    return base + ".tm";
 }
 
 void Flags::resetAll()
