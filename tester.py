@@ -259,7 +259,7 @@ def help():
     print('$ python3 tester.py hw2/ -p')
     print('$ python3 tester.py hw3/ -p --sort')
     print('$ python3 tester.py hw4/ -P --sort')
-    print('$ python3 tester.py hw5/ -M --sort')
+    print('$ python3 tester.py hw5/ -P --sort')
     print('$ python3 tester.py hw6/ -M --sort')
     print('$ python3 tester.py hw7/ --difftm --nocomments --unit ')
     print('$ python3 tester.py hw7/ --difftm --nocomments --broad')
