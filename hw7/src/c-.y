@@ -1026,7 +1026,7 @@ int main(int argc, char *argv[])
     SymTable symTable = SymTable();
     symTable.debug(flags.getSymTableDebug());
 
-    Semantics analyzer = Semantics(&symTable, false);
+    Semantics analyzer = Semantics(&symTable, true);
     if (!SyntaxError::getHasError())
     {
         analyzer.analyze(root);
